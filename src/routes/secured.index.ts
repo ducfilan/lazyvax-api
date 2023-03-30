@@ -1,15 +1,15 @@
 import { Router } from 'express'
-import { securedUserRouter } from './users.route'
-import { securedSetsRouter } from './sets.route'
-import { securedInteractionsRouter } from './interactions.route'
-import { securedItemsInteractionsRouter } from './items-interactions.route'
-import { securedItemsStatisticsRouter } from './items-statistics.route'
-import { securedSetsStatisticsRouter } from './sets-statistics.route'
-import { securedMissionsRouter } from './missions.route'
+import { securedUserRouter } from '@routes/users.route'
+import { securedSetsRouter } from '@routes/sets.route'
+import { securedInteractionsRouter } from '@routes/interactions.route'
+import { securedItemsInteractionsRouter } from '@routes/items-interactions.route'
+import { securedItemsStatisticsRouter } from '@routes/items-statistics.route'
+import { securedSetsStatisticsRouter } from '@routes/sets-statistics.route'
+import { securedMissionsRouter } from '@routes/missions.route'
 
-import tagsRouter from './tags.route'
-import imagesRouter from './images.route'
-import audioRouter from './audio.route'
+import tagsRouter from '@routes/tags.route'
+import imagesRouter from '@routes/images.route'
+import audioRouter from '@routes/audio.route'
 
 let securedRouter = Router()
 

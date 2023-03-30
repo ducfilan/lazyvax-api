@@ -1,5 +1,5 @@
 import { MaxInt, SupportingLanguagesMap } from '@common/consts'
-import { validateSkip, validateLimit } from './common.validator'
+import { validateSkip, validateLimit } from '@validators/common.validator'
 
 export const apiSearchSetValidator = ({ keyword, skip, limit, languages }, defaultLangCodes: string[]) => {
   skip = Number(skip)

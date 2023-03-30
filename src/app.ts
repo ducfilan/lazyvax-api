@@ -2,10 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 
-import publicRouteIndex from './routes/public.index'
-import securedRouteIndex from './routes/secured.index'
+import publicRouteIndex from '@routes/public.index'
+import securedRouteIndex from '@routes/secured.index'
 
-import ConfigsDao from './dao/configs.dao'
+import ConfigsDao from '@dao/configs.dao'
 
 const app = express()
 

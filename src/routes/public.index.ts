@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import categoriesRoute from './categories.route'
-import { publicUserRouter } from './users.route'
-import { publicSetsRouter } from './sets.route'
-import { publicTopSetRouter } from './top-sets.route'
-import tokenRouter from './token.route'
+import categoriesRoute from '@routes/categories.route'
+import { publicUserRouter } from '@routes/users.route'
+import { publicSetsRouter } from '@routes/sets.route'
+import { publicTopSetRouter } from '@routes/top-sets.route'
+import tokenRouter from '@routes/token.route'
 
 let publicRouter = Router()
 
