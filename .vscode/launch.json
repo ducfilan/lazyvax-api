@@ -1,0 +1,29 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Docker: Attach to Node",
+      "port": 9229,
+      "restart": true,
+      "sourceMaps": true,
+      "smartStep": true,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/home/node/app",
+      "showAsyncStacks": true,
+      "protocol": "inspector",
+      "sourceMapPathOverrides": {
+        "/home/node/app/*": "${workspaceFolder}/*"
+      },
+      "skipFiles": [
+        "/home/node/app/node_modules/**/*.js",
+        "<node_internals>/**/*.js"
+      ]
+    },
+  ]
+}

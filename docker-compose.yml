@@ -1,0 +1,68 @@
+version: "3"
+
+services:
+  lazyvax-nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lazyvax-nodejs
+    depends_on:
+      - lazyvax-db
+      - lazyvax-cache
+    container_name: lazyvax-nodejs
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MONGO_USERNAME=$MONGO_USERNAME
+      - MONGO_PASSWORD=$MONGO_PASSWORD
+      - MONGO_HOSTNAME=lazyvax-db
+      - MONGO_PORT=$MONGO_PORT
+      - MONGO_DB=$MONGO_DB
+      - NODE_PORT=$NODE_PORT
+    links:
+      - lazyvax-db
+      - lazyvax-cache
+    ports:
+      - "80:80"
+      - "9229:9229"
+    volumes:
+      - .:/home/node/app
+      - node_modules:/home/node/app/node_modules
+    networks:
+      - app-network
+    command: ./wait-for.sh lazyvax-db:$MONGO_PORT -- npm run debug
+  lazyvax-db:
+    image: mongo:5.0.2
+    container_name: lazyvax-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD
+    ports:
+      - "27017:27017"
+    volumes:
+      - lazyvax-dbdata:/data/lazyvax-db
+    networks:
+      - app-network
+  lazyvax-cache:
+    image: redis:7.0.4-alpine
+    container_name: lazyvax-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass zUCXCkxt
+    volumes:
+      - lazyvax-cache:/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  lazyvax-dbdata:
+  node_modules:
+  lazyvax-cache:
+    driver: local

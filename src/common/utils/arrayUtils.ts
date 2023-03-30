@@ -1,0 +1,1 @@
+export const genNumbersArray = (size: number, start: number = 0): number[] => Array.from(Array(size).keys()).map(num => num + start)
