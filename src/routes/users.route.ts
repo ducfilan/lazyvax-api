@@ -15,9 +15,6 @@ securedUserRouter.route('/me').patch(auth, upload.none(), validateApiUpdateUser,
 
 securedUserRouter.route('/me').get(auth, UsersController.me)
 securedUserRouter.route('/:userId').get(UsersController.getUserInfo)
-securedUserRouter.route('/:userId/sets').get(validateApiGetUserSets, UsersController.getUserSets)
-securedUserRouter.route('/me/random-set').get(auth, validateApiGetUserRandomSet, UsersController.getUserRandomSet)
-securedUserRouter.route('/me/suggestions').get(auth, UsersController.apiSuggestSets)
 securedUserRouter.route('/logout').post(auth, UsersController.logout)
 
 securedUserRouter.route('/cache').delete(auth, validateApiDeleteCache, UsersController.apiDeleteCache)

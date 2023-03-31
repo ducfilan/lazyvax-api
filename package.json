@@ -12,6 +12,17 @@
     "test:dev": "docker compose exec nodejs yarn test",
     "test:watch": "jest --passWithNoTests --watch"
   },
+  "_moduleAliases": {
+    "@": "build",
+    "@common": "build/common",
+    "@controllers": "build/controllers",
+    "@dao": "build/dao",
+    "@middlewares": "build/middlewares",
+    "@models": "build/models",
+    "@routes": "build/routes",
+    "@services": "build/services",
+    "@validators": "build/validators"
+  },
   "lint-staged": {
     "linters": {
       "*.js": [
@@ -27,9 +38,10 @@
     ]
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.303.0",
+    "@aws-sdk/s3-request-presigner": "^3.303.0",
     "@babel/cli": "^7.20.7",
     "@google-cloud/text-to-speech": "^4.2.0",
-    "aws-sdk": "^2.1316.0",
     "cors": "^2.8.5",
     "debug": "~4.3.4",
     "dotenv": "^16.0.3",
@@ -46,6 +58,7 @@
     "ioredis": "^5.3.1",
     "jest-runner": "^29.4.3",
     "jwks-rsa": "^3.0.1",
+    "module-alias": "^2.2.2",
     "mongodb": "^5.0.1",
     "morgan": "~1.10.0",
     "multer": "^1.4.5-lts.1",

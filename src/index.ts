@@ -1,3 +1,4 @@
+import 'module-alias/register'
 import app from '@/app'
 import { injectTables } from '@common/configs/mongodb-client.config'
 

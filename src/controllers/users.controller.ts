@@ -1,5 +1,4 @@
 import usersServices from '@services/api/users.services'
-import setsServices from '@services/api/sets.services'
 import { apiSearchSetValidator } from '@validators/sets.validator'
 import { ObjectId } from 'mongodb'
 import { deleteCache } from '@services/support/redis.service'
@@ -15,29 +14,6 @@ export default class UsersController {
       const userInfo = await usersServices.getUserInfoById(new ObjectId(req.params.userId))
 
       res.status(200).send(userInfo)
-    } catch (e) {
-      res.status(500).json({ error: e.message })
-    }
-  }
-
-  static async getUserSets(req, res) {
-    try {
-      const { interaction, skip, limit } = req.query
-      const sets = await usersServices.getUserSets(req.params.userId, interaction, skip, limit)
-
-      res.status(200).send(sets)
-    } catch (e) {
-      console.log(`api, ${e}`)
-      res.status(500).json({ error: e })
-    }
-  }
-
-  static async getUserRandomSet(req: { query: { interactions: string[], itemsSkip: number, itemsLimit: number }, user: User }, res) {
-    try {
-      const { interactions, itemsSkip, itemsLimit } = req.query
-      const set = await usersServices.getUserRandomSet(req.user._id, interactions, itemsSkip, itemsLimit)
-
-      res.status(200).send(set)
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -74,18 +50,6 @@ export default class UsersController {
       res.sendStatus(200)
     } catch (e) {
       res.status(500).send({ error: e.message })
-    }
-  }
-
-  static async apiSuggestSets(req, res) {
-    try {
-      const searchConditions = apiSearchSetValidator(req.query, req.user.langCodes)
-      if (!searchConditions) res.sendStatus(400)
-
-      return res.json(await setsServices.suggestSets(req.user._id, searchConditions))
-    } catch (e) {
-      console.log(`api, ${e}`)
-      res.status(500).json({ error: e })
     }
   }
 
