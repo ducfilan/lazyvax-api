@@ -39,3 +39,6 @@
 - Local redis access:
 
 	`docker exec -it cache redis-cli -u redis://default:zUCXCkxt@localhost`
+
+- Need to build success without runtime errors for the first time:
+	`yarn build`
