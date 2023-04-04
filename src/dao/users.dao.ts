@@ -1,6 +1,7 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { SupportingLanguages, UsersCollectionName } from '@common/consts'
+import User from '@/models/User'
 
 let _users: Collection
 let _db: Db
@@ -23,27 +24,61 @@ export default class UsersDao {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
-            required: ['name', 'email', 'locale', 'finishedRegisterStep', 'langCodes'],
+            required: ['name', 'email', 'locale', 'finishedRegisterStep'],
             properties: {
-              name: {
-                bsonType: 'string',
+              "_id": { "bsonType": "objectId" },
+              "type": { "bsonType": "string" },
+              "serviceAccessToken": { "bsonType": "string" },
+              "finishedRegisterStep": { "bsonType": "int" },
+              "name": { "bsonType": "string" },
+              "email": { "bsonType": "string", "format": "email" },
+              "locale": { "bsonType": "string" },
+              "password": { "bsonType": "string" },
+              "pictureUrl": { "bsonType": "string" },
+              "preferences": {
+                "bsonType": "object",
+                "properties": {
+                  "botName": { "bsonType": "string" },
+                  "userCategory": { "bsonType": "string", "enum": ["professional", "student"] },
+                  "age": { "bsonType": "int" },
+                  "gender": { "bsonType": "string", "enum": ["male", "female", "other"] },
+                  "workerType": { "bsonType": "string", "enum": ["individual", "manager", "both"] },
+                  "occupation": { "bsonType": "string" },
+                  "lifeGoals": { "bsonType": "array", "items": { "bsonType": "string" } }
+                },
+                "additionalProperties": false
               },
-              email: {
-                bsonType: 'string',
-              },
-              locale: {
-                enum: SupportingLanguages
-              },
-              finishedRegisterStep: {
-                bsonType: 'int',
-              },
-              langCodes: {
-                bsonType: 'array',
-                items: [
-                  { enum: SupportingLanguages }
-                ]
+              "conversations": {
+                "bsonType": "array",
+                "items": {
+                  "bsonType": "object",
+                  "properties": {
+                    "_id": { "bsonType": "objectId" },
+                    "type": { "bsonType": "string" },
+                    "title": { "bsonType": "string" },
+                    "description": { "bsonType": "string" },
+                    "unreadCount": { "bsonType": "int" },
+                    "participants": {
+                      "bsonType": "array",
+                      "items": {
+                        "bsonType": "object",
+                        "properties": {
+                          "_id": { "bsonType": "objectId" },
+                          "userId": { "bsonType": "objectId" },
+                          "name": { "bsonType": "string" },
+                          "pictureUrl": { "bsonType": "string" }
+                        },
+                        "required": ["_id", "userId", "name", "pictureUrl"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["_id", "type", "title", "description", "unreadCount", "participants"],
+                  "additionalProperties": false
+                }
               }
-            }
+            },
+            "additionalProperties": false
           }
         }
       })
@@ -83,22 +118,14 @@ export default class UsersDao {
     return !!this.findByEmail(email)
   }
 
-  static async registerUserIfNotFound(userInfo): Promise<ObjectId> {
+  static async registerUserIfNotFound(userInfo: User): Promise<ObjectId> {
     let user = await this.findByEmail(userInfo.email)
 
-    if (!!user) {
+    if (!!user && user._id) {
       return user._id
     }
 
-    return new Promise((resolve, reject) => {
-      _users.insertOne(userInfo, null, (error, response) => {
-        if (error) {
-          reject(error)
-        } else {
-          const insertedUserId = response.insertedId
-          resolve(insertedUserId)
-        }
-      })
-    })
+    const insertResult = await _users.insertOne(userInfo)
+    return insertResult.insertedId
   }
 }

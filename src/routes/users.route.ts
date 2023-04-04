@@ -2,7 +2,7 @@ import { Router } from 'express'
 import UsersController from '@controllers/users.controller'
 import multer from 'multer'
 import auth from '@middlewares/global/auth.mw'
-import { validateApiDeleteCache, validateApiGetUserRandomSet, validateApiGetUserSets, validateApiUpdateUser } from '@validators/users.validator'
+import { validateApiDeleteCache, validateApiUpdateUser } from '@validators/users.validator'
 
 const publicUserRouter = Router()
 const securedUserRouter = Router()

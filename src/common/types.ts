@@ -1,12 +1,3 @@
-import { ObjectId } from "mongodb";
+import { SupportingLanguages } from "./consts";
 
-export type User = {
-  _id: ObjectId,
-  name: string,
-  email: string,
-  locale: string,
-  pictureUrl: string,
-  finishedRegisterStep: number,
-  langCodes?: string[],
-  pages?: string[],
-}
+export type LangCode = typeof SupportingLanguages[number]

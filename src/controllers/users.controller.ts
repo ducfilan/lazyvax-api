@@ -1,8 +1,6 @@
 import usersServices from '@services/api/users.services'
-import { apiSearchSetValidator } from '@validators/sets.validator'
 import { ObjectId } from 'mongodb'
 import { deleteCache } from '@services/support/redis.service'
-import { User } from '@common/types'
 
 export default class UsersController {
   static async me(req, res) {

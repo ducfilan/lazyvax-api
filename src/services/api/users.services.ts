@@ -3,7 +3,8 @@ import UsersDao from '@dao/users.dao'
 import { isGoogleTokenValid } from '@services/support/google-auth.service'
 import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyRandomSet, CacheKeyUser } from '@common/consts'
 import { delCache, getCache, setCache } from '@common/redis'
-import { User } from '@common/types'
+import User from '@/models/User'
+import dogNames from 'dog-names'
 
 export default {
   register: async (requestBody): Promise<ObjectId> => {
@@ -23,8 +24,10 @@ export default {
       locale,
       password,
       pictureUrl,
-      langCodes: [locale]
-    }
+      preferences: {
+        botName: dogNames.allRandom()
+      }
+    } as User
 
     switch (type) {
       case LoginTypes.google:
