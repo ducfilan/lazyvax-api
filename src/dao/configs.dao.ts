@@ -6,7 +6,7 @@ let _configs: Collection
 let _db: Db
 
 export default class ConfigsDao {
-  static async injectDB(conn: MongoClient) {
+  static injectDB(conn: MongoClient) {
     if (_configs) {
       return
     }

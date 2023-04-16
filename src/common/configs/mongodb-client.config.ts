@@ -23,21 +23,13 @@ const Configs = {
 }
 
 export const injectTables = async () => {
-  return new Promise<MongoClient>((resolve, reject) => {
-    MongoClient.connect(
-      ConnectionString,
-      Configs
-    )
-      .catch(err => {
-        reject(err)
-      })
-      .then(async (client: MongoClient) => {
-        await UsersDao.injectDB(client)
-        await ConfigsDao.injectDB(client)
+  const client = await MongoClient.connect(
+    ConnectionString,
+    Configs
+  )
 
-        resolve(client)
-      })
-  })
+  UsersDao.injectDB(client)
+  ConfigsDao.injectDB(client)
 }
 
 export const DatabaseName = MONGO_DB
