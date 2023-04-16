@@ -1,6 +1,7 @@
-import { MongoClient, WriteConcern } from 'mongodb'
+import { MongoClient, TransactionOptions, WriteConcern } from 'mongodb'
 import ConfigsDao from '@dao/configs.dao'
 import UsersDao from '@dao/users.dao'
+import ConversationsDao from '@/dao/conversations.dao';
 
 const {
   NODE_ENV,
@@ -22,13 +23,16 @@ const Configs = {
   writeConcern: new WriteConcern('majority', 5000), // ms 
 }
 
+let client: MongoClient
+
 export const injectTables = async () => {
-  const client = await MongoClient.connect(
+  client = await MongoClient.connect(
     ConnectionString,
     Configs
   )
 
   UsersDao.injectDB(client)
+  ConversationsDao.injectDB(client)
   ConfigsDao.injectDB(client)
 }
 
@@ -38,4 +42,12 @@ export default {
   ConnectionString,
   DatabaseName,
   Configs
+}
+
+export const getDbClient = () => client
+
+export const transactionOptions: TransactionOptions = {
+  readPreference: 'primary',
+  readConcern: { level: 'local' },
+  writeConcern: { w: 'majority' }
 }

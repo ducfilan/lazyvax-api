@@ -1,5 +1,6 @@
 import { LangCode } from "@/common/types";
 import { ObjectId } from "mongodb";
+import { Conversation } from "./Conversation";
 
 export type User = {
   _id: ObjectId,
@@ -28,18 +29,3 @@ export type UserCategory = "professional" | "student"
 export type WorkerType = "individual" | "manager" | "both"
 export type Gender = "male" | "female" | "other"
 
-export type Conversation = {
-  _id: ObjectId,
-  type: string,
-  title: string,
-  description: string,
-  unreadCount: number,
-  participants: ConversationMember[],
-}
-
-export type ConversationMember = {
-  _id: ObjectId,
-  userId: ObjectId,
-  name: string,
-  pictureUrl: string
-}

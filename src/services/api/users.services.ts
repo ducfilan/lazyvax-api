@@ -21,7 +21,7 @@ export default {
       name,
       email,
       locale,
-      pictureUrl
+      pictureUrl,
     } as User
 
     switch (type) {

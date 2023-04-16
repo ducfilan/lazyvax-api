@@ -71,16 +71,8 @@ export const SupportingTopSetsTypes = {
 }
 
 export const UsersCollectionName = 'users'
-export const SetsCollectionName = 'sets'
-export const TopSetsCollectionName = 'topSets'
-export const InteractionsCollectionName = 'interactions'
-export const ItemsInteractionsCollectionName = 'itemsInteractions'
-export const ItemsStatisticsCollectionName = 'itemsStatistics'
-export const SetsStatisticsCollectionName = 'setsStatistics'
-export const MissionsCollectionName = 'missions'
-export const CategoriesCollectionName = 'categories'
+export const ConversationsCollectionName = 'conversations'
 export const ConfigsCollectionName = 'configs'
-export const TagsCollectionName = 'tags'
 
 export const LoginTypes = {
   google: 'google'
@@ -113,18 +105,6 @@ export const InteractionLike = 'like'
 export const InteractionDislike = 'dislike'
 export const SetInteractions = [InteractionSubscribe, InteractionLike, InteractionDislike]
 
-export const ItemsInteractionShow = 'show'
-export const ItemsInteractionNext = 'next'
-export const ItemsInteractionPrev = 'prev'
-export const ItemsInteractionIgnore = 'ignore'
-export const ItemsInteractionForcedDone = 'forced-done'
-export const ItemsInteractionAnswerCorrect = 'answer-correct'
-export const ItemsInteractionAnswerIncorrect = 'answer-incorrect'
-export const ItemsInteractionStar = 'star'
-export const ItemsInteractionReviewStar = 'review-star'
-export const ItemsInteractionFlip = 'flip'
-export const ItemsInteractions = [ItemsInteractionShow, ItemsInteractionNext, ItemsInteractionPrev, ItemsInteractionAnswerCorrect, ItemsInteractionAnswerIncorrect, ItemsInteractionIgnore, ItemsInteractionForcedDone, ItemsInteractionStar, ItemsInteractionFlip, ItemsInteractionReviewStar]
-
 export const MaxPaginationLimit = 100
 export const DefaultMostItemsInteractionsLimit = 5
 export const MaxRegistrationsStep = 2
@@ -147,3 +127,5 @@ export const BrowserToExtensionId = {
 }
 
 export const OAuth2TokenReceiver = (extensionId: string) => `chrome-extension://${extensionId}/pages/oauth.html`
+
+export const ConversationTypeGoal = "goal"
