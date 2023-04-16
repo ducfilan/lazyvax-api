@@ -24,6 +24,7 @@ export default class UsersController {
 
       res.status(200).send(registeredUser)
     } catch (e) {
+      console.log(`api, ${e}`)
       res.status(500).json({ error: e.message })
     }
   }

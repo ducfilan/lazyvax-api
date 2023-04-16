@@ -132,19 +132,14 @@ export const MaxRegistrationsStep = 2
 export const AscOrder = 'asc'
 export const DescOrder = 'desc'
 
-export const CacheKeyRandomSetPrefix = (userId: string, interaction: string) => `randomSet_${userId}_${interaction}`
-export const CacheKeyRandomSet = (userId: string, interactions: string[], itemsSkip: number, itemsLimit: number) => `randomSet_${userId}_${interactions.join('-')}_${itemsSkip}_${itemsLimit}`
-export const CacheKeySetPrefix = (setId: string) => `set_${setId}_`
-export const CacheKeySet = (setId: string, itemsSkip: number, itemsLimit: number) => `set_${setId}_${itemsSkip}_${itemsLimit}`
 export const CacheKeyUser = (email: string) => `user_${email}`
-export const CacheKeySuggestSet = (userId: string, keyword: string, skip: number, limit: number, languages: string[]) => `suggestSet_${userId}_${keyword}_${skip}_${limit}_${languages.join()}`
 
 export const CacheTypeUserRandomSet = "user-random-set"
 export const CacheTypes = [CacheTypeUserRandomSet]
 
 export const MaxInt = 2147483647
 
-export const ExtensionIdChrome = "pgnilfdgiaibihnlphdkbcnnbmbffodd"
+export const ExtensionIdChrome = "fnobmpemmefaajmifmdkioliggjjfibj"
 export const ExtensionIdEdge = "caigmdkjonhkmnmglimmdkkgkomgkakl"
 export const BrowserToExtensionId = {
   "chrome": ExtensionIdChrome,

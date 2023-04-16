@@ -1,15 +1,14 @@
 import { ObjectId } from 'mongodb'
 import UsersDao from '@dao/users.dao'
 import { isGoogleTokenValid } from '@services/support/google-auth.service'
-import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyRandomSet, CacheKeyUser } from '@common/consts'
-import { delCache, getCache, setCache } from '@common/redis'
-import User from '@/models/User'
-import dogNames from 'dog-names'
+import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@common/consts'
+import { delCache } from '@common/redis'
+import { User } from '@/models/User'
 
 export default {
   register: async (requestBody): Promise<ObjectId> => {
     let { type, serviceAccessToken, finishedRegisterStep,
-      name, email, locale, password, picture: pictureUrl
+      name, email, locale, picture: pictureUrl
     } = requestBody
 
     locale = locale.substring(0, 2)
@@ -22,11 +21,7 @@ export default {
       name,
       email,
       locale,
-      password,
-      pictureUrl,
-      preferences: {
-        botName: dogNames.allRandom()
-      }
+      pictureUrl
     } as User
 
     switch (type) {

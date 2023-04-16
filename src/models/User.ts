@@ -1,7 +1,7 @@
 import { LangCode } from "@/common/types";
 import { ObjectId } from "mongodb";
 
-export default interface User {
+export type User = {
   _id: ObjectId,
   type: string,
   serviceAccessToken: string,
@@ -15,9 +15,8 @@ export default interface User {
   conversations?: Conversation[]
 }
 
-export interface Preference {
-  botName: string,
-  userCategory: UserCategory,
+export type Preference = {
+  userCategory?: UserCategory,
   age?: number,
   gender?: Gender,
   workerType?: WorkerType,
@@ -29,7 +28,7 @@ export type UserCategory = "professional" | "student"
 export type WorkerType = "individual" | "manager" | "both"
 export type Gender = "male" | "female" | "other"
 
-export interface Conversation {
+export type Conversation = {
   _id: ObjectId,
   type: string,
   title: string,
@@ -38,7 +37,7 @@ export interface Conversation {
   participants: ConversationMember[],
 }
 
-export interface ConversationMember {
+export type ConversationMember = {
   _id: ObjectId,
   userId: ObjectId,
   name: string,

@@ -1,14 +1,14 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { SupportingLanguages, UsersCollectionName } from '@common/consts'
-import User from '@/models/User'
+import { User } from '@/models/User'
 
 let _users: Collection
 let _db: Db
 let defaultProjection = { projection: { password: 0 } }
 
 export default class UsersDao {
-  static async injectDB(conn: MongoClient) {
+  static injectDB(conn: MongoClient) {
     if (_users) {
       return
     }
@@ -26,59 +26,60 @@ export default class UsersDao {
             bsonType: 'object',
             required: ['name', 'email', 'locale', 'finishedRegisterStep'],
             properties: {
-              "_id": { "bsonType": "objectId" },
-              "type": { "bsonType": "string" },
-              "serviceAccessToken": { "bsonType": "string" },
-              "finishedRegisterStep": { "bsonType": "int" },
-              "name": { "bsonType": "string" },
-              "email": { "bsonType": "string", "format": "email" },
-              "locale": { "bsonType": "string" },
-              "password": { "bsonType": "string" },
-              "pictureUrl": { "bsonType": "string" },
-              "preferences": {
-                "bsonType": "object",
-                "properties": {
-                  "botName": { "bsonType": "string" },
-                  "userCategory": { "bsonType": "string", "enum": ["professional", "student"] },
-                  "age": { "bsonType": "int" },
-                  "gender": { "bsonType": "string", "enum": ["male", "female", "other"] },
-                  "workerType": { "bsonType": "string", "enum": ["individual", "manager", "both"] },
-                  "occupation": { "bsonType": "string" },
-                  "lifeGoals": { "bsonType": "array", "items": { "bsonType": "string" } }
-                },
-                "additionalProperties": false
+              _id: { bsonType: 'objectId' },
+              type: { bsonType: 'string' },
+              serviceAccessToken: { bsonType: 'string' },
+              finishedRegisterStep: { bsonType: 'int' },
+              name: { bsonType: 'string' },
+              email: { bsonType: 'string' },
+              locale: {
+                enum: SupportingLanguages
               },
-              "conversations": {
-                "bsonType": "array",
-                "items": {
-                  "bsonType": "object",
-                  "properties": {
-                    "_id": { "bsonType": "objectId" },
-                    "type": { "bsonType": "string" },
-                    "title": { "bsonType": "string" },
-                    "description": { "bsonType": "string" },
-                    "unreadCount": { "bsonType": "int" },
-                    "participants": {
-                      "bsonType": "array",
-                      "items": {
-                        "bsonType": "object",
-                        "properties": {
-                          "_id": { "bsonType": "objectId" },
-                          "userId": { "bsonType": "objectId" },
-                          "name": { "bsonType": "string" },
-                          "pictureUrl": { "bsonType": "string" }
+              password: { bsonType: 'string' },
+              pictureUrl: { bsonType: 'string' },
+              preferences: {
+                bsonType: 'object',
+                properties: {
+                  userCategory: { bsonType: 'string', 'enum': ['professional', 'student'] },
+                  age: { bsonType: 'int' },
+                  gender: { bsonType: 'string', 'enum': ['male', 'female', 'other'] },
+                  workerType: { bsonType: 'string', 'enum': ['individual', 'manager', 'both'] },
+                  occupation: { bsonType: 'string' },
+                  lifeGoals: { bsonType: 'array', items: { bsonType: 'string' } }
+                },
+                additionalProperties: false
+              },
+              conversations: {
+                bsonType: 'array',
+                items: {
+                  bsonType: 'object',
+                  properties: {
+                    _id: { bsonType: 'objectId' },
+                    type: { bsonType: 'string' },
+                    title: { bsonType: 'string' },
+                    description: { bsonType: 'string' },
+                    unreadCount: { bsonType: 'int' },
+                    participants: {
+                      bsonType: 'array',
+                      items: {
+                        bsonType: 'object',
+                        properties: {
+                          _id: { bsonType: 'objectId' },
+                          userId: { bsonType: 'objectId' },
+                          name: { bsonType: 'string' },
+                          pictureUrl: { bsonType: 'string' }
                         },
-                        "required": ["_id", "userId", "name", "pictureUrl"],
-                        "additionalProperties": false
+                        required: ['_id', 'userId', 'name', 'pictureUrl'],
+                        additionalProperties: false
                       }
                     }
                   },
-                  "required": ["_id", "type", "title", "description", "unreadCount", "participants"],
-                  "additionalProperties": false
+                  required: ['_id', 'type', 'title', 'unreadCount', 'participants'],
+                  additionalProperties: false
                 }
               }
             },
-            "additionalProperties": false
+            additionalProperties: false
           }
         }
       })
