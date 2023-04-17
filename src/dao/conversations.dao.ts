@@ -5,7 +5,6 @@ import { Conversation } from '@/models/Conversation'
 
 let _conversations: Collection
 let _db: Db
-let defaultProjection = { projection: { password: 0 } }
 
 export default class ConversationsDao {
   static injectDB(conn: MongoClient) {

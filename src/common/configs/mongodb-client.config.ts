@@ -2,6 +2,7 @@ import { MongoClient, TransactionOptions, WriteConcern } from 'mongodb'
 import ConfigsDao from '@dao/configs.dao'
 import UsersDao from '@dao/users.dao'
 import ConversationsDao from '@/dao/conversations.dao';
+import MessagesDao from '@/dao/messages.dao';
 
 const {
   NODE_ENV,
@@ -33,6 +34,7 @@ export const injectTables = async () => {
 
   UsersDao.injectDB(client)
   ConversationsDao.injectDB(client)
+  MessagesDao.injectDB(client)
   ConfigsDao.injectDB(client)
 }
 

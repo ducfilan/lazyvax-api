@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb"
 
 export type Conversation = {
-  _id: ObjectId,
+  _id?: ObjectId,
   type: string,
   title: string,
   description: string,

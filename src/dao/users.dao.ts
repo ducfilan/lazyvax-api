@@ -1,10 +1,12 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { ConversationTypeGoal, SupportingLanguages, UsersCollectionName } from '@common/consts'
+import { ConversationTypeGoal, MessageTypePlainText, SupportingLanguages, UsersCollectionName, getFirstConversationDescription, getFirstConversationTitle, getFirstMessages } from '@common/consts'
 import { User } from '@/models/User'
 import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
 import { LangCode } from '@/common/types'
+import MessagesDao from './messages.dao'
+import { Message } from '@/models/Message'
 
 let _users: Collection
 let _db: Db
@@ -118,26 +120,39 @@ export default class UsersDao {
     let insertedUserId: ObjectId
 
     const session = getDbClient().startSession()
-    await session.withTransaction(async () => {
-      const firstConversation = generateFirstConversation(userInfo.locale)
-      console.log(firstConversation)
-      const { insertedId } = await ConversationsDao.insertOne(firstConversation)
+    try {
+      await session.withTransaction(async () => {
+        const firstConversation = generateFirstConversation(userInfo.locale)
+        const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
 
-      userInfo.conversations = [
-        {
-          _id: insertedId,
-          type: ConversationTypeGoal,
-          title: firstConversation.title,
-          description: firstConversation.description,
-          unreadCount: firstConversation.unreadCount
-        } as Conversation
-      ]
-      console.log(userInfo)
-      const insertUserResult = await _users.insertOne(userInfo)
-      insertedUserId = insertUserResult.insertedId
-    }, transactionOptions)
+        const firstMessages = await MessagesDao.insertMany([])
+        firstMessages.insertedIds
 
-    return insertedUserId
+        userInfo.conversations = [
+          {
+            _id: conversationId,
+            type: ConversationTypeGoal,
+            title: firstConversation.title,
+            description: firstConversation.description,
+            unreadCount: firstConversation.unreadCount
+          } as Conversation
+        ]
+
+        const insertUserResult = await _users.insertOne(userInfo)
+        insertedUserId = insertUserResult.insertedId
+
+        MessagesDao.insertMany(generateFirstMessages(userInfo.locale, conversationId, insertedUserId, userInfo.name))
+      }, transactionOptions)
+
+      await session.commitTransaction()
+
+      return insertedUserId
+    } catch (e) {
+      await session.abortTransaction()
+      throw e
+    } finally {
+      session.endSession()
+    }
   }
 }
 
@@ -151,40 +166,13 @@ function generateFirstConversation(locale: LangCode) {
   } as Conversation
 }
 
-function getFirstConversationTitle(locale: LangCode) {
-  switch (locale) {
-    case 'en':
-      return 'Getting started with Lazyvax'
-
-    case 'vi':
-      return 'Làm quen với Lazyvax'
-
-    case 'zh':
-      return '开始使用Lazyvax'
-
-    case 'ja':
-      return 'Lazyvaxを使い始める'
-
-    default:
-      return 'Getting started with Lazyvax'
-  }
-}
-
-function getFirstConversationDescription(locale: LangCode) {
-  switch (locale) {
-    case 'en':
-      return 'Welcome to Lazyvax! This is a beginner\'s guide to help you get started with the new journey!'
-
-    case 'vi':
-      return 'Chào mừng đến với Lazyvax! Đây là hướng dẫn cho người mới bắt đầu giúp bạn bắt đầu 1 hành trình mới'
-
-    case 'zh':
-      return '欢迎来到 Lazyvax！这是一份初学者指南，帮助您开始新的旅程。'
-
-    case 'ja':
-      return 'Lazyvax へようこそ！このガイドは、新しい旅を始めるための初心者向けガイドです。'
-
-    default:
-      return 'Welcome to Lazyvax! This is a beginner\'s guide to help you get started with the new journey!'
-  }
+function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId, authorName: string): Message[] {
+  return getFirstMessages(locale).map(message => ({
+    authorId: authorId,
+    authorName: authorName,
+    content: message,
+    conversationId,
+    timestamp: new Date(),
+    type: MessageTypePlainText,
+  }))
 }
