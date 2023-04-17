@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { ConversationTypeGoal, MessageTypePlainText, SupportingLanguages, UsersCollectionName, getFirstConversationDescription, getFirstConversationTitle, getFirstMessages } from '@common/consts'
+import { BotUserId, BotUserName, ConversationTypeGoal, MessageTypePlainText, SupportingLanguages, UsersCollectionName, getFirstConversationDescription, getFirstConversationTitle, getFirstMessages } from '@common/consts'
 import { User } from '@/models/User'
 import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
@@ -120,39 +120,28 @@ export default class UsersDao {
     let insertedUserId: ObjectId
 
     const session = getDbClient().startSession()
-    try {
-      await session.withTransaction(async () => {
-        const firstConversation = generateFirstConversation(userInfo.locale)
-        const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
+    await session.withTransaction(async () => {
+      const firstConversation = generateFirstConversation(userInfo.locale)
+      const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
 
-        const firstMessages = await MessagesDao.insertMany([])
-        firstMessages.insertedIds
+      userInfo.conversations = [
+        {
+          _id: conversationId,
+          type: ConversationTypeGoal,
+          title: firstConversation.title,
+          description: firstConversation.description,
+          unreadCount: firstConversation.unreadCount
+        } as Conversation
+      ]
 
-        userInfo.conversations = [
-          {
-            _id: conversationId,
-            type: ConversationTypeGoal,
-            title: firstConversation.title,
-            description: firstConversation.description,
-            unreadCount: firstConversation.unreadCount
-          } as Conversation
-        ]
+      const insertUserResult = await _users.insertOne(userInfo)
+      insertedUserId = insertUserResult.insertedId
 
-        const insertUserResult = await _users.insertOne(userInfo)
-        insertedUserId = insertUserResult.insertedId
+      const firstMessages = generateFirstMessages(userInfo.locale, conversationId, insertedUserId, userInfo.name)
+      MessagesDao.insertMany(firstMessages)
+    }, transactionOptions)
 
-        MessagesDao.insertMany(generateFirstMessages(userInfo.locale, conversationId, insertedUserId, userInfo.name))
-      }, transactionOptions)
-
-      await session.commitTransaction()
-
-      return insertedUserId
-    } catch (e) {
-      await session.abortTransaction()
-      throw e
-    } finally {
-      session.endSession()
-    }
+    return insertedUserId
   }
 }
 
@@ -166,7 +155,7 @@ function generateFirstConversation(locale: LangCode) {
   } as Conversation
 }
 
-function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId, authorName: string): Message[] {
+function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Message[] {
   return getFirstMessages(locale).map(message => ({
     authorId: authorId,
     authorName: authorName,

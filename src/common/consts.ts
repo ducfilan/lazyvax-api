@@ -1,5 +1,6 @@
-import { LangCode } from "./types"
-import { getGreetingTime } from "./utils/stringUtils"
+import { ObjectId } from 'mongodb'
+import { LangCode } from './types'
+import { getGreetingTime } from './utils/stringUtils'
 
 export default {
   tokenExpiresIn: '7d',
@@ -29,40 +30,40 @@ export const SupportingUiLanguages = ['en', 'vi', 'zh', 'ja']
 
 export const SupportingPages: { [brandName: string]: { key: string, title: string } } = {
   facebook: {
-    key: "facebook",
-    title: "Facebook",
+    key: 'facebook',
+    title: 'Facebook',
   },
   youtube: {
-    key: "youtube",
-    title: "Youtube",
+    key: 'youtube',
+    title: 'Youtube',
   },
   amazon: {
-    key: "amazon",
-    title: "Amazon",
+    key: 'amazon',
+    title: 'Amazon',
   },
   ebay: {
-    key: "ebay",
-    title: "Ebay",
+    key: 'ebay',
+    title: 'Ebay',
   },
   twitter: {
-    key: "twitter",
-    title: "Twitter",
+    key: 'twitter',
+    title: 'Twitter',
   },
   reddit: {
-    key: "reddit",
-    title: "Reddit",
+    key: 'reddit',
+    title: 'Reddit',
   },
   google: {
-    key: "google",
-    title: "Google",
+    key: 'google',
+    title: 'Google',
   },
   pinterest: {
-    key: "pinterest",
-    title: "Pinterest",
+    key: 'pinterest',
+    title: 'Pinterest',
   },
   messenger: {
-    key: "messenger",
-    title: "FB Messenger",
+    key: 'messenger',
+    title: 'FB Messenger',
   },
 }
 
@@ -118,23 +119,26 @@ export const DescOrder = 'desc'
 
 export const CacheKeyUser = (email: string) => `user_${email}`
 
-export const CacheTypeUserRandomSet = "user-random-set"
+export const CacheTypeUserRandomSet = 'user-random-set'
 export const CacheTypes = [CacheTypeUserRandomSet]
 
 export const MaxInt = 2147483647
 
-export const ExtensionIdChrome = "fnobmpemmefaajmifmdkioliggjjfibj"
-export const ExtensionIdEdge = "caigmdkjonhkmnmglimmdkkgkomgkakl"
+export const ExtensionIdChrome = 'fnobmpemmefaajmifmdkioliggjjfibj'
+export const ExtensionIdEdge = 'caigmdkjonhkmnmglimmdkkgkomgkakl'
 export const BrowserToExtensionId = {
-  "chrome": ExtensionIdChrome,
-  "edge": ExtensionIdEdge,
+  'chrome': ExtensionIdChrome,
+  'edge': ExtensionIdEdge,
 }
 
 export const OAuth2TokenReceiver = (extensionId: string) => `chrome-extension://${extensionId}/pages/oauth.html`
 
-export const ConversationTypeGoal = "goal"
+export const ConversationTypeGoal = 'goal'
 
 export const MessageTypePlainText = 2
+
+export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
+export const BotUserName = 'Lava'
 
 export function getFirstConversationTitle(locale: LangCode) {
   switch (locale) {
