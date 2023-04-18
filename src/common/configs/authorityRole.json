@@ -1,9 +1,0 @@
-{
-  "roles": {
-    "admin": 1
-  },
-  "rules": {
-    "url": "/users",
-    "access": [1]
-  }
-}

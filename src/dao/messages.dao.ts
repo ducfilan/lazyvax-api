@@ -1,6 +1,6 @@
-import { Collection, Db, MongoClient } from 'mongodb'
+import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { MessagesCollectionName } from '@common/consts'
+import { MaxInt, MessagesCollectionName } from '@common/consts'
 import { Message } from '@/models/Message'
 
 let _messages: Collection
@@ -71,5 +71,13 @@ export default class MessagesDao {
 
   static async insertMany(messages: Message[]) {
     return _messages.insertMany(messages, {})
+  }
+
+  static async getMessages(conversationId: ObjectId, skip: number = 0, limit: number = MaxInt) {
+    return _messages.find({
+      conversationId
+    }, {
+      skip, limit
+    }).toArray()
   }
 }
