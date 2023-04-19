@@ -3,7 +3,7 @@ import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { ConversationsCollectionName } from '@common/consts'
 import { Conversation } from '@/models/Conversation'
 
-let _conversations: Collection
+let _conversations: Collection<Conversation>
 let _db: Db
 
 export default class ConversationsDao {
@@ -57,5 +57,9 @@ export default class ConversationsDao {
 
   static async insertOne(conversation: Conversation) {
     return _conversations.insertOne(conversation)
+  }
+
+  static async findOne(id: ObjectId) {
+    return _conversations.findOne({ _id: id })
   }
 }
