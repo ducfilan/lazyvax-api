@@ -35,11 +35,10 @@ export default class ConversationsDao {
                   bsonType: 'object',
                   properties: {
                     _id: { bsonType: 'objectId' },
-                    userId: { bsonType: 'objectId' },
                     name: { bsonType: 'string' },
                     pictureUrl: { bsonType: 'string' }
                   },
-                  required: ['_id', 'userId', 'name', 'pictureUrl'],
+                  required: ['_id', 'name', 'pictureUrl'],
                   additionalProperties: false
                 }
               }

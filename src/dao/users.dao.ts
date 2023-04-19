@@ -121,18 +121,13 @@ export default class UsersDao {
 
     const session = getDbClient().startSession()
     await session.withTransaction(async () => {
-      const firstConversation = generateFirstConversation(userInfo.locale)
-      const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
+      userInfo._id = new ObjectId()
 
-      userInfo.conversations = [
-        {
-          _id: conversationId,
-          type: ConversationTypeGoal,
-          title: firstConversation.title,
-          description: firstConversation.description,
-          unreadCount: firstConversation.unreadCount
-        } as Conversation
-      ]
+      const firstConversation = generateFirstConversation(userInfo.locale, userInfo)
+      const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
+      firstConversation._id = conversationId
+
+      userInfo.conversations = [firstConversation]
 
       const insertUserResult = await _users.insertOne(userInfo)
       insertedUserId = insertUserResult.insertedId
@@ -145,13 +140,17 @@ export default class UsersDao {
   }
 }
 
-function generateFirstConversation(locale: LangCode) {
+function generateFirstConversation(locale: LangCode, userInfo: User) {
   return {
     title: getFirstConversationTitle(locale),
     description: getFirstConversationDescription(locale),
     unreadCount: 1,
     type: ConversationTypeGoal,
-    participants: []
+    participants: [{
+      _id: userInfo._id,
+      name: userInfo.name,
+      pictureUrl: userInfo.pictureUrl,
+    }]
   } as Conversation
 }
 

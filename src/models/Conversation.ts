@@ -11,7 +11,6 @@ export type Conversation = {
 
 export type Participant = {
   _id: ObjectId,
-  userId: ObjectId,
   name: string,
   pictureUrl: string
 }
