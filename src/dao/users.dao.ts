@@ -127,12 +127,13 @@ export default class UsersDao {
       const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
       firstConversation._id = conversationId
 
+      delete firstConversation.participants
       userInfo.conversations = [firstConversation]
 
       const insertUserResult = await _users.insertOne(userInfo)
       insertedUserId = insertUserResult.insertedId
 
-      const firstMessages = generateFirstMessages(userInfo.locale, conversationId, insertedUserId, userInfo.name)
+      const firstMessages = generateFirstMessages(userInfo.locale, conversationId)
       MessagesDao.insertMany(firstMessages)
     }, transactionOptions)
 
