@@ -50,18 +50,19 @@ export function registerSocketIo(server: HttpServer) {
       })
 
       async function sendMessageListener(message: ChatMessage) {
-        socket.to(message.conversationId).emit(EventNameReceiveConversationMessage, {
-          ...message,
-          senderId: socket.user._id
-        })
-
-        saveMessage({
+        const messageId = await saveMessage({
           conversationId: new ObjectId(message.conversationId),
           authorId: socket.user._id,
           authorName: socket.user.name,
           content: message.content,
           type: message.type,
           timestamp: new Date(),
+        })
+
+        socket.to(message.conversationId).emit(EventNameReceiveConversationMessage, {
+          ...message,
+          id: messageId,
+          senderId: socket.user._id
         })
       }
 

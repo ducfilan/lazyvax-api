@@ -6,6 +6,7 @@ export type LangCode = typeof SupportingLanguages[number]
 export type MessageType = typeof MessageTypes[number]
 
 export type ChatMessage = {
+  id?: ObjectId,
   type: MessageType,
   senderId?: ObjectId,
   content: string,

@@ -66,7 +66,7 @@ export default class MessagesDao {
   }
 
   static async insertOne(message: Message) {
-    return _messages.insertOne(message)
+    return (await _messages.insertOne(message)).insertedId
   }
 
   static async insertMany(messages: Message[]) {
