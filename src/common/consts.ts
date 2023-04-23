@@ -182,39 +182,48 @@ export function getFirstConversationDescription(locale: LangCode) {
   }
 }
 
-export function getFirstMessages(locale: LangCode): string[] {
+export function getFirstMessages(locale: LangCode): { message: string, type: number }[] {
   const greetingString = getGreetingTime(locale)
 
   switch (locale) {
     case 'en':
       return [
-        `${greetingString} my friend! 🤗`,
-        'You can call me ✨Lava✨',
-        'Destiny has arranged me here to help you use your time better. Let\'s get to know each other really quick!'
+        { message: `${greetingString} my friend! 🤗`, type: MessageTypePlainText },
+        { message: 'You can call me ✨Lava✨', type: MessageTypePlainText },
+        { message: 'Destiny has arranged me here to help you use your time better. Let\'s get to know each other really quick!', type: MessageTypePlainText },
+        { message: '', type: MessageTypeAskQuestionnaires },
       ]
 
-    case 'vi': [
-      `${greetingString} bạn nha! 🤗`,
-      'Bạn hãy gọi mình là ✨Lava✨',
-      'Định mệnh đã sắp xếp mình đến đây để giúp bạn sử dụng thời gian hiệu quả hơn, bạn ạ. Trước hết mình cùng hiểu thêm về nhau chút nha ^^!'
-    ]
+    case 'vi':
+      return [
+        { message: `${greetingString} bạn nha! 🤗`, type: MessageTypePlainText },
+        { message: 'Bạn hãy gọi mình là ✨Lava✨', type: MessageTypePlainText },
+        { message: 'Định mệnh đã sắp xếp mình đến đây để giúp bạn sử dụng thời gian hiệu quả hơn, bạn ạ. Trước hết mình cùng hiểu thêm về nhau chút nha ^^!', type: MessageTypePlainText },
+        { message: '', type: MessageTypeAskQuestionnaires },
+      ]
 
-    case 'zh': [
-      `${greetingString}我的朋友！ 🤗`,
-      '你可以叫我✨Lava✨。',
-      '命运把我安排在这里，是为了帮你更好地利用时间。\n让我们快速了解彼此。'
-    ]
+    case 'zh':
+      return [
+        { message: `${greetingString}我的朋友！ 🤗`, type: MessageTypePlainText },
+        { message: '你可以叫我✨Lava✨。', type: MessageTypePlainText },
+        { message: '命运把我安排在这里，是为了帮你更好地利用时间。\n让我们快速了解彼此。', type: MessageTypePlainText },
+        { message: '', type: MessageTypeAskQuestionnaires },
+      ]
 
-    case 'ja': [
-      `${greetingString}、私の友人！ 🤗`,
-      '✨Lava✨と呼んでください。',
-      'あなたが時間をより有効に使えるように、私をここに配置しました. 早くお互いを知りましょう。'
-    ]
+    case 'ja':
+      return [
+        { message: `${greetingString}、私の友人！ 🤗`, type: MessageTypePlainText },
+        { message: '✨Lava✨と呼んでください。', type: MessageTypePlainText },
+        { message: 'あなたが時間をより有効に使えるように、私をここに配置しました. 早くお互いを知りましょう。', type: MessageTypePlainText },
+        { message: '', type: MessageTypeAskQuestionnaires },
+      ]
 
-    default: [
-      `${greetingString} my friend! 🤗`,
-      'You can call me ✨Lava✨',
-      'Destiny has arranged me here to help you use your time better. Let\'s get to know each other really quick!'
-    ]
+    default:
+      return [
+        { message: `${greetingString} my friend! 🤗`, type: MessageTypePlainText },
+        { message: 'You can call me ✨Lava✨', type: MessageTypePlainText },
+        { message: 'Destiny has arranged me here to help you use your time better. Let\'s get to know each other really quick!', type: MessageTypePlainText },
+        { message: '', type: MessageTypeAskQuestionnaires },
+      ]
   }
 }

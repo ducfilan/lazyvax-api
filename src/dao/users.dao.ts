@@ -156,12 +156,12 @@ function generateFirstConversation(locale: LangCode, userInfo: User) {
 }
 
 function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Message[] {
-  return getFirstMessages(locale).map(message => ({
+  return getFirstMessages(locale).map(({ message: content, type }) => ({
     authorId: authorId,
     authorName: authorName,
-    content: message,
+    content,
     conversationId,
     timestamp: new Date(),
-    type: MessageTypePlainText,
+    type,
   }))
 }
