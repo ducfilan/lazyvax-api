@@ -135,7 +135,11 @@ export const OAuth2TokenReceiver = (extensionId: string) => `chrome-extension://
 
 export const ConversationTypeGoal = 'goal'
 
+
+export const MessageTypeBeforeLogin = 1
 export const MessageTypePlainText = 2
+export const MessageTypeAskQuestionnaires = 3
+export const MessageTypes = [MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
 export const BotUserName = 'Lava'

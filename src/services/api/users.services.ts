@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import UsersDao from '@dao/users.dao'
 import { isGoogleTokenValid } from '@services/support/google-auth.service'
 import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@common/consts'
-import { delCache } from '@common/redis'
+import { delCache, getCache, setCache } from '@common/redis'
 import { User } from '@/models/User'
 
 export default {
@@ -41,6 +41,20 @@ export default {
 
   getUserInfoById: async (userId: ObjectId) => {
     return UsersDao.findOne({ _id: userId })
+  },
+
+  getUserByEmail: async (email: string) => {
+    const cacheKey = CacheKeyUser(email)
+    let user = await getCache(cacheKey)
+
+    if (user) {
+      user._id = new ObjectId(user._id)
+    } else {
+      user = await UsersDao.findByEmail(email)
+      setCache(cacheKey, user)
+    }
+
+    return user
   },
 
   update: async ({ _id, email }: User, updateItems) => {
