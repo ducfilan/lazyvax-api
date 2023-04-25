@@ -105,22 +105,17 @@ export const HttpStatusUnauthorized = 401
 export const HttpStatusForbidden = 403
 export const HttpStatusInternalServer = 500
 
-export const InteractionSubscribe = 'subscribe'
-export const InteractionLike = 'like'
-export const InteractionDislike = 'dislike'
-export const SetInteractions = [InteractionSubscribe, InteractionLike, InteractionDislike]
-
 export const MaxPaginationLimit = 100
 export const DefaultMostItemsInteractionsLimit = 5
-export const MaxRegistrationsStep = 2
+export const MaxRegistrationsStep = 6
+export const GoalMaxLength = 250
 
 export const AscOrder = 'asc'
 export const DescOrder = 'desc'
 
 export const CacheKeyUser = (email: string) => `user_${email}`
 
-export const CacheTypeUserRandomSet = 'user-random-set'
-export const CacheTypes = [CacheTypeUserRandomSet]
+export const CacheTypes = []
 
 export const MaxInt = 2147483647
 
@@ -134,7 +129,6 @@ export const BrowserToExtensionId = {
 export const OAuth2TokenReceiver = (extensionId: string) => `chrome-extension://${extensionId}/pages/oauth.html`
 
 export const ConversationTypeGoal = 'goal'
-
 
 export const MessageTypeBeforeLogin = 1
 export const MessageTypePlainText = 2

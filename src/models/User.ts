@@ -28,4 +28,3 @@ export type Preference = {
 export type UserCategory = "professional" | "student"
 export type WorkerType = "individual" | "manager" | "both"
 export type Gender = "male" | "female" | "other"
-

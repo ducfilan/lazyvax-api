@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { BotUserId, BotUserName, ConversationTypeGoal, MessageTypePlainText, SupportingLanguages, UsersCollectionName, getFirstConversationDescription, getFirstConversationTitle, getFirstMessages } from '@common/consts'
+import { BotUserId, BotUserName, ConversationTypeGoal, GoalMaxLength, MessageTypePlainText, SupportingLanguages, UsersCollectionName, getFirstConversationDescription, getFirstConversationTitle, getFirstMessages } from '@common/consts'
 import { User } from '@/models/User'
 import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
@@ -46,11 +46,11 @@ export default class UsersDao {
                 bsonType: 'object',
                 properties: {
                   userCategory: { bsonType: 'string', 'enum': ['professional', 'student'] },
-                  age: { bsonType: 'int' },
+                  age: { bsonType: 'int', minimum: 0, maximum: 150 },
                   gender: { bsonType: 'string', 'enum': ['male', 'female', 'other'] },
                   workerType: { bsonType: 'string', 'enum': ['individual', 'manager', 'both'] },
                   occupation: { bsonType: 'string' },
-                  lifeGoals: { bsonType: 'array', items: { bsonType: 'string' } }
+                  lifeGoals: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } }
                 },
                 additionalProperties: false
               },

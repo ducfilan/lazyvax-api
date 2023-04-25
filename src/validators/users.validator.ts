@@ -1,4 +1,4 @@
-import { CacheTypes, MaxRegistrationsStep, SupportingLanguages, SupportingPagesLength } from '@common/consts'
+import { CacheTypes, GoalMaxLength, MaxRegistrationsStep, SupportingLanguages, SupportingPagesLength } from '@common/consts'
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
 
@@ -9,16 +9,27 @@ export const validateApiUpdateUser = [
     .withMessage(`should be positive and less than or equal ${MaxRegistrationsStep}!`)
     .bail()
     .toInt(),
-  check('langCodes')
-    .optional({ nullable: true, checkFalsy: true })
-    .isArray()
+  check('locale')
+    .optional()
     .isIn(SupportingLanguages)
     .bail(),
-  check('pages')
+  check('preferences.occupation')
+    .optional()
+    .isString()
+    .isLength({ min: 0, max: 100 })
+    .bail(),
+  check('preferences.lifeGoals')
     .optional({ nullable: true, checkFalsy: true })
-    .isArray({ max: SupportingPagesLength })
-    .bail()
-    .withMessage(`too many pages, supporting ${SupportingPagesLength}`)
+    .isArray()
+    .bail(),
+  check('preferences.lifeGoals.*')
+    .isString()
+    .custom(value => {
+      if (value.length > GoalMaxLength) {
+        throw new Error('Goal must be less than 250 characters long')
+      }
+      return true
+    })
     .bail(),
   (req, res, next) => {
     const errors = validationResult(req)
@@ -27,15 +38,15 @@ export const validateApiUpdateUser = [
       return res.status(422).json({ error: `${param} - ${msg}` })
     }
 
-    const { langCodes, pages, finishedRegisterStep } = req.body
-    let updateProperties = { langCodes, pages, finishedRegisterStep }
+    const { finishedRegisterStep, locale, preferences } = req.body
+    let updateProperties = { finishedRegisterStep, locale, preferences }
 
-    if (!langCodes || !Array.isArray(langCodes) || langCodes.length === 0) delete updateProperties.langCodes
-    if (!pages || !Array.isArray(pages) || pages.length === 0) delete updateProperties.pages
+    if (!locale || locale.length === 0) delete updateProperties.locale
+    if (Object.keys(preferences).length === 0) delete updateProperties.preferences
     if (!finishedRegisterStep) delete updateProperties.finishedRegisterStep
 
     if (isEmpty(updateProperties))
-      return res.status(422).json({ error: 'required one of finishedRegisterStep/langCodes/pages is not provided' })
+      return res.status(422).json({ error: 'required one of finishedRegisterStep, locale, preferences is not provided' })
 
     req.body.updateProperties = updateProperties
 
