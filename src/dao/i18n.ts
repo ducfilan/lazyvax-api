@@ -4,18 +4,18 @@ import { DefaultLangCode, I18nCollectionName, SupportingUiLanguages } from '@com
 import { LangCode } from '@/common/types'
 import { I18n } from '@/models/I18n'
 
-let _predefinedMessages: Collection<I18n>
+let _i18n: Collection<I18n>
 let _db: Db
 
 export default class I18nDao {
   static injectDB(conn: MongoClient) {
-    if (_predefinedMessages) {
+    if (_i18n) {
       return
     }
 
     try {
       _db = conn.db(DatabaseName)
-      _predefinedMessages = _db.collection(I18nCollectionName)
+      _i18n = _db.collection(I18nCollectionName)
 
       _db.command({
         collMod: I18nCollectionName,
@@ -25,8 +25,6 @@ export default class I18nDao {
             required: [
               'code',
               'type',
-              'messageType',
-              'needFormat',
               'order',
               'locale',
               'content'
@@ -72,7 +70,7 @@ export default class I18nDao {
       locale = DefaultLangCode
     }
 
-    return _predefinedMessages.find({
+    return _i18n.find({
       code,
       locale
     }).toArray()

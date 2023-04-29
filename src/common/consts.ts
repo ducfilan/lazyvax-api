@@ -145,3 +145,4 @@ export const AgeGroups = ["< 18", "18-24", "25-34", "35-44", "45-54", "55-64", "
 export const I18nDbCodeFirstMessages = 'first-messages'
 export const I18nDbCodeFirstConversationTitle = 'first-conversation-title'
 export const I18nDbCodeFirstConversationDescription = 'first-conversation-description'
+export const I18nDbCodeIntroduceHowItWorks = 'introduce-how-it-works'
