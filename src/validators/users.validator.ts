@@ -1,4 +1,4 @@
-import { CacheTypes, GoalMaxLength, MaxRegistrationsStep, SupportingLanguages, SupportingPagesLength } from '@common/consts'
+import { AgeGroups, CacheTypes, GoalMaxLength, MaxRegistrationsStep, SupportingLanguages } from '@common/consts'
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
 
@@ -12,6 +12,11 @@ export const validateApiUpdateUser = [
   check('locale')
     .optional()
     .isIn(SupportingLanguages)
+    .bail(),
+  check('preferences.age')
+    .optional()
+    .isString()
+    .isIn(AgeGroups)
     .bail(),
   check('preferences.occupation')
     .optional()
@@ -42,7 +47,7 @@ export const validateApiUpdateUser = [
     let updateProperties = { finishedRegisterStep, locale, preferences }
 
     if (!locale || locale.length === 0) delete updateProperties.locale
-    if (Object.keys(preferences).length === 0) delete updateProperties.preferences
+    if (!preferences || Object.keys(preferences).length === 0) delete updateProperties.preferences
     if (!finishedRegisterStep) delete updateProperties.finishedRegisterStep
 
     if (isEmpty(updateProperties))

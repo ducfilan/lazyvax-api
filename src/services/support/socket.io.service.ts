@@ -3,11 +3,12 @@ import { Server as HttpServer } from 'http'
 import { Server, Socket } from "socket.io"
 import { queryChatGPT } from "@/services/support/ai.services"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { ChatMessage, JoinConversationMessage, User } from "@/common/types"
+import { ChatMessage, FinishQuestionnairesMessage, JoinConversationMessage, User } from "@/common/types"
 import usersServices from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
 import { isParticipantInConversation } from "../api/conversations.services"
+import { BotUserId, MessageTypePlainText } from "@/common/consts"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -18,6 +19,7 @@ export const EventNameJoinConversation = "join conversation"
 export const EventNameSendMessage = "send message"
 export const EventNameReceiveConversationMessage = "conversation message"
 export const EventNameAckJoinConversation = "ack join conversation"
+export const EventNameFinishQuestionnaires = "fin questionnaires"
 
 export function registerSocketIo(server: HttpServer) {
   ConfigsDao.getAllowedOrigins().then((origins) => {
@@ -43,6 +45,7 @@ export function registerSocketIo(server: HttpServer) {
     io.on('connection', async (socket: ISocket) => {
       socket.on(EventNameSendMessage, sendMessageListener)
       socket.on(EventNameJoinConversation, joinConversationListener)
+      socket.on(EventNameFinishQuestionnaires, finishQuestionnairesListener)
 
       socket.on('disconnect', () => {
         console.log('User disconnected')
@@ -59,7 +62,7 @@ export function registerSocketIo(server: HttpServer) {
           timestamp: new Date(),
         })
 
-        socket.to(message.conversationId).emit(EventNameReceiveConversationMessage, {
+        io.to(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, {
           ...message,
           id: messageId,
           senderId: socket.user._id
@@ -71,11 +74,21 @@ export function registerSocketIo(server: HttpServer) {
         const isParticipant = await isParticipantInConversation(socket.user._id, conversationId)
 
         if (isParticipant) {
-          await socket.join(message.conversationId)
+          await socket.join(`conversation:${message.conversationId}`)
           socket.emit(EventNameAckJoinConversation, {
             conversationId,
           })
         }
+      }
+
+      function finishQuestionnairesListener(message: FinishQuestionnairesMessage) {
+        io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, {
+          id: "test",
+          senderId: BotUserId,
+          type: MessageTypePlainText,
+          content: "hi",
+          conversationId: message.conversationId,
+        })
       }
     })
   })

@@ -1,12 +1,15 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { BotUserId, BotUserName, ConversationTypeGoal, GoalMaxLength, MessageTypePlainText, SupportingLanguages, UsersCollectionName, getFirstConversationDescription, getFirstConversationTitle, getFirstMessages } from '@common/consts'
+import { AgeGroupMaxLength, BotUserId, BotUserName, ConversationTypeGoal, GoalMaxLength, I18nDbCodeFirstConversationDescription, I18nDbCodeFirstConversationTitle, I18nDbCodeFirstMessages, OccupationLength, StudyCourseLength, SupportingLanguages, UsersCollectionName } from '@common/consts'
 import { User } from '@/models/User'
 import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
 import { LangCode } from '@/common/types'
 import MessagesDao from './messages.dao'
 import { Message } from '@/models/Message'
+import I18nDao from './i18n'
+import { I18n } from '@/models/I18n'
+import { formatString, getGreetingTime } from '@/common/utils/stringUtils'
 
 let _users: Collection
 let _db: Db
@@ -46,10 +49,12 @@ export default class UsersDao {
                 bsonType: 'object',
                 properties: {
                   userCategory: { bsonType: 'string', 'enum': ['professional', 'student'] },
-                  age: { bsonType: 'int', minimum: 0, maximum: 150 },
+                  age: { bsonType: 'string', maxLength: AgeGroupMaxLength },
                   gender: { bsonType: 'string', 'enum': ['male', 'female', 'other'] },
                   workerType: { bsonType: 'string', 'enum': ['individual', 'manager', 'both'] },
-                  occupation: { bsonType: 'string' },
+                  occupation: { bsonType: 'string', maxLength: OccupationLength },
+                  degree: { bsonType: 'string', 'enum': ['k-12', 'undergraduate', 'graduate'] },
+                  studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
                   lifeGoals: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } }
                 },
                 additionalProperties: false
@@ -123,7 +128,7 @@ export default class UsersDao {
     await session.withTransaction(async () => {
       userInfo._id = new ObjectId()
 
-      const firstConversation = generateFirstConversation(userInfo.locale, userInfo)
+      const firstConversation = await generateFirstConversation(userInfo.locale, userInfo)
       const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
       firstConversation._id = conversationId
 
@@ -133,7 +138,7 @@ export default class UsersDao {
       const insertUserResult = await _users.insertOne(userInfo)
       insertedUserId = insertUserResult.insertedId
 
-      const firstMessages = generateFirstMessages(userInfo.locale, conversationId)
+      const firstMessages = await generateFirstMessages(userInfo.locale, conversationId)
       MessagesDao.insertMany(firstMessages)
     }, transactionOptions)
 
@@ -141,10 +146,13 @@ export default class UsersDao {
   }
 }
 
-function generateFirstConversation(locale: LangCode, userInfo: User) {
+async function generateFirstConversation(locale: LangCode, userInfo: User) {
+  const title = ((await I18nDao.getByCode(I18nDbCodeFirstConversationTitle, locale))?.at(0) as I18n | null)?.content || ''
+  const description = ((await I18nDao.getByCode(I18nDbCodeFirstConversationDescription, locale))?.at(0) as I18n | null)?.content || ''
+
   return {
-    title: getFirstConversationTitle(locale),
-    description: getFirstConversationDescription(locale),
+    title,
+    description,
     unreadCount: 1,
     type: ConversationTypeGoal,
     participants: [{
@@ -155,13 +163,19 @@ function generateFirstConversation(locale: LangCode, userInfo: User) {
   } as Conversation
 }
 
-function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Message[] {
-  return getFirstMessages(locale).map(({ message: content, type }) => ({
-    authorId: authorId,
-    authorName: authorName,
-    content,
+async function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Promise<Message[]> {
+  const i18nMessages = await I18nDao.getByCode(I18nDbCodeFirstMessages, locale) as I18n[]
+
+  const orderToFormatArgs = {
+    1: [getGreetingTime(locale)]
+  }
+
+  return i18nMessages.sort((m1, m2) => m1.order - m2.order).map((i18n) => ({
+    authorId,
+    authorName,
+    content: i18n.needFormat ? formatString(i18n.content, orderToFormatArgs[i18n.order]) : i18n.content,
     conversationId,
     timestamp: new Date(),
-    type,
+    type: i18n.messageType,
   }))
 }

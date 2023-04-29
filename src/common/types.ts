@@ -42,3 +42,7 @@ export type Participant = {
 export type JoinConversationMessage = {
   conversationId: string,
 }
+
+export type FinishQuestionnairesMessage = {
+  conversationId: string,
+}

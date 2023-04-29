@@ -38,5 +38,6 @@ export default async (req, res, next) => {
     next()
   } catch (error) {
     res.status(401).send({ error: `Not authorized to access this resource, ${error.message}` })
+    next(error)
   }
 }

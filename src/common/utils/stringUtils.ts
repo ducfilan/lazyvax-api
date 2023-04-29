@@ -76,3 +76,10 @@ export const getGreetingTime = (locale: LangCode, time?: Date) => {
       return 'Good morning'
   }
 }
+
+export function formatString(template: string, args?: string[]): string {
+  return template.replace(/:\d+/g, (match) => {
+    const index = parseInt(match.substring(1))
+    return args[index] ?? match;
+  })
+}
