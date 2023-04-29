@@ -8,7 +8,9 @@ import usersServices from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
 import { isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, MessageTypePlainText } from "@/common/consts"
+import { BotUserId, BotUserName, I18nDbCodeIntroduceHowItWorks, MessageTypePlainText } from "@/common/consts"
+import I18nDao from "@/dao/i18n"
+import { Message } from "@/models/Message"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -81,14 +83,21 @@ export function registerSocketIo(server: HttpServer) {
         }
       }
 
-      function finishQuestionnairesListener(message: FinishQuestionnairesMessage) {
-        io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, {
-          id: "test",
-          senderId: BotUserId,
+      async function finishQuestionnairesListener(message: FinishQuestionnairesMessage) {
+        const content = (await I18nDao.getByCode(I18nDbCodeIntroduceHowItWorks, socket.user.locale))?.at(0).content
+
+        const chatMessage = {
+          conversationId: new ObjectId(message.conversationId),
+          authorId: BotUserId,
+          authorName: BotUserName,
+          content: content,
           type: MessageTypePlainText,
-          content: "hi",
-          conversationId: message.conversationId,
-        })
+          timestamp: new Date(),
+        } as Message
+
+        chatMessage._id = await saveMessage(chatMessage)
+
+        io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, chatMessage)
       }
     })
   })
