@@ -51,53 +51,64 @@ export function registerSocketIo(server: HttpServer) {
 
       socket.on('disconnect', () => {
         console.log('User disconnected')
-        // client.close()
       })
 
       async function sendMessageListener(message: ChatMessage) {
-        const messageId = await saveMessage({
-          conversationId: new ObjectId(message.conversationId),
-          authorId: socket.user._id,
-          authorName: socket.user.name,
-          content: message.content,
-          type: message.type,
-          timestamp: new Date(),
-        })
+        try {
+          const messageId = await saveMessage({
+            conversationId: new ObjectId(message.conversationId),
+            authorId: socket.user._id,
+            authorName: socket.user.name,
+            content: message.content,
+            type: message.type,
+            timestamp: new Date(),
+          })
 
-        io.to(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, {
-          ...message,
-          id: messageId,
-          senderId: socket.user._id
-        })
+          io.to(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, {
+            ...message,
+            id: messageId,
+            senderId: socket.user._id
+          })
+        } catch (error) {
+          console.log(error)
+        }
       }
 
       async function joinConversationListener(message: JoinConversationMessage) {
-        const conversationId = new ObjectId(message.conversationId)
-        const isParticipant = await isParticipantInConversation(socket.user._id, conversationId)
+        try {
+          const conversationId = new ObjectId(message.conversationId)
+          const isParticipant = await isParticipantInConversation(socket.user._id, conversationId)
 
-        if (isParticipant) {
-          await socket.join(`conversation:${message.conversationId}`)
-          socket.emit(EventNameAckJoinConversation, {
-            conversationId,
-          })
+          if (isParticipant) {
+            await socket.join(`conversation:${message.conversationId}`)
+            socket.emit(EventNameAckJoinConversation, {
+              conversationId,
+            })
+          }
+        } catch (error) {
+          console.log(error)
         }
       }
 
       async function finishQuestionnairesListener(message: FinishQuestionnairesMessage) {
-        const content = (await I18nDao.getByCode(I18nDbCodeIntroduceHowItWorks, socket.user.locale))?.at(0).content
+        try {
+          const content = (await I18nDao.getByCode(I18nDbCodeIntroduceHowItWorks, socket.user.locale))?.at(0).content
 
-        const chatMessage = {
-          conversationId: new ObjectId(message.conversationId),
-          authorId: BotUserId,
-          authorName: BotUserName,
-          content: content,
-          type: MessageTypePlainText,
-          timestamp: new Date(),
-        } as Message
+          const chatMessage = {
+            conversationId: new ObjectId(message.conversationId),
+            authorId: BotUserId,
+            authorName: BotUserName,
+            content: content,
+            type: MessageTypePlainText,
+            timestamp: new Date(),
+          } as Message
 
-        chatMessage._id = await saveMessage(chatMessage)
+          chatMessage._id = await saveMessage(chatMessage)
 
-        io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, chatMessage)
+          io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, chatMessage)
+        } catch (error) {
+          console.log(error)
+        }
       }
     })
   })
