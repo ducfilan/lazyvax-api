@@ -46,3 +46,15 @@ export type JoinConversationMessage = {
 export type FinishQuestionnairesMessage = {
   conversationId: string,
 }
+
+export type CreateNewGoalMessage = {
+  conversation: {
+    type: string,
+    title: string,
+    description: string,
+    unreadCount: number,
+    participants: {
+      userId: string
+    }[],
+  },
+}

@@ -22,14 +22,16 @@ export default async (req, res, next) => {
 
     if (!email) return next()
 
-    const cacheKey = CacheKeyUser(email)
-    let user = await getCache(cacheKey)
+    const cacheKeyEmail = CacheKeyUser(email)
+    let user = await getCache(cacheKeyEmail)
 
     if (user) {
       user._id = new ObjectId(user._id)
     } else {
       user = await UsersDao.findByEmail(email)
-      setCache(cacheKey, user)
+
+      const cacheKeyId = CacheKeyUser(user._id.toHexString())
+      await Promise.all([setCache(cacheKeyEmail, user), setCache(cacheKeyId, user)])
     }
 
     if (!user) return next()

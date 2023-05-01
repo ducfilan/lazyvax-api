@@ -1,16 +1,17 @@
 import ConfigsDao from "@/dao/configs.dao"
 import { Server as HttpServer } from 'http'
 import { Server, Socket } from "socket.io"
-import { queryChatGPT } from "@/services/support/ai.services"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { ChatMessage, FinishQuestionnairesMessage, JoinConversationMessage, User } from "@/common/types"
-import usersServices from "../api/users.services"
+import { ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage, User } from "@/common/types"
+import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, I18nDbCodeIntroduceHowItWorks, MessageTypePlainText } from "@/common/consts"
+import { createConversation, isParticipantInConversation } from "../api/conversations.services"
+import { BotUserId, BotUserName, I18nDbCodeIntroduceHowItWorks, MessageTypeRunningText } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message } from "@/models/Message"
+import { GoalMessageAdapter } from "../utils/conversation.adapter"
+import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -22,6 +23,7 @@ export const EventNameSendMessage = "send message"
 export const EventNameReceiveConversationMessage = "conversation message"
 export const EventNameAckJoinConversation = "ack join conversation"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
+export const EventNameCreateNewGoal = "create goal"
 
 export function registerSocketIo(server: HttpServer) {
   ConfigsDao.getAllowedOrigins().then((origins) => {
@@ -48,6 +50,7 @@ export function registerSocketIo(server: HttpServer) {
       socket.on(EventNameSendMessage, sendMessageListener)
       socket.on(EventNameJoinConversation, joinConversationListener)
       socket.on(EventNameFinishQuestionnaires, finishQuestionnairesListener)
+      socket.on(EventNameCreateNewGoal, createNewGoal)
 
       socket.on('disconnect', () => {
         console.log('User disconnected')
@@ -99,13 +102,31 @@ export function registerSocketIo(server: HttpServer) {
             authorId: BotUserId,
             authorName: BotUserName,
             content: content,
-            type: MessageTypePlainText,
+            type: MessageTypeRunningText,
             timestamp: new Date(),
           } as Message
 
           chatMessage._id = await saveMessage(chatMessage)
 
           io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, chatMessage)
+        } catch (error) {
+          console.log(error)
+        }
+      }
+
+      async function createNewGoal(message: CreateNewGoalMessage, ack: any) {
+        try {
+          const conversation = await new GoalMessageAdapter(message).getConversation()
+          console.log(conversation)
+
+          const session = getDbClient().startSession()
+          await session.withTransaction(async () => {
+            const conversationId = await createConversation(conversation)
+            conversation._id = conversationId
+            await addUserConversation(socket.user, conversation)
+
+            ack(conversationId)
+          }, transactionOptions)
         } catch (error) {
           console.log(error)
         }

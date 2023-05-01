@@ -9,7 +9,7 @@ export default class UsersController {
 
   static async getUserInfo(req, res) {
     try {
-      const userInfo = await usersServices.getUserInfoById(new ObjectId(req.params.userId))
+      const userInfo = await usersServices.getUserById(new ObjectId(req.params.userId))
 
       res.status(200).send(userInfo)
     } catch (e) {
@@ -20,7 +20,7 @@ export default class UsersController {
   static async register(req, res) {
     try {
       const registeredUserId = await usersServices.register(req.body)
-      const registeredUser = await usersServices.getUserInfoById(registeredUserId)
+      const registeredUser = await usersServices.getUserById(registeredUserId)
 
       res.status(200).send(registeredUser)
     } catch (e) {

@@ -1,23 +1,47 @@
-export const queryChatGPT = async function (prompt) {
-  const openaiUrl = 'https://api.openai.com/v1/engines/davinci-codex/completions';
-  const headers = {
-    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    'Content-Type': 'application/json'
-  };
+import { Configuration, OpenAIApi } from 'openai'
 
-  const data = {
-    prompt: `${prompt}`,
-    max_tokens: 100,
-    n: 1,
-    stop: null,
-    temperature: 0.8,
-  };
+const AiProviderOpenAi = 'openai'
+const AiProviders = [AiProviderOpenAi]
 
-  try {
-    // const response = await axios.post(openaiUrl, data, { headers });
-    // return response.data.choices[0].text;
-  } catch (error) {
-    console.error(`Error querying ChatGPT API: ${error.message}`);
-    return null;
+type AiProvider = typeof AiProviders[number]
+
+export interface AiServices {
+  query(prompt: string): Promise<string>
+}
+
+export class OpenAiServices implements AiServices {
+  client: OpenAIApi
+
+  constructor() {
+    this.client = new OpenAIApi(new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    }))
+  }
+
+  async query(prompt: string): Promise<string> {
+    const response = await this.client.createCompletion({
+      model: 'text-davinci-003',
+      prompt,
+      temperature: 0,
+      max_tokens: 100,
+      top_p: 1,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+      stop: ['\n'],
+    })
+
+    return response.data.choices[0].text
+  }
+}
+
+export class AiServiceFactory {
+  createAiService(provider: AiProvider): AiServices {
+    switch (provider) {
+      case AiProviderOpenAi:
+        return new OpenAiServices()
+
+      default:
+        return new OpenAiServices()
+    }
   }
 }

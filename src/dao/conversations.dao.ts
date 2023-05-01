@@ -56,7 +56,7 @@ export default class ConversationsDao {
   }
 
   static async insertOne(conversation: Conversation) {
-    return _conversations.insertOne(conversation)
+    return (await _conversations.insertOne(conversation)).insertedId
   }
 
   static async findOne(id: ObjectId) {

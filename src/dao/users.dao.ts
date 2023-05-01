@@ -11,7 +11,7 @@ import I18nDao from './i18n'
 import { I18n } from '@/models/I18n'
 import { formatString, getGreetingTime } from '@/common/utils/stringUtils'
 
-let _users: Collection
+let _users: Collection<User>
 let _db: Db
 let defaultProjection = { projection: { password: 0 } }
 
@@ -129,7 +129,7 @@ export default class UsersDao {
       userInfo._id = new ObjectId()
 
       const firstConversation = await generateFirstConversation(userInfo.locale, userInfo)
-      const { insertedId: conversationId } = await ConversationsDao.insertOne(firstConversation)
+      const conversationId = await ConversationsDao.insertOne(firstConversation)
       firstConversation._id = conversationId
 
       delete firstConversation.participants

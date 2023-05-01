@@ -26,52 +26,6 @@ export const DefaultLangCode = 'en'
 
 export const SupportingUiLanguages = ['en', 'vi', 'zh', 'ja']
 
-export const SupportingPages: { [brandName: string]: { key: string, title: string } } = {
-  facebook: {
-    key: 'facebook',
-    title: 'Facebook',
-  },
-  youtube: {
-    key: 'youtube',
-    title: 'Youtube',
-  },
-  amazon: {
-    key: 'amazon',
-    title: 'Amazon',
-  },
-  ebay: {
-    key: 'ebay',
-    title: 'Ebay',
-  },
-  twitter: {
-    key: 'twitter',
-    title: 'Twitter',
-  },
-  reddit: {
-    key: 'reddit',
-    title: 'Reddit',
-  },
-  google: {
-    key: 'google',
-    title: 'Google',
-  },
-  pinterest: {
-    key: 'pinterest',
-    title: 'Pinterest',
-  },
-  messenger: {
-    key: 'messenger',
-    title: 'FB Messenger',
-  },
-}
-
-export const SupportingPagesLength = Object.keys(SupportingPages).length
-
-export const SupportingTopSetsTypes = {
-  Global: 0,
-  Category: 1
-}
-
 export const UsersCollectionName = 'users'
 export const ConversationsCollectionName = 'conversations'
 export const MessagesCollectionName = 'messages'
@@ -86,8 +40,6 @@ export const BaseCollectionProperties = () => ({
   lastUpdated: new Date(),
   delFlag: false
 })
-
-export const SupportingSetTypes = ['term-def', 'q&a', 'content']
 
 export const CaptchaVerificationUrl = (response) => `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${response}`;
 
@@ -115,7 +67,7 @@ export const AgeGroupMaxLength = 10
 export const AscOrder = 'asc'
 export const DescOrder = 'desc'
 
-export const CacheKeyUser = (email: string) => `user_${email}`
+export const CacheKeyUser = (identifier: string) => `user_${identifier}`
 
 export const CacheTypes = []
 
@@ -135,7 +87,8 @@ export const ConversationTypeGoal = 'goal'
 export const MessageTypeBeforeLogin = 1
 export const MessageTypePlainText = 2
 export const MessageTypeAskQuestionnaires = 3
-export const MessageTypes = [MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires]
+export const MessageTypeRunningText = 4
+export const MessageTypes = [MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires, MessageTypeRunningText]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
 export const BotUserName = 'Lava'
