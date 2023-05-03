@@ -17,7 +17,7 @@ export class MessageGroupBuilder {
   i18ns: I18n[]
   orderToFormatArgs: { [key: number]: string[] }
 
-  constructor(messages: I18n[], orderToFormatArgs: { [key: number]: string[] }) {
+  constructor(messages: I18n[], orderToFormatArgs?: { [key: number]: string[] }) {
     this.i18ns = messages
     this.orderToFormatArgs = orderToFormatArgs
   }

@@ -2,16 +2,18 @@ import ConfigsDao from "@/dao/configs.dao"
 import { Server as HttpServer } from 'http'
 import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage, User } from "@/common/types"
+import { ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { createConversation, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, I18nDbCodeIntroduceHowItWorks, MessageTypeRunningText } from "@/common/consts"
+import { createConversation, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
+import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeRunningText } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
-import { Message } from "@/models/Message"
-import { GoalMessageAdapter } from "../utils/conversation.adapter"
+import { Message, MessageGroupBuilder } from "@/models/Message"
+import { ConversationBuilder } from "../utils/conversation.utils"
 import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
+import { User } from "@/models/User"
+import MessagesDao from "@/dao/messages.dao"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -116,12 +118,15 @@ export function registerSocketIo(server: HttpServer) {
 
       async function createNewGoal(message: CreateNewGoalMessage, ack: any) {
         try {
-          const conversation = await new GoalMessageAdapter(message).getConversation()
-          console.log(conversation)
+          const conversation = await new ConversationBuilder(message).build()
 
           const session = getDbClient().startSession()
           await session.withTransaction(async () => {
             const conversationId = await createConversation(conversation)
+
+            const firstMessages = await generateFirstMessages(ConversationTypeGoal, socket.user?.locale || DefaultLangCode)
+            MessagesDao.insertMany(new MessageGroupBuilder(firstMessages).build(conversationId))
+
             conversation._id = conversationId
             await addUserConversation(socket.user, conversation)
 

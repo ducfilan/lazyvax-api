@@ -6,7 +6,7 @@ import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
 import { LangCode } from '@/common/types'
 import MessagesDao from './messages.dao'
-import { Message } from '@/models/Message'
+import { Message, MessageGroupBuilder } from '@/models/Message'
 import I18nDao from './i18n'
 import { I18n } from '@/models/I18n'
 import { formatString, getGreetingTime } from '@/common/utils/stringUtils'
@@ -170,12 +170,5 @@ async function generateFirstMessages(locale: LangCode, conversationId: ObjectId,
     1: [getGreetingTime(locale)]
   }
 
-  return i18nMessages.sort((m1, m2) => m1.order - m2.order).map((i18n) => ({
-    authorId,
-    authorName,
-    content: i18n.needFormat ? formatString(i18n.content, orderToFormatArgs[i18n.order]) : i18n.content,
-    conversationId,
-    timestamp: new Date(),
-    type: i18n.messageType,
-  }))
+  return new MessageGroupBuilder(i18nMessages, orderToFormatArgs).build(conversationId, authorId, authorName)
 }

@@ -5,7 +5,7 @@ import { Conversation } from "./Conversation";
 export type User = {
   _id: ObjectId,
   type: string,
-  serviceAccessToken: string,
+  serviceAccessToken?: string,
   finishedRegisterStep: number,
   name: string,
   email: string,

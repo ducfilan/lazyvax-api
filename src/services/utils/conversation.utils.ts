@@ -3,18 +3,14 @@ import { Conversation } from "@/models/Conversation"
 import { ObjectId } from "mongodb"
 import { getUserById } from "../api/users.services"
 
-interface IConversationAdapter {
-  getConversation(): Promise<Conversation>
-}
-
-export class GoalMessageAdapter implements IConversationAdapter {
+export class ConversationBuilder {
   private goalMessage: CreateNewGoalMessage
 
   constructor(goalMessage: CreateNewGoalMessage) {
     this.goalMessage = goalMessage
   }
 
-  async getConversation(): Promise<Conversation> {
+  async build(): Promise<Conversation> {
     const participants = await Promise.all(this.goalMessage.conversation.participants.map(async (p) => {
       const _id = new ObjectId(p.userId)
       const user = await getUserById(_id)
