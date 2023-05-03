@@ -6,7 +6,7 @@ export type I18n = {
   code: string,
   order: number,
   type: string,
-  needFormat?: boolean, 
+  needFormat?: boolean,
   messageType?: MessageType,
   locale: LangCode,
   content: string,
