@@ -9,7 +9,7 @@ import MessagesDao from './messages.dao'
 import { Message, MessageGroupBuilder } from '@/models/Message'
 import I18nDao from './i18n'
 import { I18n } from '@/models/I18n'
-import { formatString, getGreetingTime } from '@/common/utils/stringUtils'
+import { getGreetingTime } from '@/common/utils/stringUtils'
 
 let _users: Collection<User>
 let _db: Db
@@ -164,7 +164,7 @@ async function generateFirstConversation(locale: LangCode, userInfo: User) {
 }
 
 async function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Promise<Message[]> {
-  const i18nMessages = await I18nDao.getByCode(I18nDbCodeFirstMessages, locale) as I18n[]
+  const i18nMessages = await I18nDao.getByCode(I18nDbCodeFirstMessages, locale) 
 
   const orderToFormatArgs = {
     1: [getGreetingTime(locale)]

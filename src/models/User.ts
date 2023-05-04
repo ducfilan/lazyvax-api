@@ -18,13 +18,16 @@ export type User = {
 
 export type Preference = {
   userCategory?: UserCategory,
-  age?: number,
+  age?: AgeGroup,
   gender?: Gender,
   workerType?: WorkerType,
   occupation?: string,
+  degree?: string,
+  studyCourse?: string,
   lifeGoals?: string[],
 }
 
 export type UserCategory = "professional" | "student"
+export type AgeGroup = "< 18" | "18-24" | "25-34" | "35-44" | "45-54" | "55-64" | "> 65"
 export type WorkerType = "individual" | "manager" | "both"
 export type Gender = "male" | "female" | "other"

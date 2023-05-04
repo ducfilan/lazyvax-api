@@ -4,11 +4,14 @@ import { injectTables } from '@common/configs/mongodb-client.config'
 
 import http from 'http'
 import { registerSocketIo } from './services/support/socket.io.service'
+import { registerAiServices } from './services/support/ai.services'
+import { AiProviderOpenAi } from './common/consts'
 
 const port = process.env.NODE_PORT || 80
 
 const server = http.createServer(app)
 
+registerAiServices(AiProviderOpenAi, { name: 'text-davinci-003' })
 
 injectTables()
   .catch(err => {

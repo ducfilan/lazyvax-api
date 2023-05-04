@@ -63,6 +63,7 @@ export const GoalMaxLength = 255
 export const StudyCourseLength = 255
 export const OccupationLength = 255
 export const AgeGroupMaxLength = 10
+export const MaxInt = 2147483647
 
 export const AscOrder = 'asc'
 export const DescOrder = 'desc'
@@ -71,7 +72,7 @@ export const CacheKeyUser = (identifier: string) => `user_${identifier}`
 
 export const CacheTypes = []
 
-export const MaxInt = 2147483647
+export const AiProviderOpenAi = 'openai'
 
 export const ExtensionIdChrome = 'fnobmpemmefaajmifmdkioliggjjfibj'
 export const ExtensionIdEdge = 'caigmdkjonhkmnmglimmdkkgkomgkakl'
@@ -88,7 +89,9 @@ export const MessageTypeBeforeLogin = 1
 export const MessageTypePlainText = 2
 export const MessageTypeAskQuestionnaires = 3
 export const MessageTypeRunningText = 4
-export const MessageTypes = [MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires, MessageTypeRunningText]
+export const MessageTypeStateGoal = 5
+export const MessageTypeAskUser = 6
+export const MessageTypes = [MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires, MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUser]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
 export const BotUserName = 'Lava'

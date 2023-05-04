@@ -51,6 +51,12 @@ export default class MessagesDao {
               content: {
                 bsonType: 'string'
               },
+              parentContent: {
+                bsonType: 'string'
+              },
+              parentId: {
+                bsonType: 'objectId'
+              },
               timestamp: {
                 bsonType: 'date'
               }

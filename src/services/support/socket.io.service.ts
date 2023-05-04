@@ -14,6 +14,7 @@ import { ConversationBuilder } from "../utils/conversation.utils"
 import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
 import { User } from "@/models/User"
 import MessagesDao from "@/dao/messages.dao"
+import { BotResponseFactory } from "../utils/message.utils"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -58,22 +59,35 @@ export function registerSocketIo(server: HttpServer) {
         console.log('User disconnected')
       })
 
-      async function sendMessageListener(message: ChatMessage) {
+      async function sendMessageListener(chatMessage: ChatMessage) {
+        // TODO: Validate message.
+
         try {
-          const messageId = await saveMessage({
-            conversationId: new ObjectId(message.conversationId),
+          const message: Message = {
+            conversationId: new ObjectId(chatMessage.conversationId),
             authorId: socket.user._id,
             authorName: socket.user.name,
-            content: message.content,
-            type: message.type,
+            content: chatMessage.content,
+            type: chatMessage.type,
             timestamp: new Date(),
-          })
+          }
 
-          io.to(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, {
-            ...message,
+          chatMessage.parentContent && (message.parentContent = chatMessage.parentContent)
+          chatMessage.parentId && (message.parentId = new ObjectId(chatMessage.parentId))
+
+          const messageId = await saveMessage(message)
+
+          io.to(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, {
+            ...chatMessage,
             id: messageId,
             senderId: socket.user._id
           })
+
+          const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
+          await builder.preprocess()
+          const responseMessage = await builder.getResponse()
+
+          io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
         } catch (error) {
           console.log(error)
         }
@@ -125,7 +139,7 @@ export function registerSocketIo(server: HttpServer) {
             const conversationId = await createConversation(conversation)
 
             const firstMessages = await generateFirstMessages(ConversationTypeGoal, socket.user?.locale || DefaultLangCode)
-            MessagesDao.insertMany(new MessageGroupBuilder(firstMessages).build(conversationId))
+            await MessagesDao.insertMany(new MessageGroupBuilder(firstMessages).build(conversationId))
 
             conversation._id = conversationId
             await addUserConversation(socket.user, conversation)

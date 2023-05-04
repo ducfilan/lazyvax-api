@@ -29,6 +29,51 @@ export default class ConversationsDao {
               title: { bsonType: 'string' },
               description: { bsonType: 'string' },
               unreadCount: { bsonType: 'int' },
+              smartQuestions: {
+                bsonType: 'array',
+                items: {
+                  bsonType: 'object',
+                  required: [
+                    'content',
+                    'answerType',
+                  ],
+                  'properties': {
+                    content: {
+                      bsonType: 'string'
+                    },
+                    answerType: {
+                      bsonType: 'string'
+                    },
+                    answer: {
+                      bsonType: 'string'
+                    },
+                    answerUserId: {
+                      bsonType: 'objectId'
+                    },
+                    selection: {
+                      bsonType: 'object',
+                      'required': [
+                        'type',
+                        'options'
+                      ],
+                      'properties': {
+                        type: {
+                          bsonType: 'string'
+                        },
+                        options: {
+                          bsonType: 'array',
+                          items: {
+                            bsonType: 'string'
+                          }
+                        }
+                      }
+                    },
+                    unit: {
+                      bsonType: 'string'
+                    }
+                  }
+                }
+              },
               participants: {
                 bsonType: 'array',
                 items: {
@@ -61,5 +106,16 @@ export default class ConversationsDao {
 
   static async findOne(id: ObjectId) {
     return _conversations.findOne({ _id: id })
+  }
+
+  static async updateOne(_id: ObjectId, updateOperations) {
+    try {
+      await _conversations.findOneAndUpdate({ _id }, updateOperations)
+      return true
+    } catch (e) {
+      console.log(arguments)
+      console.error(`Error, ${e}, ${e.stack}`)
+      return false
+    }
   }
 }
