@@ -11,7 +11,7 @@ const port = process.env.NODE_PORT || 80
 
 const server = http.createServer(app)
 
-registerAiServices(AiProviderOpenAi, { name: 'text-davinci-003' })
+registerAiServices(AiProviderOpenAi)
 
 injectTables()
   .catch(err => {

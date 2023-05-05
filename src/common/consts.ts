@@ -74,6 +74,9 @@ export const CacheTypes = []
 
 export const AiProviderOpenAi = 'openai'
 
+export const AiModeCompletion = 'completion'
+export const AiModeChat = 'chat'
+
 export const ExtensionIdChrome = 'fnobmpemmefaajmifmdkioliggjjfibj'
 export const ExtensionIdEdge = 'caigmdkjonhkmnmglimmdkkgkomgkakl'
 export const BrowserToExtensionId = {

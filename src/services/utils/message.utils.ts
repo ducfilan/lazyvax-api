@@ -1,6 +1,6 @@
 import { BotUserId, BotUserName, MessageTypeAskUser, MessageTypeStateGoal } from "@/common/consts"
 import { Message } from "@/models/Message"
-import { AiServices } from "../support/ai.services"
+import { ChatAiService } from "../support/ai.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import { saveMessage } from "../api/messages.services"
 import { User } from "@/models/User"
@@ -32,35 +32,22 @@ export class StateGoalResponse implements IResponse {
     this.smartQuestions = []
   }
 
-  private buildUserInfoTemplate(): string {
-    if (!this.user.preferences) return ""
-
-    const { userCategory, age, gender, workerType, occupation, degree, studyCourse } = this.user.preferences
-
-    const commonInfo = `You are talking with a ${userCategory}, ${gender}, in ${age} years old`
-    const professionalInfo = `working as ${workerType == "both" ? "both individual and manager" : workerType} in the organization, in the field "${occupation}"`
-    const studentInfo = `studying the ${degree} degree of ${studyCourse} field`
-
-    switch (userCategory) {
-      case "professional":
-        return `${commonInfo}, ${professionalInfo}.`
-
-      case "student":
-        return `${commonInfo}, ${studentInfo}.`
-
-      default:
-        return ''
-    }
-  }
-
   private buildPrompt(): string {
-    const userInfo = this.buildUserInfoTemplate()
-    const request = 'Give me questions for me to answer to make this goal S.M.A.R.T. Give me enough question so that after answer those questions, the goal should be S.M.A.R.T.'
-    const answerPrefs = 'Add the answer type, like "date", "number", "text", "selection". If it is "selection", output selection options in this format: [single or multiple]-[option 1||option 2||option n] (specify those options). If it is "number", output the measurement unit next to number if possible, e.g. "number" (days).'
-    const goal = `###Goal:### "${this.currentMessage.content}"`
-    const answerFormat = `"#Q#{question}?#Q# - #A#{answer type}::{type properties}#A#"\nExample:\n#Q#What is this?#Q# - #A#text::#A#\n#Q#How old are you?#Q# - #A#number::#A#\n#Q#How many days?#Q# - #A#number::(days)#A#\n#Q#What’s your level?#Q# - #A#selection::[single]-[Beginner||Intermediate||Advanced]#A#\n#Q#What do you like?#Q# - #A#selection::[multiple]-[A||B||C||D]#A#`
+    return `Give me questions and answer type (I explain below) for me to answer to make this goal S.M.A.R.T. It is important to give me enough question so that after answer those questions, the goal will be S.M.A.R.T.
+    Add the answer type, like "date", "number", "text", "selection". If it's "selection", output selection options in this format: [single or multiple]-[option 1||option 2||option n] (specify those options). If it's "number", output the measurement unit next to number if possible, e.g. "number" (days).
 
-    return `${userInfo}\n\n${request}\n\n${answerPrefs}\n\n${goal}\n\n${answerFormat}`
+    ###Answer format:###
+    "#Q#{question}?#Q# - #A#{answer type}::{type properties}#A#"
+
+    ###Example answer from you:###
+    #Q#What is this?#Q# - #A#text::#A#
+    #Q#How old are you?#Q# - #A#number::#A#
+    #Q#How many days?#Q# - #A#number::(days)#A#
+    #Q#What’s your level?#Q# - #A#selection::[single]-[Beginner||Intermediate||Advanced]#A#
+    #Q#What do you like?#Q# - #A#selection::[multiple]-[A||B||C||D]#A#
+
+    ###Goal:###
+    ${this.currentMessage.content.trim()}`
   }
 
   private parseAiResponse(response: string) {
@@ -96,7 +83,8 @@ export class StateGoalResponse implements IResponse {
 
   async preprocess(): Promise<void> {
     try {
-      const aiResponse = await AiServices.query(this.prompt)
+      ChatAiService.preprocess(this.user)
+      const aiResponse = await ChatAiService.query(this.prompt)
       this.parseAiResponse(aiResponse)
       ConversationsDao.updateOne(this.currentMessage.conversationId, { $set: { smartQuestions: this.smartQuestions } })
 
@@ -107,6 +95,8 @@ export class StateGoalResponse implements IResponse {
   }
 
   async getResponse(): Promise<Message> {
+    if (this.smartQuestions.length === 0) return null
+
     const firstQuestion = this.smartQuestions[0]
     const responseMessage: Message = {
       authorId: BotUserId,

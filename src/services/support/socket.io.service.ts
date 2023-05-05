@@ -87,7 +87,7 @@ export function registerSocketIo(server: HttpServer) {
           await builder.preprocess()
           const responseMessage = await builder.getResponse()
 
-          io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
+          responseMessage && io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
         } catch (error) {
           console.log(error)
         }
