@@ -24,6 +24,8 @@ interface ISocket extends Socket {
 export const EventNameJoinConversation = "join conversation"
 export const EventNameSendMessage = "send message"
 export const EventNameReceiveConversationMessage = "conversation message"
+export const EventNameReceiveTypingUser = "user typing"
+export const EventNameReceiveEndTypingUser = "user end typing"
 export const EventNameAckJoinConversation = "ack join conversation"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
 export const EventNameCreateNewGoal = "create goal"
@@ -83,10 +85,13 @@ export function registerSocketIo(server: HttpServer) {
             senderId: socket.user._id
           })
 
+          io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveTypingUser, BotUserName)
+
           const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
           await builder.preprocess()
           const responseMessage = await builder.getResponse()
 
+          io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveEndTypingUser, BotUserName)
           responseMessage && io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
         } catch (error) {
           console.log(error)
