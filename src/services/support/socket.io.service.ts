@@ -88,7 +88,6 @@ export function registerSocketIo(server: HttpServer) {
 
           const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
           builder.addObserver(new FirstQuestionObserver(message, (responseMessage) => {
-            console.log(responseMessage)
             responseMessage && io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
             io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveEndTypingUser, BotUserName)
           }))

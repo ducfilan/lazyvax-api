@@ -138,8 +138,6 @@ export class StateGoalResponse implements IResponse {
 
         stream.on('data', (data => {
           try {
-            console.log(data.toString())
-
             const lines = data.toString().split('\n').filter((line: string) => line.trim() !== '')
             for (const line of lines) {
               const chunk = line.toString().replace(/^data: /, '')
