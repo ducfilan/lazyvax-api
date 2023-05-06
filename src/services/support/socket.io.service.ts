@@ -26,7 +26,6 @@ export const EventNameSendMessage = "send message"
 export const EventNameReceiveConversationMessage = "conversation message"
 export const EventNameReceiveTypingUser = "user typing"
 export const EventNameReceiveEndTypingUser = "user end typing"
-export const EventNameAckJoinConversation = "ack join conversation"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
 export const EventNameCreateNewGoal = "create goal"
 
@@ -98,16 +97,16 @@ export function registerSocketIo(server: HttpServer) {
         }
       }
 
-      async function joinConversationListener(message: JoinConversationMessage) {
+      async function joinConversationListener(message: JoinConversationMessage, ack: any) {
         try {
           const conversationId = new ObjectId(message.conversationId)
           const isParticipant = await isParticipantInConversation(socket.user._id, conversationId)
 
           if (isParticipant) {
             await socket.join(`conversation:${message.conversationId}`)
-            socket.emit(EventNameAckJoinConversation, {
-              conversationId,
-            })
+            ack(conversationId)
+          } else {
+            ack(null)
           }
         } catch (error) {
           console.log(error)
