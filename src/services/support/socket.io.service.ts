@@ -14,7 +14,7 @@ import { ConversationBuilder } from "../utils/conversation.utils"
 import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
 import { User } from "@/models/User"
 import MessagesDao from "@/dao/messages.dao"
-import { BotResponseFactory } from "../utils/message.utils"
+import { BotResponseFactory, FirstQuestionObserver } from "../utils/message.utils"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -87,11 +87,12 @@ export function registerSocketIo(server: HttpServer) {
           io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveTypingUser, BotUserName)
 
           const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
+          builder.addObserver(new FirstQuestionObserver(message, (responseMessage) => {
+            console.log(responseMessage)
+            responseMessage && io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
+            io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveEndTypingUser, BotUserName)
+          }))
           await builder.preprocess()
-          const responseMessage = await builder.getResponse()
-
-          io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveEndTypingUser, BotUserName)
-          responseMessage && io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
         } catch (error) {
           console.log(error)
         }

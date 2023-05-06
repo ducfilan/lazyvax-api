@@ -1,6 +1,7 @@
 import { AiModeChat, AiModeCompletion, AiProviderOpenAi } from '@/common/consts'
 import { User } from '@/models/User'
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai'
+import { Readable } from 'stream'
 
 const AiProviders = [AiProviderOpenAi]
 
@@ -12,7 +13,7 @@ export type AiModelInfo = {
 
 export interface IAiService {
   preprocess(user: User): void
-  query(prompt: string): Promise<string>
+  query(prompt: string, isReturnStream?: boolean): Promise<string | Readable>
 }
 
 export class OpenAiCompletionService implements IAiService {
@@ -124,8 +125,8 @@ export class OpenAiChatService implements IAiService {
     this.buildSystemMessage(user)
   }
 
-  async query(prompt: string): Promise<string> {
-    const response = await this.client.createChatCompletion({
+  async query(prompt: string, isReturnStream: boolean = false): Promise<string | Readable> {
+    const response: any = await this.client.createChatCompletion({
       model: this.modelInfo.name,
       messages: [
         this.systemMessage,
@@ -140,9 +141,14 @@ export class OpenAiChatService implements IAiService {
       top_p: 1,
       frequency_penalty: 0.2,
       presence_penalty: 0.0,
-    })
+      stream: isReturnStream,
+    }, { responseType: isReturnStream ? 'stream' : 'json' })
 
-    return response.data.choices[0].message.content
+    if (isReturnStream) {
+      return response.data as Readable
+    }
+
+    return response.data.choices[0].message.content as string
   }
 }
 

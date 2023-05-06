@@ -4,6 +4,7 @@ import { ChatAiService } from "../support/ai.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import { saveMessage } from "../api/messages.services"
 import { User } from "@/models/User"
+import { Readable } from "stream"
 
 type AnswerType =
   | "text"
@@ -19,17 +20,60 @@ interface Question {
 }
 
 export interface IResponse {
+  addObserver(observer: IResponseObserver): void
   preprocess(): Promise<void>
   getResponse(): Promise<Message>
+}
+
+interface IResponseObserver {
+  work(question: Question)
+}
+
+export class FirstQuestionObserver implements IResponseObserver {
+  constructor(private currentMessage: Message, private callback: Function) { }
+
+  async work(firstQuestion: Question) {
+    const responseMessage: Message = {
+      authorId: BotUserId,
+      authorName: BotUserName,
+      content: firstQuestion.content,
+      conversationId: this.currentMessage.conversationId,
+      type: MessageTypeAskUser,
+      timestamp: new Date(),
+      parentId: this.currentMessage._id,
+      parentContent: this.currentMessage.content,
+    }
+
+    const messageId = await saveMessage(responseMessage)
+    responseMessage._id = messageId
+
+    this.callback(responseMessage)
+  }
 }
 
 export class StateGoalResponse implements IResponse {
   private prompt: string
   private smartQuestions: Question[]
+  private firstQuestion: Question
+  private firstQuestionObservers: IResponseObserver[]
+  private questionMatchRegex: RegExp
 
   constructor(private currentMessage: Message, private user: User) {
     this.prompt = this.buildPrompt()
     this.smartQuestions = []
+    this.firstQuestion = null
+    this.firstQuestionObservers = []
+    this.questionMatchRegex = /#Q#(.*?)#Q#\s-\s#A#(.*?)::(.*?)?#A#/g
+  }
+
+  addObserver(observer: IResponseObserver): void {
+    this.firstQuestionObservers.push(observer);
+  }
+
+  notifyObservers(data: any): void {
+    for (const observer of this.firstQuestionObservers) {
+      observer.work(data)
+    }
   }
 
   private buildPrompt(): string {
@@ -50,43 +94,81 @@ export class StateGoalResponse implements IResponse {
     ${this.currentMessage.content.trim()}`
   }
 
+  private parseQuestion(questionMatches: any): Question {
+    const question: Question = {
+      content: questionMatches[1],
+      answerType: questionMatches[2] || "text",
+    }
+
+    const properties = questionMatches[3]
+    if (properties) {
+      switch (question.answerType) {
+        case "number":
+          question.unit = properties.replace(/^\((.*?)\)$/, "$1") // remove parentheses
+          break
+
+        case "selection":
+          const propertiesMatch = properties.match(/\[(single|multiple)\]-\[(.*?)\]/)
+          if (propertiesMatch) {
+            const [_, type, options] = propertiesMatch;
+            const parsedOptions = options.split("||");
+            question.selection = { type, options: parsedOptions }
+          }
+      }
+    }
+
+    return question
+  }
+
   private parseAiResponse(response: string) {
-    const regex = /#Q#(.*?)#Q#\s-\s#A#(.*?)::(.*?)?#A#/g;
-
     let questionMatch;
-    while ((questionMatch = regex.exec(response))) {
-      const question: Question = {
-        content: questionMatch[1],
-        answerType: questionMatch[2] || "text",
-      }
-
-      const properties = questionMatch[3]
-      if (properties) {
-        switch (question.answerType) {
-          case "number":
-            question.unit = properties.replace(/^\((.*?)\)$/, "$1") // remove parentheses
-            break
-
-          case "selection":
-            const propertiesMatch = properties.match(/\[(single|multiple)\]-\[(.*?)\]/)
-            if (propertiesMatch) {
-              const [_, type, options] = propertiesMatch;
-              const parsedOptions = options.split("||");
-              question.selection = { type, options: parsedOptions }
-            }
-        }
-      }
-
-      this.smartQuestions.push(question)
+    this.questionMatchRegex.lastIndex = 0
+    while ((questionMatch = this.questionMatchRegex.exec(response))) {
+      this.smartQuestions.push(this.parseQuestion(questionMatch))
     }
   }
 
   async preprocess(): Promise<void> {
     try {
       ChatAiService.preprocess(this.user)
-      const aiResponse = await ChatAiService.query(this.prompt)
-      this.parseAiResponse(aiResponse)
-      ConversationsDao.updateOne(this.currentMessage.conversationId, { $set: { smartQuestions: this.smartQuestions } })
+      const stream = await ChatAiService.query(this.prompt, true) as Readable
+
+      return new Promise((resolve, reject) => {
+        let fullResult = ''
+
+        stream.on('data', (data => {
+          try {
+            console.log(data.toString())
+
+            const lines = data.toString().split('\n').filter((line: string) => line.trim() !== '')
+            for (const line of lines) {
+              const chunk = line.toString().replace(/^data: /, '')
+              const isEnd = chunk === '[DONE]'
+              if (isEnd) {
+                this.parseAiResponse(fullResult)
+                ConversationsDao.updateOne(this.currentMessage.conversationId, { $set: { smartQuestions: this.smartQuestions } })
+                resolve()
+              }
+
+              const parsed = JSON.parse(chunk)
+              fullResult += parsed.choices[0].delta?.content || ''
+
+              if (!this.firstQuestion) {
+                this.questionMatchRegex.lastIndex = 0
+                const isFirstQuestionAvailable = this.questionMatchRegex.test(fullResult)
+                if (isFirstQuestionAvailable) {
+                  this.questionMatchRegex.lastIndex = 0
+                  const questionMatches = this.questionMatchRegex.exec(fullResult)
+                  this.firstQuestion = this.parseQuestion(questionMatches)
+                  this.notifyObservers(this.firstQuestion)
+                }
+              }
+            }
+          } catch (error) {
+            reject(error)
+          }
+        }).bind(this))
+      })
 
     } catch (error) {
       // TODO: Handle the error.
@@ -95,28 +177,14 @@ export class StateGoalResponse implements IResponse {
   }
 
   async getResponse(): Promise<Message> {
-    if (this.smartQuestions.length === 0) return null
-
-    const firstQuestion = this.smartQuestions[0]
-    const responseMessage: Message = {
-      authorId: BotUserId,
-      authorName: BotUserName,
-      content: firstQuestion.content,
-      conversationId: this.currentMessage.conversationId,
-      type: MessageTypeAskUser,
-      timestamp: new Date(),
-      parentId: this.currentMessage._id,
-      parentContent: this.currentMessage.content,
-    }
-
-    const messageId = await saveMessage(responseMessage)
-    responseMessage._id = messageId
-
-    return responseMessage
+    return null
   }
 }
 
 export class EmptyResponse implements IResponse {
+  addObserver(observer: IResponseObserver): void {
+  }
+
   async preprocess(): Promise<void> { }
 
   async getResponse(): Promise<Message> {
