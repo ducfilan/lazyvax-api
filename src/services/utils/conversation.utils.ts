@@ -28,6 +28,7 @@ export class ConversationBuilder {
       participants,
       type: this.goalMessage.conversation.type,
       unreadCount: this.goalMessage.conversation.unreadCount,
+      smartQuestions: []
     }
   }
 }

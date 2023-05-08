@@ -1,23 +1,13 @@
-import { BotUserId, BotUserName, MessageTypeAskUser, MessageTypeStateGoal } from "@/common/consts"
+import { BotUserId, BotUserName, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeStateGoal } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import { saveMessage } from "../api/messages.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
-
-type AnswerType =
-  | "text"
-  | "number"
-  | "date"
-  | "selection"
-
-interface Question {
-  content: string;
-  answerType: AnswerType;
-  unit?: string; // example: "days"
-  selection?: { type: "single" | "multiple", options: string[] }
-}
+import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
+import { SmartQuestion } from "@/models/Conversation"
+import { getSmartQuestions, updateConversation, updateSmartQuestionAnswer } from "../api/conversations.services"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void
@@ -26,25 +16,29 @@ export interface IResponse {
 }
 
 interface IResponseObserver {
-  work(question: Question)
+  work(question: SmartQuestion)
 }
 
 export class FirstQuestionObserver implements IResponseObserver {
   constructor(private currentMessage: Message, private callback: Function) { }
 
-  async work(firstQuestion: Question) {
+  async work(smartQuestions: SmartQuestion) {
     const responseMessage: Message = {
       authorId: BotUserId,
       authorName: BotUserName,
-      content: firstQuestion.content,
+      content: smartQuestions.content,
       conversationId: this.currentMessage.conversationId,
-      type: MessageTypeAskUser,
+      type: MessageTypeAskUserSmartQuestion,
       timestamp: new Date(),
       parentId: this.currentMessage._id,
       parentContent: this.currentMessage.content,
     }
 
-    const messageId = await saveMessage(responseMessage)
+    const [_, messageId] = await Promise.all([
+      updateConversation(this.currentMessage.conversationId, { $push: { smartQuestions } }),
+      saveMessage(responseMessage)
+    ])
+
     responseMessage._id = messageId
 
     this.callback(responseMessage)
@@ -53,8 +47,8 @@ export class FirstQuestionObserver implements IResponseObserver {
 
 export class StateGoalResponse implements IResponse {
   private prompt: string
-  private smartQuestions: Question[]
-  private firstQuestion: Question
+  private smartQuestions: SmartQuestion[]
+  private firstQuestion: SmartQuestion
   private firstQuestionObservers: IResponseObserver[]
   private questionMatchRegex: RegExp
 
@@ -77,6 +71,7 @@ export class StateGoalResponse implements IResponse {
   }
 
   private buildPrompt(): string {
+    // TODO: Move to DB/cache and load with other languages.
     return `Give me questions and answer type (I explain below) for me to answer to make this goal S.M.A.R.T. It is important to give me enough question so that after answer those questions, the goal will be S.M.A.R.T.
     Add the answer type, like "date", "number", "text", "selection". If it's "selection", output selection options in this format: [single or multiple]-[option 1||option 2||option n] (specify those options). If it's "number", output the measurement unit next to number if possible, e.g. "number" (days).
 
@@ -94,8 +89,8 @@ export class StateGoalResponse implements IResponse {
     ${this.currentMessage.content.trim()}`
   }
 
-  private parseQuestion(questionMatches: any): Question {
-    const question: Question = {
+  private parseQuestion(questionMatches: any): SmartQuestion {
+    const question: SmartQuestion = {
       content: questionMatches[1],
       answerType: questionMatches[2] || "text",
     }
@@ -144,7 +139,11 @@ export class StateGoalResponse implements IResponse {
               const isEnd = chunk === '[DONE]'
               if (isEnd) {
                 this.parseAiResponse(fullResult)
-                ConversationsDao.updateOne(this.currentMessage.conversationId, { $set: { smartQuestions: this.smartQuestions } })
+                updateConversation(this.currentMessage.conversationId, {
+                  $push: {
+                    smartQuestions: { $each: this.smartQuestions }
+                  }
+                })
                 resolve()
               }
 
@@ -155,6 +154,7 @@ export class StateGoalResponse implements IResponse {
                 this.questionMatchRegex.lastIndex = 0
                 const isFirstQuestionAvailable = this.questionMatchRegex.test(fullResult)
                 if (isFirstQuestionAvailable) {
+                  fullResult = ''
                   this.questionMatchRegex.lastIndex = 0
                   const questionMatches = this.questionMatchRegex.exec(fullResult)
                   this.firstQuestion = this.parseQuestion(questionMatches)
@@ -190,11 +190,49 @@ export class EmptyResponse implements IResponse {
   }
 }
 
+export class AnswerSmartQuestionResponse implements IResponse {
+  constructor(private currentMessage: Message, private user: User) { }
+
+  addObserver(observer: IResponseObserver): void {
+  }
+
+  async preprocess(): Promise<void> {
+    const { conversationId, parentContent, content, authorId } = this.currentMessage
+    await updateSmartQuestionAnswer(conversationId, parentContent, content, authorId)
+  }
+
+  async getResponse(): Promise<Message> {
+    const questions = await getSmartQuestions(this.currentMessage.conversationId)
+    const nextQuestion = questions.find((question: SmartQuestion) => !question.answer)
+
+    const message: Message = {
+      authorId: BotUserId,
+      authorName: BotUserName,
+      content: nextQuestion.content,
+      conversationId: this.currentMessage.conversationId,
+      type: MessageTypeAskUserSmartQuestion,
+      timestamp: new Date(),
+    }
+
+    return message
+  }
+}
+
 export class BotResponseFactory {
   static createResponseBuilder(currentMessage: Message, user: User): IResponse {
     switch (currentMessage.type) {
       case MessageTypeStateGoal:
-        return new StateGoalResponse(currentMessage, user)
+        const builder = new StateGoalResponse(currentMessage, user)
+        builder.addObserver(new FirstQuestionObserver(currentMessage, (responseMessage) => {
+          const conversationId = currentMessage.conversationId.toHexString()
+          responseMessage && emitConversationMessage(conversationId, responseMessage)
+          emitEndTypingUser(conversationId, BotUserName)
+        }))
+
+        return builder
+
+      case MessageTypeAnswerSmartQuestion:
+        return new AnswerSmartQuestionResponse(currentMessage, user)
 
       default:
         return new EmptyResponse()

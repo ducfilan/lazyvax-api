@@ -14,7 +14,7 @@ import { ConversationBuilder } from "../utils/conversation.utils"
 import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
 import { User } from "@/models/User"
 import MessagesDao from "@/dao/messages.dao"
-import { BotResponseFactory, FirstQuestionObserver } from "../utils/message.utils"
+import { BotResponseFactory } from "../utils/message.utils"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -23,15 +23,29 @@ interface ISocket extends Socket {
 
 export const EventNameJoinConversation = "join conversation"
 export const EventNameSendMessage = "send message"
-export const EventNameReceiveConversationMessage = "conversation message"
-export const EventNameReceiveTypingUser = "user typing"
-export const EventNameReceiveEndTypingUser = "user end typing"
+export const EventNameConversationMessage = "conversation message"
+export const EventNameTypingUser = "user typing"
+export const EventNameEndTypingUser = "user end typing"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
 export const EventNameCreateNewGoal = "create goal"
 
+export let io: Server
+
+export function emitConversationMessage(conversationId: string, message: any) {
+  io.in(`conversation:${conversationId}`).emit(EventNameConversationMessage, message)
+}
+
+export function emitEndTypingUser(conversationId: string, userName: any) {
+  io.in(`conversation:${conversationId}`).emit(EventNameEndTypingUser, userName)
+}
+
+export function emitTypingUser(conversationId: string, userName: any) {
+  io.in(`conversation:${conversationId}`).emit(EventNameTypingUser, userName)
+}
+
 export function registerSocketIo(server: HttpServer) {
   ConfigsDao.getAllowedOrigins().then((origins) => {
-    const io = new Server(server, {
+    io = new Server(server, {
       cors: {
         origin: origins,
       },
@@ -60,7 +74,7 @@ export function registerSocketIo(server: HttpServer) {
         console.log('User disconnected')
       })
 
-      async function sendMessageListener(chatMessage: ChatMessage) {
+      async function sendMessageListener(chatMessage: ChatMessage, ack: any) {
         // TODO: Validate message.
 
         try {
@@ -77,21 +91,24 @@ export function registerSocketIo(server: HttpServer) {
           chatMessage.parentId && (message.parentId = new ObjectId(chatMessage.parentId))
 
           const messageId = await saveMessage(message)
+          ack(messageId)
 
-          io.to(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, {
+          emitConversationMessage(chatMessage.conversationId, {
             ...chatMessage,
             id: messageId,
-            senderId: socket.user._id
+            senderId: socket.user._id,
           })
 
-          io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveTypingUser, BotUserName)
+          emitTypingUser(chatMessage.conversationId, BotUserName)
 
           const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
-          builder.addObserver(new FirstQuestionObserver(message, (responseMessage) => {
-            responseMessage && io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveConversationMessage, responseMessage)
-            io.in(`conversation:${chatMessage.conversationId}`).emit(EventNameReceiveEndTypingUser, BotUserName)
-          }))
           await builder.preprocess()
+          const responseMessage = await builder.getResponse()
+          if (responseMessage) {
+            await saveMessage(responseMessage)
+            emitConversationMessage(chatMessage.conversationId, responseMessage)
+            emitEndTypingUser(chatMessage.conversationId, BotUserName)
+          }
         } catch (error) {
           console.log(error)
         }
@@ -128,7 +145,7 @@ export function registerSocketIo(server: HttpServer) {
 
           chatMessage._id = await saveMessage(chatMessage)
 
-          io.in(`conversation:${message.conversationId}`).emit(EventNameReceiveConversationMessage, chatMessage)
+          io.in(`conversation:${message.conversationId}`).emit(EventNameConversationMessage, chatMessage)
         } catch (error) {
           console.log(error)
         }

@@ -104,18 +104,26 @@ export default class ConversationsDao {
     return (await _conversations.insertOne(conversation)).insertedId
   }
 
-  static async findOne(id: ObjectId) {
-    return _conversations.findOne({ _id: id })
+  static async findById(id: ObjectId, projection: any = {}) {
+    return _conversations.findOne({ _id: id }, { projection })
   }
 
-  static async updateOne(_id: ObjectId, updateOperations) {
+  static async findByOne(condition) {
+    return _conversations.findOne(condition)
+  }
+
+  static async updateOne(findCondition, updateOperations) {
     try {
-      await _conversations.findOneAndUpdate({ _id }, updateOperations)
+      await _conversations.findOneAndUpdate(findCondition, updateOperations)
       return true
     } catch (e) {
       console.log(arguments)
       console.error(`Error, ${e}, ${e.stack}`)
       return false
     }
+  }
+
+  static async updateOneById(_id: ObjectId, updateOperations) {
+    return this.updateOne({ _id }, updateOperations)
   }
 }

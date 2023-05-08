@@ -93,8 +93,13 @@ export const MessageTypePlainText = 2
 export const MessageTypeAskQuestionnaires = 3
 export const MessageTypeRunningText = 4
 export const MessageTypeStateGoal = 5
-export const MessageTypeAskUser = 6
-export const MessageTypes = [MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires, MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUser]
+export const MessageTypeAskUserSmartQuestion = 6
+export const MessageTypeAnswerSmartQuestion = 7
+export const MessageTypes = [
+  MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
+  MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
+  MessageTypeAnswerSmartQuestion
+]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
 export const BotUserName = 'Lava'
