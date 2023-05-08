@@ -3,6 +3,24 @@ import { isParticipantInConversation } from "@/services/api/conversations.servic
 import { check, validationResult } from "express-validator"
 import { ObjectId } from "mongodb"
 
+export const validateApiGetConversation = [
+  check('conversationId')
+    .customSanitizer(id => new ObjectId(id))
+    .custom(async (conversationId, { req }) => {
+      const userId = req.user._id
+      if (!isParticipantInConversation(userId, conversationId)) {
+        throw new Error('You are not part of this conversation')
+      }
+    }),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty())
+      return res.status(422).json({ errors: errors.array() })
+
+    next()
+  },
+]
+
 export const validateApiGetMessages = [
   check('skip')
     .not()

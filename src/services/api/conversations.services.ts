@@ -22,7 +22,7 @@ export async function updateSmartQuestionAnswer(conversationId: ObjectId, questi
   return ConversationsDao.updateOne(
     {
       _id: conversationId,
-      'smartQuestions.content': question
+      'smartQuestions.content': question.trim()
     },
     {
       $set: {

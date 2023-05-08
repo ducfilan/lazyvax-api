@@ -1,7 +1,6 @@
 import { BotUserId, BotUserName, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeStateGoal } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
-import ConversationsDao from "@/dao/conversations.dao"
 import { saveMessage } from "../api/messages.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
@@ -91,8 +90,8 @@ export class StateGoalResponse implements IResponse {
 
   private parseQuestion(questionMatches: any): SmartQuestion {
     const question: SmartQuestion = {
-      content: questionMatches[1],
-      answerType: questionMatches[2] || "text",
+      content: questionMatches[1].trim(),
+      answerType: questionMatches[2].trim() || "text",
     }
 
     const properties = questionMatches[3]

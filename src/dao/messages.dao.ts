@@ -3,7 +3,7 @@ import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { MaxInt, MessagesCollectionName } from '@common/consts'
 import { Message } from '@/models/Message'
 
-let _messages: Collection
+let _messages: Collection<Message>
 let _db: Db
 
 export default class MessagesDao {
