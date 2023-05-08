@@ -32,6 +32,7 @@ export const EventNameCreateNewGoal = "create goal"
 export let io: Server
 
 export function emitConversationMessage(conversationId: string, message: any) {
+  message.type = MessageTypeRunningText
   io.in(`conversation:${conversationId}`).emit(EventNameConversationMessage, message)
 }
 
