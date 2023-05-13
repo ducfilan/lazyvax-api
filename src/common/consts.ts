@@ -68,7 +68,8 @@ export const MaxInt = 2147483647
 export const AscOrder = 'asc'
 export const DescOrder = 'desc'
 
-export const CacheKeyUser = (identifier: string) => `user_${identifier}`
+export const CacheKeyUser = (id: string) => `user:${id}`
+export const CacheKeyConversation = (id: string) => `conversation:${id}`
 
 export const CacheTypes = []
 
@@ -95,10 +96,11 @@ export const MessageTypeRunningText = 4
 export const MessageTypeStateGoal = 5
 export const MessageTypeAskUserSmartQuestion = 6
 export const MessageTypeAnswerSmartQuestion = 7
+export const MessageTypeConfirmAllAnswers = 8
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
-  MessageTypeAnswerSmartQuestion
+  MessageTypeAnswerSmartQuestion, MessageTypeConfirmAllAnswers
 ]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')

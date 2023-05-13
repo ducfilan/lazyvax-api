@@ -1,4 +1,5 @@
-import { ConversationTypeGoal, I18nDbCodeGoalFirstMessage } from "@/common/consts"
+import { CacheKeyConversation, ConversationTypeGoal, I18nDbCodeGoalFirstMessage } from "@/common/consts"
+import { delCache, getCache } from "@/common/redis"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import { Conversation, SmartQuestion } from "@/models/Conversation"
@@ -15,10 +16,14 @@ export async function createConversation(conversation: Conversation) {
 }
 
 export async function updateConversation(conversationId: ObjectId, updateOperations) {
+  delCache(CacheKeyConversation(conversationId.toHexString()))
+
   return ConversationsDao.updateOneById(conversationId, updateOperations)
 }
 
 export async function updateSmartQuestionAnswer(conversationId: ObjectId, question: string, answer: string, answerUserId: ObjectId) {
+  delCache(CacheKeyConversation(conversationId.toHexString()))
+
   return ConversationsDao.updateOne(
     {
       _id: conversationId,
@@ -34,6 +39,9 @@ export async function updateSmartQuestionAnswer(conversationId: ObjectId, questi
 }
 
 export async function getSmartQuestions(conversationId: ObjectId): Promise<SmartQuestion[]> {
+  const conversationCache = await getCache(CacheKeyConversation(conversationId.toHexString()))
+  if (conversationCache) return conversationCache.smartQuestions as SmartQuestion[]
+
   const result = await ConversationsDao.findById(conversationId, { smartQuestions: 1 })
   if (!result) return []
 

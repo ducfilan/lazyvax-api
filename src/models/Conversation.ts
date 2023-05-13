@@ -13,14 +13,14 @@ export type Conversation = {
 export type Participant = {
   _id: ObjectId,
   name: string,
-  pictureUrl: string
+  pictureUrl: string,
 }
 
 export type SmartQuestion = {
-  content: string;
-  answerType: AnswerType;
-  unit?: string; // example: "days"
-  selection?: { type: "single" | "multiple", options: string[] }
+  content: string,
+  answerType: AnswerType,
+  unit?: string, // example: "days"
+  selection?: { type: "single" | "multiple", options: string[] },
   answer?: string,
   answerUserId?: ObjectId,
 }

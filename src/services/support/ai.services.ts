@@ -13,7 +13,7 @@ export type AiModelInfo = {
 
 export interface IAiService {
   preprocess(user: User): void
-  query(prompt: string, isReturnStream?: boolean): Promise<string | Readable>
+  query<T>(prompt: string, isReturnStream?: boolean): Promise<T>
 }
 
 export class OpenAiCompletionService implements IAiService {
@@ -54,7 +54,7 @@ export class OpenAiCompletionService implements IAiService {
     this.user = user
   }
 
-  async query(prompt: string): Promise<string> {
+  async query<T>(prompt: string): Promise<T> {
     const userInfo = this.buildUserInfoTemplate(this.user)
 
     const response = await this.client.createCompletion({
@@ -71,7 +71,7 @@ export class OpenAiCompletionService implements IAiService {
       presence_penalty: 0.0,
     })
 
-    return response.data.choices[0].text
+    return response.data.choices[0].text as T
   }
 }
 
@@ -125,7 +125,7 @@ export class OpenAiChatService implements IAiService {
     this.buildSystemMessage(user)
   }
 
-  async query(prompt: string, isReturnStream: boolean = false): Promise<string | Readable> {
+  async query<T>(prompt: string, isReturnStream: boolean = false): Promise<T> {
     const response: any = await this.client.createChatCompletion({
       model: this.modelInfo.name,
       messages: [
@@ -145,10 +145,10 @@ export class OpenAiChatService implements IAiService {
     }, { responseType: isReturnStream ? 'stream' : 'json' })
 
     if (isReturnStream) {
-      return response.data as Readable
+      return response.data as T
     }
 
-    return response.data.choices[0].message.content as string
+    return response.data.choices[0].message.content as T
   }
 }
 
@@ -164,7 +164,6 @@ export class AiServiceFactory {
             return new OpenAiChatService(modelInfo)
 
           default:
-          case AiModeCompletion:
             return new OpenAiCompletionService(modelInfo)
         }
 

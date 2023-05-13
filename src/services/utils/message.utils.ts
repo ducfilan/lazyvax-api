@@ -125,7 +125,7 @@ export class StateGoalResponse implements IResponse {
   async preprocess(): Promise<void> {
     try {
       ChatAiService.preprocess(this.user)
-      const stream = await ChatAiService.query(this.prompt, true) as Readable
+      const stream = await ChatAiService.query<Readable>(this.prompt, true)
 
       return new Promise((resolve, reject) => {
         let fullResult = ''
@@ -179,8 +179,7 @@ export class StateGoalResponse implements IResponse {
 }
 
 export class EmptyResponse implements IResponse {
-  addObserver(observer: IResponseObserver): void {
-  }
+  addObserver(observer: IResponseObserver): void { }
 
   async preprocess(): Promise<void> { }
 
@@ -192,17 +191,29 @@ export class EmptyResponse implements IResponse {
 export class AnswerSmartQuestionResponse implements IResponse {
   constructor(private currentMessage: Message, private user: User) { }
 
-  addObserver(observer: IResponseObserver): void {
-  }
+  addObserver(observer: IResponseObserver): void { }
 
   async preprocess(): Promise<void> {
     const { conversationId, parentContent, content, authorId } = this.currentMessage
     await updateSmartQuestionAnswer(conversationId, parentContent, content, authorId)
   }
 
+  async summarizeSmartQuestions(questions: SmartQuestion[]): Promise<string> {
+    const prompt = questions.map((question) => {
+      return `Q: ${question.content}\nA: ${question.answer}`
+    }).join('\n\n')
+    return ChatAiService.query<string>(prompt)
+  }
+
   async getResponse(): Promise<Message> {
     const questions = await getSmartQuestions(this.currentMessage.conversationId)
     const nextQuestion = questions.find((question: SmartQuestion) => !question.answer)
+
+    const isAllQuestionAnswered = !nextQuestion
+
+    if (isAllQuestionAnswered) {
+      const summary = await this.summarizeSmartQuestions(questions)
+    }
 
     const message: Message = {
       authorId: BotUserId,
