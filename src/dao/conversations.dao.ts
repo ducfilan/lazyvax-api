@@ -145,8 +145,6 @@ export default class ConversationsDao {
   }
 
   static async updateOneById(_id: ObjectId, updateOperations) {
-    await delCache(CacheKeyConversation(_id.toHexString()))
-
     return this.updateOne({ _id }, updateOperations)
   }
 }

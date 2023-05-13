@@ -196,6 +196,8 @@ export class AnswerSmartQuestionResponse implements IResponse {
   addObserver(observer: IResponseObserver): void { }
 
   async preprocess(): Promise<void> {
+    ChatAiService.preprocess(this.user)
+
     const { conversationId, parentContent, content, authorId } = this.currentMessage
     await updateSmartQuestionAnswer(conversationId, parentContent, content, authorId)
   }
@@ -209,7 +211,7 @@ export class AnswerSmartQuestionResponse implements IResponse {
     }).join('\n\n')
 
     const prompt = `${request}\n${qa}`
-    return ChatAiService.query<string>(prompt)
+    return await ChatAiService.query<string>(prompt)
   }
 
   async getResponse(): Promise<Message | null> {
@@ -217,13 +219,13 @@ export class AnswerSmartQuestionResponse implements IResponse {
     if (!conversation) return null
 
     const nextQuestion = conversation.smartQuestions.find((question: SmartQuestion) => !question.answer)
-    let messageContent = nextQuestion.content, messageType = MessageTypeAskUserSmartQuestion
+    let messageContent = nextQuestion?.content, messageType = MessageTypeAskUserSmartQuestion
 
     const isAllQuestionAnswered = !nextQuestion
 
     if (isAllQuestionAnswered) {
       const summary = await this.summarizeSmartQuestions(conversation)
-      ConversationsDao.updateOne(conversation._id,
+      await ConversationsDao.updateOneById(conversation._id,
         {
           $set: {
             description: summary,
@@ -231,7 +233,8 @@ export class AnswerSmartQuestionResponse implements IResponse {
         }
       )
 
-      messageContent = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)[0]
+      const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
+      messageContent = i18ns[0].content
       messageType = MessageTypeConfirmQuestionnaires
     }
 
