@@ -1,10 +1,11 @@
-import messagesServices from '@services/api/messages.services'
+import { getConversation } from '@/services/api/conversations.services'
+import { getMessages } from '@services/api/messages.services'
 
 export default class ConversationsController {
   static async getConversation(req, res) {
     try {
       const { conversationId } = req.params
-      const conversationInfo = await messagesServices.getConversation(conversationId)
+      const conversationInfo = await getConversation(conversationId)
 
       res.status(200).send(conversationInfo)
     } catch (e) {
@@ -16,7 +17,7 @@ export default class ConversationsController {
     try {
       const { conversationId } = req.params
       const { skip, limit } = req.query
-      const messages = await messagesServices.getMessages(conversationId, skip, limit)
+      const messages = await getMessages(conversationId, skip, limit)
 
       res.status(200).send(messages)
     } catch (e) {

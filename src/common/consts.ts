@@ -96,11 +96,12 @@ export const MessageTypeRunningText = 4
 export const MessageTypeStateGoal = 5
 export const MessageTypeAskUserSmartQuestion = 6
 export const MessageTypeAnswerSmartQuestion = 7
-export const MessageTypeConfirmAllAnswers = 8
+export const MessageTypeConfirmQuestionnaires = 8
+export const MessageTypeSummaryQuestionnaires = 9
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
-  MessageTypeAnswerSmartQuestion, MessageTypeConfirmAllAnswers
+  MessageTypeAnswerSmartQuestion, MessageTypeConfirmQuestionnaires, MessageTypeSummaryQuestionnaires
 ]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
@@ -113,3 +114,4 @@ export const I18nDbCodeFirstConversationTitle = 'first-conversation-title'
 export const I18nDbCodeFirstConversationDescription = 'first-conversation-description'
 export const I18nDbCodeIntroduceHowItWorks = 'introduce-how-it-works'
 export const I18nDbCodeGoalFirstMessage = 'goal-first-message'
+export const I18nDbCodeConfirmQuestionnaires = 'confirm-questionnaires'

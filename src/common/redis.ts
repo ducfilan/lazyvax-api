@@ -1,4 +1,6 @@
+import { Conversation } from '@/models/Conversation'
 import Redis from 'ioredis'
+import { ObjectId } from 'mongodb'
 
 let redis: Redis = null
 
@@ -75,4 +77,20 @@ export async function getCache(key: string, ignoreError = true, fallbackValue = 
 
     throw error
   }
+}
+
+export async function getConversationCache(key: string, ignoreError = true, fallbackValue = null): Promise<Conversation | null> {
+  const cachedConversation = await getCache(key, ignoreError, fallbackValue)
+  if (!cachedConversation) return fallbackValue
+
+  cachedConversation.conversationId = new ObjectId(cachedConversation.conversationId)
+  cachedConversation.participants.forEach(p => {
+    p._id && (p._id = new ObjectId(p._id))
+  })
+
+  cachedConversation.smartQuestions?.forEach(q => {
+    q.answerUserId && (q.answerUserId = new ObjectId(q.answerUserId))
+  })
+
+  return cachedConversation as Conversation
 }

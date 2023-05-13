@@ -1,7 +1,8 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { ConversationsCollectionName } from '@common/consts'
+import { CacheKeyConversation, ConversationsCollectionName } from '@common/consts'
 import { Conversation } from '@/models/Conversation'
+import { delCache, getConversationCache, setCache } from '@/common/redis'
 
 let _conversations: Collection<Conversation>
 let _db: Db
@@ -105,7 +106,25 @@ export default class ConversationsDao {
   }
 
   static async findById(id: ObjectId, projection: any = {}) {
-    return _conversations.findOne({ _id: id }, { projection })
+    let conversation = await getConversationCache(CacheKeyConversation(id.toHexString()))
+
+    if (!conversation) {
+      conversation = await _conversations.findOne({ _id: id })
+      conversation && setCache(CacheKeyConversation(id.toHexString()), conversation)
+    }
+
+    if (conversation) {
+      for (const key in projection) {
+        if (Object.prototype.hasOwnProperty.call(projection, key)) {
+          const element = projection[key]
+          if (element && element === 0) {
+            delete conversation[key]
+          }
+        }
+      }
+    }
+
+    return conversation
   }
 
   static async findByOne(condition) {
@@ -114,6 +133,8 @@ export default class ConversationsDao {
 
   static async updateOne(findCondition, updateOperations) {
     try {
+      await delCache(CacheKeyConversation(findCondition._id.toHexString()))
+
       await _conversations.findOneAndUpdate(findCondition, updateOperations)
       return true
     } catch (e) {
@@ -124,6 +145,8 @@ export default class ConversationsDao {
   }
 
   static async updateOneById(_id: ObjectId, updateOperations) {
+    await delCache(CacheKeyConversation(_id.toHexString()))
+
     return this.updateOne({ _id }, updateOperations)
   }
 }

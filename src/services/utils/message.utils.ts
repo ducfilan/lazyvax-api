@@ -1,17 +1,19 @@
-import { BotUserId, BotUserName, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeStateGoal } from "@/common/consts"
+import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeConfirmQuestionnaires, MessageTypeStateGoal } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
 import { saveMessage } from "../api/messages.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
-import { SmartQuestion } from "@/models/Conversation"
-import { getSmartQuestions, updateConversation, updateSmartQuestionAnswer } from "../api/conversations.services"
+import { Conversation, SmartQuestion } from "@/models/Conversation"
+import { getConversation, getSmartQuestions, updateById, updateSmartQuestionAnswer } from "../api/conversations.services"
+import ConversationsDao from "@/dao/conversations.dao"
+import I18nDao from "@/dao/i18n"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void
   preprocess(): Promise<void>
-  getResponse(): Promise<Message>
+  getResponse(): Promise<Message | null>
 }
 
 interface IResponseObserver {
@@ -34,7 +36,7 @@ export class FirstQuestionObserver implements IResponseObserver {
     }
 
     const [_, messageId] = await Promise.all([
-      updateConversation(this.currentMessage.conversationId, { $push: { smartQuestions } }),
+      updateById(this.currentMessage.conversationId, { $push: { smartQuestions } }),
       saveMessage(responseMessage)
     ])
 
@@ -138,7 +140,7 @@ export class StateGoalResponse implements IResponse {
               const isEnd = chunk === '[DONE]'
               if (isEnd) {
                 this.parseAiResponse(fullResult)
-                updateConversation(this.currentMessage.conversationId, {
+                updateById(this.currentMessage.conversationId, {
                   $push: {
                     smartQuestions: { $each: this.smartQuestions }
                   }
@@ -173,7 +175,7 @@ export class StateGoalResponse implements IResponse {
     }
   }
 
-  async getResponse(): Promise<Message> {
+  async getResponse(): Promise<Message | null> {
     return null
   }
 }
@@ -183,7 +185,7 @@ export class EmptyResponse implements IResponse {
 
   async preprocess(): Promise<void> { }
 
-  async getResponse(): Promise<Message> {
+  async getResponse(): Promise<Message | null> {
     return null
   }
 }
@@ -198,29 +200,47 @@ export class AnswerSmartQuestionResponse implements IResponse {
     await updateSmartQuestionAnswer(conversationId, parentContent, content, authorId)
   }
 
-  async summarizeSmartQuestions(questions: SmartQuestion[]): Promise<string> {
-    const prompt = questions.map((question) => {
+  async summarizeSmartQuestions(conversation: Conversation): Promise<string> {
+    // TODO: Move to DB/cache and load with other languages.
+    const request = `Summary this conversation to support the goal: "I want to get IELTS 7.0", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
+
+    const qa = conversation.smartQuestions.map((question) => {
       return `Q: ${question.content}\nA: ${question.answer}`
     }).join('\n\n')
+
+    const prompt = `${request}\n${qa}`
     return ChatAiService.query<string>(prompt)
   }
 
-  async getResponse(): Promise<Message> {
-    const questions = await getSmartQuestions(this.currentMessage.conversationId)
-    const nextQuestion = questions.find((question: SmartQuestion) => !question.answer)
+  async getResponse(): Promise<Message | null> {
+    const conversation = await getConversation(this.currentMessage.conversationId)
+    if (!conversation) return null
+
+    const nextQuestion = conversation.smartQuestions.find((question: SmartQuestion) => !question.answer)
+    let messageContent = nextQuestion.content, messageType = MessageTypeAskUserSmartQuestion
 
     const isAllQuestionAnswered = !nextQuestion
 
     if (isAllQuestionAnswered) {
-      const summary = await this.summarizeSmartQuestions(questions)
+      const summary = await this.summarizeSmartQuestions(conversation)
+      ConversationsDao.updateOne(conversation._id,
+        {
+          $set: {
+            description: summary,
+          }
+        }
+      )
+
+      messageContent = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)[0]
+      messageType = MessageTypeConfirmQuestionnaires
     }
 
     const message: Message = {
       authorId: BotUserId,
       authorName: BotUserName,
-      content: nextQuestion.content,
+      content: messageContent,
       conversationId: this.currentMessage.conversationId,
-      type: MessageTypeAskUserSmartQuestion,
+      type: messageType,
       timestamp: new Date(),
     }
 
