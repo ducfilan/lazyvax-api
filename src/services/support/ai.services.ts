@@ -1,7 +1,6 @@
 import { AiModeChat, AiModeCompletion, AiProviderOpenAi } from '@/common/consts'
 import { User } from '@/models/User'
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai'
-import { Readable } from 'stream'
 
 const AiProviders = [AiProviderOpenAi]
 

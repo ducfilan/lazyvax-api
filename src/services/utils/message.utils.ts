@@ -1,4 +1,4 @@
-import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeConfirmQuestionnaires, MessageTypeStateGoal } from "@/common/consts"
+import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
 import { saveMessage } from "../api/messages.services"
@@ -6,7 +6,7 @@ import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
 import { Conversation, SmartQuestion } from "@/models/Conversation"
-import { getConversation, getSmartQuestions, updateById, updateSmartQuestionAnswer } from "../api/conversations.services"
+import { getConversation, updateById, updateSmartQuestionAnswer } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 
@@ -196,10 +196,45 @@ export class AnswerSmartQuestionResponse implements IResponse {
   addObserver(observer: IResponseObserver): void { }
 
   async preprocess(): Promise<void> {
-    ChatAiService.preprocess(this.user)
-
     const { conversationId, parentContent, content, authorId } = this.currentMessage
     await updateSmartQuestionAnswer(conversationId, parentContent, content, authorId)
+  }
+
+  async getResponse(): Promise<Message | null> {
+    const conversation = await getConversation(this.currentMessage.conversationId)
+    if (!conversation) return null
+
+    const nextQuestion = conversation.smartQuestions.find((question: SmartQuestion) => !question.answer)
+    let messageContent = nextQuestion?.content, messageType = MessageTypeAskUserSmartQuestion
+
+    const isAllQuestionAnswered = !nextQuestion
+
+    if (isAllQuestionAnswered) {
+      const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
+      messageContent = i18ns[0].content
+      messageType = MessageTypeAskConfirmQuestionnaires
+    }
+
+    const message: Message = {
+      authorId: BotUserId,
+      authorName: BotUserName,
+      content: messageContent,
+      conversationId: this.currentMessage.conversationId,
+      type: messageType,
+      timestamp: new Date(),
+    }
+
+    return message
+  }
+}
+
+export class ConfirmYesQuestionnairesResponse implements IResponse {
+  constructor(private currentMessage: Message, private user: User) { }
+
+  addObserver(observer: IResponseObserver): void { }
+
+  async preprocess(): Promise<void> {
+    ChatAiService.preprocess(this.user)
   }
 
   async summarizeSmartQuestions(conversation: Conversation): Promise<string> {
@@ -218,25 +253,18 @@ export class AnswerSmartQuestionResponse implements IResponse {
     const conversation = await getConversation(this.currentMessage.conversationId)
     if (!conversation) return null
 
-    const nextQuestion = conversation.smartQuestions.find((question: SmartQuestion) => !question.answer)
-    let messageContent = nextQuestion?.content, messageType = MessageTypeAskUserSmartQuestion
-
-    const isAllQuestionAnswered = !nextQuestion
-
-    if (isAllQuestionAnswered) {
-      const summary = await this.summarizeSmartQuestions(conversation)
-      await ConversationsDao.updateOneById(conversation._id,
-        {
-          $set: {
-            description: summary,
-          }
+    const summary = await this.summarizeSmartQuestions(conversation)
+    await ConversationsDao.updateOneById(conversation._id,
+      {
+        $set: {
+          description: summary,
         }
-      )
+      }
+    )
 
-      const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
-      messageContent = i18ns[0].content
-      messageType = MessageTypeConfirmQuestionnaires
-    }
+    const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
+    const messageContent = i18ns[0].content
+    const messageType = MessageTypeAckSummaryQuestionnaires
 
     const message: Message = {
       authorId: BotUserId,
@@ -263,6 +291,9 @@ export class BotResponseFactory {
         }))
 
         return builder
+
+      case MessageTypeConfirmYesQuestionnaires:
+        return new ConfirmYesQuestionnairesResponse(currentMessage, user)
 
       case MessageTypeAnswerSmartQuestion:
         return new AnswerSmartQuestionResponse(currentMessage, user)
