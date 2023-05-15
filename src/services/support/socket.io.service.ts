@@ -14,7 +14,7 @@ import { ConversationBuilder } from "../utils/conversation.utils"
 import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
 import { User } from "@/models/User"
 import MessagesDao from "@/dao/messages.dao"
-import { BotResponseFactory } from "../utils/message.utils"
+import { BotResponseFactory } from "../utils/botResponse.factory"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
