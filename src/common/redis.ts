@@ -83,7 +83,7 @@ export async function getConversationCache(key: string, ignoreError = true, fall
   const cachedConversation = await getCache(key, ignoreError, fallbackValue)
   if (!cachedConversation) return fallbackValue
 
-  cachedConversation.conversationId = new ObjectId(cachedConversation.conversationId)
+  cachedConversation._id = new ObjectId(cachedConversation.conversationId)
   cachedConversation.participants.forEach(p => {
     p._id && (p._id = new ObjectId(p._id))
   })
