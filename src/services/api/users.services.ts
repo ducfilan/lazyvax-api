@@ -72,23 +72,19 @@ export async function register(requestBody): Promise<ObjectId> {
 }
 
 export async function update({ _id, email }: User, updateItems) {
-  await Promise.all([delCache(CacheKeyUser(email)), delCache(CacheKeyUser(_id.toHexString()))])
-  return UsersDao.updateOne(_id, { $set: updateItems })
+  return UsersDao.updateOne({ _id, email }, { $set: updateItems })
 }
 
 export async function logout({ _id, email }) {
-  await Promise.all([delCache(CacheKeyUser(email)), delCache(CacheKeyUser(_id.toHexString()))])
 }
 
 export async function addConversation({ _id, email }: User, conversation: Conversation) {
   delete conversation.participants
 
   await UsersDao.updateOne(
-    _id,
+    { _id, email },
     { $push: { conversations: conversation } }
   )
-
-  await Promise.all([delCache(CacheKeyUser(email)), delCache(CacheKeyUser(_id.toHexString()))])
 }
 
 export default {

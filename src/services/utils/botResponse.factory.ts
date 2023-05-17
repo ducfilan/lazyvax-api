@@ -9,6 +9,7 @@ import { Conversation, SmartQuestion } from "@/models/Conversation"
 import { getConversation, updateById, updateSmartQuestionAnswer } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
+import UsersDao from "@/dao/users.dao"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void
@@ -254,12 +255,22 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
     if (!conversation) return null
 
     const summary = await this.summarizeSmartQuestions(conversation)
-    await ConversationsDao.updateOneById(conversation._id,
-      {
-        $set: {
-          description: summary,
-        }
+
+    // TODO: Consider data consistency.
+    await UsersDao.updateOne({
+      _id: this.user._id,
+      email: this.user.email,
+      'conversations._id': conversation._id
+    }, {
+      $set: {
+        'conversations.$.description': summary
       }
+    })
+    await ConversationsDao.updateById(conversation._id, {
+      $set: {
+        description: summary,
+      }
+    }
     )
 
     const i18ns = await I18nDao.getByCode(I18nDbCodeSummarizeQuestionnaires, this.user.locale)

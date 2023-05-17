@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { AgeGroupMaxLength, BotUserId, BotUserName, ConversationTypeGoal, GoalMaxLength, I18nDbCodeFirstConversationDescription, I18nDbCodeFirstConversationTitle, I18nDbCodeFirstMessages, OccupationLength, StudyCourseLength, SupportingLanguages, UsersCollectionName } from '@common/consts'
+import { AgeGroupMaxLength, BotUserId, BotUserName, CacheKeyUser, ConversationTypeGoal, GoalMaxLength, I18nDbCodeFirstConversationDescription, I18nDbCodeFirstConversationTitle, I18nDbCodeFirstMessages, OccupationLength, StudyCourseLength, SupportingLanguages, UsersCollectionName } from '@common/consts'
 import { User } from '@/models/User'
 import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
@@ -10,6 +10,7 @@ import { Message, MessageGroupBuilder } from '@/models/Message'
 import I18nDao from './i18n'
 import { I18n } from '@/models/I18n'
 import { getGreetingTime } from '@/common/utils/stringUtils'
+import { delCache } from '@/common/redis'
 
 let _users: Collection<User>
 let _db: Db
@@ -100,9 +101,12 @@ export default class UsersDao {
     }
   }
 
-  static async updateOne(_id: ObjectId, updateOperations) {
+  static async updateOne(findCondition, updateOperations) {
     try {
-      await _users.findOneAndUpdate({ _id }, updateOperations, defaultProjection)
+      if (!findCondition._id || !findCondition.email) throw new Error('No _id in findCondition')
+
+      await Promise.all([delCache(CacheKeyUser(findCondition.email)), delCache(CacheKeyUser(findCondition._id.toHexString()))])
+      await _users.findOneAndUpdate(findCondition, updateOperations, defaultProjection)
       return true
     } catch (e) {
       console.log(arguments)
@@ -164,7 +168,7 @@ async function generateFirstConversation(locale: LangCode, userInfo: User) {
 }
 
 async function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Promise<Message[]> {
-  const i18nMessages = await I18nDao.getByCode(I18nDbCodeFirstMessages, locale) 
+  const i18nMessages = await I18nDao.getByCode(I18nDbCodeFirstMessages, locale)
 
   const orderToFormatArgs = {
     1: [getGreetingTime(locale)]

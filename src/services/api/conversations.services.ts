@@ -15,7 +15,7 @@ export async function createConversation(conversation: Conversation) {
 }
 
 export async function updateById(conversationId: ObjectId, updateOperations) {
-  return ConversationsDao.updateOneById(conversationId, updateOperations)
+  return ConversationsDao.updateById(conversationId, updateOperations)
 }
 
 export async function updateSmartQuestionAnswer(conversationId: ObjectId, question: string, answer: string, answerUserId: ObjectId) {
