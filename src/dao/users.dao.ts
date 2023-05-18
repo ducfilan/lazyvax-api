@@ -103,7 +103,7 @@ export default class UsersDao {
 
   static async updateOne(findCondition, updateOperations) {
     try {
-      if (!findCondition._id || !findCondition.email) throw new Error('No _id in findCondition')
+      if (!findCondition._id || !findCondition.email) throw new Error('No _id or mail in findCondition')
 
       await Promise.all([delCache(CacheKeyUser(findCondition.email)), delCache(CacheKeyUser(findCondition._id.toHexString()))])
       await _users.findOneAndUpdate(findCondition, updateOperations, defaultProjection)
