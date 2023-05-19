@@ -156,11 +156,11 @@ export class StateGoalResponse implements IResponse {
                 this.questionMatchRegex.lastIndex = 0
                 const isFirstQuestionAvailable = this.questionMatchRegex.test(fullResult)
                 if (isFirstQuestionAvailable) {
-                  fullResult = ''
                   this.questionMatchRegex.lastIndex = 0
                   const questionMatches = this.questionMatchRegex.exec(fullResult)
                   this.firstQuestion = this.parseQuestion(questionMatches)
                   this.notifyObservers(this.firstQuestion)
+                  fullResult = ''
                 }
               }
             }
