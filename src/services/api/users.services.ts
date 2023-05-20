@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import UsersDao from '@dao/users.dao'
 import { isGoogleTokenValid } from '@services/support/google-auth.service'
 import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@common/consts'
-import { delCache, getCache, setCache } from '@common/redis'
+import { getCache, setCache } from '@common/redis'
 import { User } from '@/models/User'
 import { Conversation } from '@/models/Conversation'
 
@@ -80,6 +80,7 @@ export async function logout({ _id, email }) {
 
 export async function addConversation({ _id, email }: User, conversation: Conversation) {
   delete conversation.participants
+  delete conversation.smartQuestions
 
   await UsersDao.updateOne(
     { _id, email },

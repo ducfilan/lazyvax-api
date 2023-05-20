@@ -71,7 +71,7 @@ export default class UsersDao {
                     description: { bsonType: 'string' },
                     unreadCount: { bsonType: 'int' }
                   },
-                  required: ['_id', 'type', 'title', 'unreadCount'],
+                  required: ['_id', 'type', 'title'],
                   additionalProperties: false
                 }
               }
