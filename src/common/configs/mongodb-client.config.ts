@@ -38,6 +38,8 @@ export const injectTables = async () => {
   MessagesDao.injectDB(client)
   ConfigsDao.injectDB(client)
   I18nDao.injectDB(client)
+
+  return client
 }
 
 export const DatabaseName = MONGO_DB

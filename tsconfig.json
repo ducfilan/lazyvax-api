@@ -3,7 +3,9 @@
     "allowJs": true,
     "target": "es2016",
     "outDir": "dist",
-    "typeRoots": ["node_modules/@types"],
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "module": "commonjs",
     "esModuleInterop": true,
     "sourceMap": true,
@@ -14,17 +16,36 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"],
-      "@common/*": ["common/*"],
-      "@controllers/*": ["controllers/*"],
-      "@dao/*": ["dao/*"],
-      "@middlewares/*": ["middlewares/*"],
-      "@models/*": ["models/*"],
-      "@routes/*": ["routes/*"],
-      "@services/*": ["services/*"],
-      "@validators/*": ["validators/*"]
+      "@/*": [
+        "*"
+      ],
+      "@common/*": [
+        "common/*"
+      ],
+      "@controllers/*": [
+        "controllers/*"
+      ],
+      "@dao/*": [
+        "dao/*"
+      ],
+      "@middlewares/*": [
+        "middlewares/*"
+      ],
+      "@models/*": [
+        "models/*"
+      ],
+      "@routes/*": [
+        "routes/*"
+      ],
+      "@services/*": [
+        "services/*"
+      ],
+      "@validators/*": [
+        "validators/*"
+      ]
     }
   },
   "$schema": "https://json.schemastore.org/tsconfig",

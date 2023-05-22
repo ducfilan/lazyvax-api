@@ -1,5 +1,8 @@
 
 import { Config } from '@jest/types'
+import { config } from "dotenv"
+
+config()
 
 const setup = async function (globalConfig: Config.GlobalConfig, projectConfig: Config.ProjectConfig) {
   const OLD_ENV = process.env
