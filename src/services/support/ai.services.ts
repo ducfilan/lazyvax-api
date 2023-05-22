@@ -125,6 +125,8 @@ export class OpenAiChatService implements IAiService {
   }
 
   async query<T>(prompt: string, isReturnStream: boolean = false): Promise<T> {
+    console.log('prompt: ', prompt)
+
     const response: any = await this.client.createChatCompletion({
       model: this.modelInfo.name,
       messages: [
@@ -147,6 +149,7 @@ export class OpenAiChatService implements IAiService {
       return response.data as T
     }
 
+    console.log('response: ', response.data.choices[0].message.content)
     return response.data.choices[0].message.content as T
   }
 }

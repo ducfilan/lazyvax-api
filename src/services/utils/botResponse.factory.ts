@@ -6,7 +6,7 @@ import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
 import { Conversation, SmartQuestion } from "@/models/Conversation"
-import { getConversation, updateById, updateSmartQuestionAnswer } from "../api/conversations.services"
+import { getConversation, updateById as updateConversationById, updateSmartQuestionAnswer } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
@@ -37,7 +37,7 @@ export class FirstQuestionObserver implements IResponseObserver {
     }
 
     const [_, messageId] = await Promise.all([
-      updateById(this.currentMessage.conversationId, { $push: { smartQuestions } }),
+      updateConversationById(this.currentMessage.conversationId, { $push: { smartQuestions } }),
       saveMessage(responseMessage)
     ])
 
@@ -141,7 +141,7 @@ export class StateGoalResponse implements IResponse {
               const isEnd = chunk === '[DONE]'
               if (isEnd) {
                 this.parseAiResponse(fullResult)
-                updateById(this.currentMessage.conversationId, {
+                updateConversationById(this.currentMessage.conversationId, {
                   $push: {
                     smartQuestions: { $each: this.smartQuestions }
                   }
@@ -240,7 +240,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
   async summarizeSmartQuestions(conversation: Conversation): Promise<string> {
     // TODO: Move to DB/cache and load with other languages.
-    const request = `Summary this conversation to support the goal: "I want to get IELTS 7.0", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
+    const request = `Summary this conversation to support the goal: "${conversation.title}", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
 
     const qa = conversation.smartQuestions.map((question) => {
       return `Q: ${question.content}\nA: ${question.answer}`
@@ -266,6 +266,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
         'conversations.$.description': summary
       }
     })
+
     await ConversationsDao.updateById(conversation._id, {
       $set: {
         description: summary,
