@@ -21,12 +21,7 @@ export default class TokenController {
       const tokens = await refreshAccessToken(refreshToken)
       return res.json(tokens)
     } catch (e) {
-      console.log(`api, ${e}`)
-      if (e.code) {
-        res.status(parseInt(e.code)).json(e)
-      } else {
-        res.status(500).json(e)
-      }
+      res.status(500).json(e)
     }
   }
 
