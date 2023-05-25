@@ -102,13 +102,18 @@ export const MessageTypeConfirmYesQuestionnaires = 10
 export const MessageTypeConfirmNoQuestionnaires = 11
 export const MessageTypeAckSummaryQuestionnaires = 12
 export const MessageTypeSuggestMilestoneAndActions = 13
+export const MessageTypeAddMilestoneAndActions = 14
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
   MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeSummaryQuestionnaires,
   MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
-  MessageTypeSuggestMilestoneAndActions
+  MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions
 ]
+
+export const MilestoneSourceSuggestion = 1
+export const MilestoneSourceUser = 2
+export const MilestoneSources = [MilestoneSourceSuggestion, MilestoneSourceUser]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
 export const BotUserName = 'Lava'

@@ -1,4 +1,4 @@
-import { MessageTypes, SupportingLanguages } from "./consts";
+import { MessageTypes, MilestoneSources, SupportingLanguages } from "./consts";
 
 export type LangCode = typeof SupportingLanguages[number]
 
@@ -33,3 +33,11 @@ export type CreateNewGoalMessage = {
     }[],
   },
 }
+
+export type AddMilestoneAndActionsMessage = {
+  conversationId: string,
+  milestone: string,
+  actions: string[]
+}
+
+export type MilestoneSource = typeof MilestoneSources[number]

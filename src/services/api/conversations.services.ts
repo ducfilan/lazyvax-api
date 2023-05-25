@@ -1,7 +1,7 @@
 import { ConversationTypeGoal, I18nDbCodeGoalFirstMessage } from "@/common/consts"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
-import { Conversation, SmartQuestion } from "@/models/Conversation"
+import { Conversation, SmartQuestion, UserMilestone } from "@/models/Conversation"
 import { I18n } from "@/models/I18n"
 import { ObjectId } from "mongodb"
 
@@ -16,6 +16,19 @@ export async function createConversation(conversation: Conversation) {
 
 export async function updateById(conversationId: ObjectId, updateOperations) {
   return ConversationsDao.updateById(conversationId, updateOperations)
+}
+
+export async function addUserMilestone(conversationId: ObjectId, milestone: UserMilestone) {
+  return ConversationsDao.updateOne(
+    {
+      _id: conversationId,
+    },
+    {
+      $push: {
+        userMilestones: milestone
+      }
+    }
+  )
 }
 
 export async function updateSmartQuestionAnswer(conversationId: ObjectId, question: string, answer: string, answerUserId: ObjectId) {
@@ -41,10 +54,19 @@ export async function getConversation(conversationId: ObjectId): Promise<Convers
 }
 
 export async function getSmartQuestions(conversationId: ObjectId): Promise<SmartQuestion[]> {
+  // TODO: Consider separate getting out of getConversation.
   const conversation = await getConversation(conversationId)
   if (!conversation) return []
 
-  return conversation.smartQuestions as SmartQuestion[]
+  return conversation.smartQuestions
+}
+
+export async function getUserMilestones(conversationId: ObjectId): Promise<UserMilestone[]> {
+  // TODO: Consider separate getting out of getConversation.
+  const conversation = await getConversation(conversationId)
+  if (!conversation) return []
+
+  return conversation.userMilestones
 }
 
 export async function generateFirstMessages(conversationType: string, locale: string): Promise<I18n[]> {

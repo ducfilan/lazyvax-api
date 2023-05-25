@@ -1,11 +1,11 @@
-import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires } from "@/common/consts"
+import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires, MessageTypeAddMilestoneAndActions, MilestoneSourceSuggestion, MessageTypeSuggestMilestoneAndActions, MessageTypePlainText } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
 import { Conversation, MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
-import { getConversation, updateById as updateConversationById, updateSmartQuestionAnswer } from "../api/conversations.services"
+import { getConversation, getSmartQuestions, getUserMilestones, updateById as updateConversationById, updateSmartQuestionAnswer } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
@@ -46,6 +46,9 @@ export class BotResponseFactory {
 
       case MessageTypeAnswerSmartQuestion:
         return new AnswerSmartQuestionResponse(currentMessage, user)
+
+      case MessageTypeAddMilestoneAndActions:
+        return new AddMilestoneAndActionsResponse(currentMessage, user)
 
       default:
         return new EmptyResponse()
@@ -214,10 +217,10 @@ export class AnswerSmartQuestionResponse implements IResponse {
   }
 
   async getResponses(): Promise<Message[]> {
-    const conversation = await getConversation(this.currentMessage.conversationId)
-    if (!conversation) return null
+    const smartQuestions = await getSmartQuestions(this.currentMessage.conversationId)
+    if (!smartQuestions) return null
 
-    const nextQuestion = conversation.smartQuestions.find((question: SmartQuestion) => !question.answer)
+    const nextQuestion = smartQuestions.find((question: SmartQuestion) => !question.answer)
     let messageContent = nextQuestion?.content, messageType = MessageTypeAskUserSmartQuestion
 
     const isAllQuestionAnswered = !nextQuestion
@@ -305,7 +308,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
   }
 
   async postprocess(): Promise<void> {
-    this.buildSuggestMilestoneAndActions()
+    await this.buildSuggestMilestoneAndActions()
   }
 
   private async buildSuggestMilestoneAndActions() {
@@ -340,36 +343,34 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
     const stream = await ChatAiService.query<Readable>(prompt, true)
 
-    return new Promise((resolve, reject) => {
-      let aiResponse = ''
+    let aiResponse = ''
 
-      stream.on('data', (data => {
-        try {
-          const lines = data.toString().split('\n').filter((line: string) => line.trim() !== '')
-          for (const line of lines) {
-            const chunk = line.toString().replace(/^data: /, '')
+    stream.on('data', (data => {
+      try {
+        const lines = data.toString().split('\n').filter((line: string) => line.trim() !== '')
+        for (const line of lines) {
+          const chunk = line.toString().replace(/^data: /, '')
 
-            const isEnd = chunk === '[DONE]'
-            if (isEnd) {
-              this.parseAdditionalContent(aiResponse)
-            } else {
-              const parsedObj = JSON.parse(chunk)
-              aiResponse += parsedObj.choices[0].delta?.content || ''
-            }
-
-            this.milestoneMatchRegex.lastIndex = 0
-            const isMilestoneAvailable = this.milestoneMatchRegex.test(aiResponse)
-            if (isMilestoneAvailable) {
-              this.parseMilestoneSuggestion(aiResponse)
-
-              aiResponse = ''
-            }
+          const isEnd = chunk === '[DONE]'
+          if (isEnd) {
+            this.parseAdditionalContent(aiResponse)
+          } else {
+            const parsedObj = JSON.parse(chunk)
+            aiResponse += parsedObj.choices[0].delta?.content || ''
           }
-        } catch (error) {
-          reject(error)
+
+          this.milestoneMatchRegex.lastIndex = 0
+          const isMilestoneAvailable = this.milestoneMatchRegex.test(aiResponse)
+          if (isMilestoneAvailable) {
+            this.parseMilestoneSuggestion(aiResponse)
+
+            aiResponse = ''
+          }
         }
-      }).bind(this))
-    })
+      } catch (error) {
+        console.log('fetch milestone suggestion failed: ', error)
+      }
+    }).bind(this))
   }
 
   private parseMilestoneSuggestion(aiResponse: string) {
@@ -434,4 +435,44 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
       timestamp: new Date(),
     }
   }
+}
+
+export class AddMilestoneAndActionsResponse implements IResponse {
+  constructor(private currentMessage: Message, private user: User) { }
+
+  addObserver(observer: IResponseObserver): void { }
+
+  async preprocess(): Promise<void> {
+  }
+
+  async getResponses(): Promise<Message[]> {
+    const conversation = await getConversation(this.currentMessage.conversationId)
+    if (!conversation) return null
+
+    const sentSuggestionsCount = conversation.userMilestones.filter(m => m.source === MilestoneSourceSuggestion).length
+    const isAllSuggestionSent = sentSuggestionsCount >= conversation.milestoneSuggestions.milestones.length
+
+    let messageContent: string, messageType: number
+    if (isAllSuggestionSent) {
+      messageContent = conversation.milestoneSuggestions.additionalContent
+      messageType = MessageTypePlainText
+    } else {
+      const nextMilestoneSuggestion = conversation.milestoneSuggestions.milestones[sentSuggestionsCount]
+      messageType = MessageTypeSuggestMilestoneAndActions
+      messageContent = JSON.stringify(nextMilestoneSuggestion)
+    }
+
+    const message: Message = {
+      authorId: BotUserId,
+      authorName: BotUserName,
+      content: messageContent,
+      conversationId: this.currentMessage.conversationId,
+      type: messageType,
+      timestamp: new Date(),
+    }
+
+    return [message]
+  }
+
+  async postprocess(): Promise<void> { }
 }

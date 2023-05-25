@@ -1,3 +1,4 @@
+import { MilestoneSource } from "@/common/types"
 import { ObjectId } from "mongodb"
 
 export type Conversation = {
@@ -6,6 +7,7 @@ export type Conversation = {
   title: string,
   description: string,
   unreadCount: number,
+  userMilestones?: UserMilestone[],
   milestonesFetchDone?: boolean,
   milestoneSuggestions?: {
     milestones: MilestoneSuggestion[],
@@ -19,6 +21,18 @@ export type Participant = {
   _id: ObjectId,
   name: string,
   pictureUrl: string,
+}
+
+export type UserMilestone = {
+  _id: ObjectId,
+  milestone: string,
+  source: MilestoneSource,
+  isDone?: boolean,
+  actions: {
+    _id: ObjectId,
+    action: string,
+    isDone?: boolean,
+  }[]
 }
 
 export type MilestoneSuggestion = {

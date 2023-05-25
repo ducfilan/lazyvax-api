@@ -30,12 +30,50 @@ export default class ConversationsDao {
               title: { bsonType: 'string' },
               description: { bsonType: 'string' },
               unreadCount: { bsonType: 'int' },
+              userMilestones: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: [
+                    'milestone',
+                  ],
+                  properties: {
+                    _id: {
+                      bsonType: 'objectId'
+                    },
+                    milestone: {
+                      bsonType: 'string'
+                    },
+                    isDone: {
+                      bsonType: 'bool'
+                    },
+                    actions: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          _id: {
+                            bsonType: 'objectId'
+                          },
+                          action: {
+                            bsonType: 'string'
+                          },
+                          isDone: {
+                            bsonType: 'bool'
+                          },
+                        },
+                        additionalProperties: false
+                      }
+                    }
+                  },
+                  additionalProperties: false
+                }
+              },
               milestonesFetchDone: { bsonType: 'bool' },
               milestoneSuggestions: {
                 type: 'object',
                 required: [
-                  'milestones',
-                  'additionalContent'
+                  'milestones'
                 ],
                 properties: {
                   milestones: {
