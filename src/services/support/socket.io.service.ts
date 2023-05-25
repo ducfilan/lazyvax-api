@@ -190,7 +190,7 @@ export function registerSocketIo(server: HttpServer) {
             source: MilestoneSourceSuggestion,
             actions: message.actions.map(action => ({
               _id: new ObjectId(),
-              action: action,
+              action,
             })),
           })
           ack(milestoneId)

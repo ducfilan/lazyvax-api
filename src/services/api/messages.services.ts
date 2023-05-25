@@ -4,7 +4,6 @@ import { Message } from '@/models/Message'
 import { ObjectId } from 'mongodb'
 
 export async function saveMessage(message: Message) {
-  console.log('saveMessage', message)
   return MessagesDao.insertOne(message)
 }
 

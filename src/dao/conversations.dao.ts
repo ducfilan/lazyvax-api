@@ -44,6 +44,9 @@ export default class ConversationsDao {
                     milestone: {
                       bsonType: 'string'
                     },
+                    source: {
+                      bsonType: 'number'
+                    },
                     isDone: {
                       bsonType: 'bool'
                     },
