@@ -101,11 +101,13 @@ export const MessageTypeSummaryQuestionnaires = 9
 export const MessageTypeConfirmYesQuestionnaires = 10
 export const MessageTypeConfirmNoQuestionnaires = 11
 export const MessageTypeAckSummaryQuestionnaires = 12
+export const MessageTypeSuggestMilestoneAndActions = 13
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
   MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeSummaryQuestionnaires,
-  MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires
+  MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
+  MessageTypeSuggestMilestoneAndActions
 ]
 
 export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')

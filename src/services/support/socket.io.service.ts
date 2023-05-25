@@ -103,12 +103,16 @@ export function registerSocketIo(server: HttpServer) {
 
           const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
           await builder.preprocess()
-          const responseMessage = await builder.getResponse()
-          if (responseMessage) {
-            await saveMessage(responseMessage)
-            emitConversationMessage(chatMessage.conversationId, responseMessage)
+          const responseMessages = await builder.getResponses()
+          if (responseMessages.length) {
+            for (const responseMessage of responseMessages) {
+              await saveMessage(responseMessage)
+              emitConversationMessage(chatMessage.conversationId, responseMessage)
+            }
+
             emitEndTypingUser(chatMessage.conversationId, BotUserName)
           }
+          builder.postprocess()
         } catch (error) {
           console.log(error)
         }

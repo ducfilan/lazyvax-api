@@ -6,6 +6,11 @@ export type Conversation = {
   title: string,
   description: string,
   unreadCount: number,
+  milestonesFetchDone?: boolean,
+  milestoneSuggestions?: {
+    milestones: MilestoneSuggestion[],
+    additionalContent?: string,
+  },
   smartQuestions?: SmartQuestion[],
   participants: Participant[],
 }
@@ -14,6 +19,11 @@ export type Participant = {
   _id: ObjectId,
   name: string,
   pictureUrl: string,
+}
+
+export type MilestoneSuggestion = {
+  milestone: string,
+  actions: string[],
 }
 
 export type SmartQuestion = {

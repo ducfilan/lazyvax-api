@@ -1,49 +1,55 @@
 import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
-import { saveMessage } from "../api/messages.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
-import { Conversation, SmartQuestion } from "@/models/Conversation"
+import { Conversation, MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
 import { getConversation, updateById as updateConversationById, updateSmartQuestionAnswer } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
+import { ObjectId } from "mongodb"
+import { MessageType } from "@/common/types"
+import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver } from "./responseObservers"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void
   preprocess(): Promise<void>
-  getResponse(): Promise<Message | null>
+  getResponses(): Promise<Message[]>
+  postprocess(): Promise<void>
 }
 
-interface IResponseObserver {
-  work(question: SmartQuestion)
-}
+export class BotResponseFactory {
+  static createResponseBuilder(currentMessage: Message, user: User): IResponse {
+    switch (currentMessage.type) {
+      case MessageTypeStateGoal:
+        const builderStateGoal = new StateGoalResponse(currentMessage, user)
+        builderStateGoal.addObserver(new FirstQuestionObserver(currentMessage, (responseMessage) => {
+          const conversationId = currentMessage.conversationId.toHexString()
+          responseMessage && emitConversationMessage(conversationId, responseMessage)
+          emitEndTypingUser(conversationId, BotUserName)
+        }))
 
-export class FirstQuestionObserver implements IResponseObserver {
-  constructor(private currentMessage: Message, private callback: Function) { }
+        return builderStateGoal
 
-  async work(smartQuestions: SmartQuestion) {
-    const responseMessage: Message = {
-      authorId: BotUserId,
-      authorName: BotUserName,
-      content: smartQuestions.content,
-      conversationId: this.currentMessage.conversationId,
-      type: MessageTypeAskUserSmartQuestion,
-      timestamp: new Date(),
-      parentId: this.currentMessage._id,
-      parentContent: this.currentMessage.content,
+      case MessageTypeConfirmYesQuestionnaires:
+        const builderSummary = new ConfirmYesQuestionnairesResponse(currentMessage, user)
+        builderSummary.addObserver(new MilestoneSuggestionObserver(currentMessage, (responseMessage) => {
+          console.log('responseMessage', responseMessage)
+
+          const conversationId = currentMessage.conversationId.toHexString()
+          responseMessage && emitConversationMessage(conversationId, responseMessage)
+          emitEndTypingUser(conversationId, BotUserName)
+        }))
+        return builderSummary
+
+      case MessageTypeAnswerSmartQuestion:
+        return new AnswerSmartQuestionResponse(currentMessage, user)
+
+      default:
+        return new EmptyResponse()
     }
-
-    const [_, messageId] = await Promise.all([
-      updateConversationById(this.currentMessage.conversationId, { $push: { smartQuestions } }),
-      saveMessage(responseMessage)
-    ])
-
-    responseMessage._id = messageId
-
-    this.callback(responseMessage)
   }
 }
 
@@ -176,8 +182,11 @@ export class StateGoalResponse implements IResponse {
     }
   }
 
-  async getResponse(): Promise<Message | null> {
-    return null
+  async getResponses(): Promise<Message[]> {
+    return []
+  }
+
+  async postprocess(): Promise<void> {
   }
 }
 
@@ -186,8 +195,11 @@ export class EmptyResponse implements IResponse {
 
   async preprocess(): Promise<void> { }
 
-  async getResponse(): Promise<Message | null> {
-    return null
+  async getResponses(): Promise<Message[]> {
+    return []
+  }
+
+  async postprocess(): Promise<void> {
   }
 }
 
@@ -201,7 +213,7 @@ export class AnswerSmartQuestionResponse implements IResponse {
     await updateSmartQuestionAnswer(conversationId, parentContent, content, authorId)
   }
 
-  async getResponse(): Promise<Message | null> {
+  async getResponses(): Promise<Message[]> {
     const conversation = await getConversation(this.currentMessage.conversationId)
     if (!conversation) return null
 
@@ -225,24 +237,43 @@ export class AnswerSmartQuestionResponse implements IResponse {
       timestamp: new Date(),
     }
 
-    return message
+    return [message]
+  }
+
+  async postprocess(): Promise<void> {
   }
 }
 
 export class ConfirmYesQuestionnairesResponse implements IResponse {
-  constructor(private currentMessage: Message, private user: User) { }
+  private conversation: Conversation
+  private milestoneSuggestionObservers: IResponseObserver[] = []
+  private milestoneMatchRegex = /@#M#(?<milestone>[\s\S]*?)#M#(?<actions>\s*#A#[\s\S]*?#A#+)@/g
+  private actionMatchRegex = /#A#(?<action>[\s\S]*?)#A#/g
+  private additionalContentMatchRegex = /#E#(?<content>[\s\S]*?)#E#/g
 
-  addObserver(observer: IResponseObserver): void { }
+  constructor(private currentMessage: Message, private user: User) {
+  }
+
+  addObserver(observer: IResponseObserver): void {
+    this.milestoneSuggestionObservers.push(observer);
+  }
+
+  notifyObservers(data: any): void {
+    for (const observer of this.milestoneSuggestionObservers) {
+      observer.work(data)
+    }
+  }
 
   async preprocess(): Promise<void> {
+    this.conversation = await getConversation(this.currentMessage.conversationId)
     ChatAiService.preprocess(this.user)
   }
 
-  async summarizeSmartQuestions(conversation: Conversation): Promise<string> {
+  async summarizeSmartQuestions(): Promise<string> {
     // TODO: Move to DB/cache and load with other languages.
-    const request = `Summary this conversation to support the goal: "${conversation.title}", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
+    const request = `Summary this conversation to support the goal: "${this.conversation.title}", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
 
-    const qa = conversation.smartQuestions.map((question) => {
+    const qa = this.conversation.smartQuestions.map((question) => {
       return `Q: ${question.content}\nA: ${question.answer}`
     }).join('\n\n')
 
@@ -250,68 +281,157 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
     return await ChatAiService.query<string>(prompt)
   }
 
-  async getResponse(): Promise<Message | null> {
-    const conversation = await getConversation(this.currentMessage.conversationId)
-    if (!conversation) return null
+  async getResponses(): Promise<Message[]> {
+    if (!this.conversation) return null
 
-    const summary = await this.summarizeSmartQuestions(conversation)
+    const ackSummaryMessages = await this.buildAckSummaryMessages()
+
+    return ackSummaryMessages
+  }
+
+  private async buildAckSummaryMessages(): Promise<Message[]> {
+    // const summary = await this.summarizeSmartQuestions()
+    const summary = "I want to achieve an IELTS score of 7.0 by August 1, 2024. I can dedicate 5 hours per week to studying, and I need to improve my writing and speaking skills. I don't have any study materials or a plan yet, but I am motivated by the requirement to immigrate to Australia and my desire to improve my English ability overall."
+
+    this.updateDescription(this.conversation._id, summary)
+
+    const i18ns = await I18nDao.getByCode(I18nDbCodeSummarizeQuestionnaires, this.user.locale)
+    const messageType = MessageTypeAckSummaryQuestionnaires
+
+    const message1 = this.buildBotMessage(i18ns[0].content, messageType)
+    const message2 = this.buildBotMessage(i18ns[1].content, messageType)
+
+    return [message1, message2]
+  }
+
+  async postprocess(): Promise<void> {
+    this.buildSuggestMilestoneAndActions()
+  }
+
+  private async buildSuggestMilestoneAndActions() {
+    const prompt = `My goal: "${this.conversation.description}"
+    I want you to break it down to very manageable, specific, executable, achievable milestones to check over time when each one is achieved. Make it easier to take action and harder to procrastinate. Make it enough to reach the goal after finishing all milestones. Make milestones and actions very concise, as concise as possible but enough information.
+    
+    ###Answer template:###
+    @#M#{milestone 1}#M#
+    #A#{milestone 1's action 1}#A#
+    #A#{milestone 1's action 2}#A#
+    #A#{milestone 1's action n}#A#@
+    @#M#{milestone 2}#M#
+    #A#{milestone 2's action 1}#A#
+    #A#{milestone 2's action 2}#A#
+    #A#{milestone 2's action n}#A#@
+    @#M#{milestone n}#M#
+    #A#{milestone n's action 1}#A#
+    #A#{milestone n's action 2}#A#
+    #A#{milestone n's action n}#A#@
+    #E#{Anything else you want to say concisely}#E#
+    
+    ###Sample:###
+    @#M#Milestone 1: Define Product Vision#M#
+    #A#Clearly articulate the problem your software product aims to solve.#A#
+    #A#Identify the target audience and understand their needs and pain points.#A#
+    #A#Visualize the positive impact your product will have on users' lives.#A#@
+    @#M#Milestone 2: Build a Cross-Functional Team#M#
+    #A#Identify and recruit team members with complementary skills in development, marketing, and business.#A#
+    #A#Define roles and responsibilities for each team member to ensure smooth collaboration.#A#
+    #A#Establish effective communication channels to foster teamwork and shared vision.#A#@
+    #E#Remember, changing the world requires persistence, adaptability, and a strong belief in your product's potential. Stay committed to your vision, seek feedback from users, and continuously iterate to improve your software product. Surround yourself with a supportive team and leverage their expertise. Your determination and dedication will pave the way for a product that positively impacts people's lives. Good luck on your journey to create meaningful change!#E#`
+
+    const stream = await ChatAiService.query<Readable>(prompt, true)
+
+    return new Promise((resolve, reject) => {
+      let aiResponse = ''
+
+      stream.on('data', (data => {
+        try {
+          const lines = data.toString().split('\n').filter((line: string) => line.trim() !== '')
+          for (const line of lines) {
+            const chunk = line.toString().replace(/^data: /, '')
+
+            const isEnd = chunk === '[DONE]'
+            if (isEnd) {
+              this.parseAdditionalContent(aiResponse)
+            } else {
+              const parsedObj = JSON.parse(chunk)
+              aiResponse += parsedObj.choices[0].delta?.content || ''
+            }
+
+            this.milestoneMatchRegex.lastIndex = 0
+            const isMilestoneAvailable = this.milestoneMatchRegex.test(aiResponse)
+            if (isMilestoneAvailable) {
+              this.parseMilestoneSuggestion(aiResponse)
+
+              aiResponse = ''
+            }
+          }
+        } catch (error) {
+          reject(error)
+        }
+      }).bind(this))
+    })
+  }
+
+  private parseMilestoneSuggestion(aiResponse: string) {
+    this.milestoneMatchRegex.lastIndex = 0
+    let milestoneMatch: RegExpExecArray
+    while ((milestoneMatch = this.milestoneMatchRegex.exec(aiResponse)) != null) {
+      const milestone = milestoneMatch.groups?.milestone.trim()
+
+      let actions = [], actionsMatch: RegExpExecArray
+      while ((actionsMatch = this.actionMatchRegex.exec(milestoneMatch.groups?.actions)) != null) {
+        const action = actionsMatch.groups?.action?.trim()
+        action && actions.push(action)
+      }
+
+      const milestoneSuggestion: MilestoneSuggestion = { milestone, actions }
+
+      this.notifyObservers(milestoneSuggestion)
+    }
+  }
+
+  private parseAdditionalContent(aiResponse: string) {
+    let additionalContentMatch: RegExpExecArray
+    this.additionalContentMatchRegex.lastIndex = 0
+    while ((additionalContentMatch = this.additionalContentMatchRegex.exec(aiResponse))) {
+      updateConversationById(this.currentMessage.conversationId, {
+        $set: {
+          'milestoneSuggestions.additionalContent': additionalContentMatch.groups?.content.trim()
+        }
+      })
+    }
+  }
+
+  private async updateDescription(conversationId: ObjectId, description: string) {
+    this.conversation.description = description
 
     // TODO: Consider data consistency.
     await UsersDao.updateOne({
       _id: this.user._id,
       email: this.user.email,
-      'conversations._id': conversation._id
+      'conversations._id': conversationId
     }, {
       $set: {
-        'conversations.$.description': summary
+        'conversations.$.description': description
       }
     })
 
-    await ConversationsDao.updateById(conversation._id, {
+    await ConversationsDao.updateById(conversationId, {
       $set: {
-        description: summary,
+        description: description,
       }
     }
     )
+  }
 
-    const i18ns = await I18nDao.getByCode(I18nDbCodeSummarizeQuestionnaires, this.user.locale)
-    const messageContent = i18ns[0].content
-    const messageType = MessageTypeAckSummaryQuestionnaires
-
-    const message: Message = {
+  private buildBotMessage(messageContent: string, messageType: MessageType): Message {
+    return {
       authorId: BotUserId,
       authorName: BotUserName,
       content: messageContent,
       conversationId: this.currentMessage.conversationId,
       type: messageType,
       timestamp: new Date(),
-    }
-
-    return message
-  }
-}
-
-export class BotResponseFactory {
-  static createResponseBuilder(currentMessage: Message, user: User): IResponse {
-    switch (currentMessage.type) {
-      case MessageTypeStateGoal:
-        const builder = new StateGoalResponse(currentMessage, user)
-        builder.addObserver(new FirstQuestionObserver(currentMessage, (responseMessage) => {
-          const conversationId = currentMessage.conversationId.toHexString()
-          responseMessage && emitConversationMessage(conversationId, responseMessage)
-          emitEndTypingUser(conversationId, BotUserName)
-        }))
-
-        return builder
-
-      case MessageTypeConfirmYesQuestionnaires:
-        return new ConfirmYesQuestionnairesResponse(currentMessage, user)
-
-      case MessageTypeAnswerSmartQuestion:
-        return new AnswerSmartQuestionResponse(currentMessage, user)
-
-      default:
-        return new EmptyResponse()
     }
   }
 }
