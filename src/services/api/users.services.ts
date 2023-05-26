@@ -81,6 +81,8 @@ export async function logout({ _id, email }) {
 export async function addConversation({ _id, email }: User, conversation: Conversation) {
   delete conversation.participants
   delete conversation.smartQuestions
+  delete conversation.userMilestones
+  delete conversation.milestoneSuggestions
 
   await UsersDao.updateOne(
     { _id, email },
