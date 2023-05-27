@@ -43,7 +43,9 @@ export async function register(requestBody): Promise<ObjectId> {
     name, email, locale, picture: pictureUrl
   } = requestBody
 
-  locale = locale.substring(0, 2)
+  // TODO: Fixed en first.
+  //locale = locale.substring(0, 2)
+  locale = DefaultLangCode
   locale = SupportingLanguagesMap[locale] ? locale : DefaultLangCode
 
   let userInfo = {
