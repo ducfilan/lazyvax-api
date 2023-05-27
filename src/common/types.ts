@@ -36,8 +36,14 @@ export type CreateNewGoalMessage = {
 
 export type AddMilestoneAndActionsMessage = {
   conversationId: string,
+  milestoneId: string,
   milestone: string,
   actions: string[]
+}
+
+export type NextMilestoneAndActionsMessage = {
+  conversationId: string,
+  milestoneId: string,
 }
 
 export type MilestoneSource = typeof MilestoneSources[number]

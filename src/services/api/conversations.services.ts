@@ -31,6 +31,21 @@ export async function addUserMilestone(conversationId: ObjectId, milestone: User
   )
 }
 
+
+export async function updateSuggestedMilestone(conversationId: ObjectId, milestoneId: ObjectId, isSuggested: boolean = true) {
+  return ConversationsDao.updateOne(
+    {
+      _id: conversationId,
+      'milestoneSuggestions.milestones._id': milestoneId
+    },
+    {
+      $set: {
+        'milestoneSuggestions.milestones.$.isSuggested': isSuggested
+      }
+    }
+  )
+}
+
 export async function updateSmartQuestionAnswer(conversationId: ObjectId, question: string, answer: string, answerUserId: ObjectId) {
   return ConversationsDao.updateOne(
     {

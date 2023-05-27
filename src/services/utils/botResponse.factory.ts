@@ -1,11 +1,11 @@
-import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires, MessageTypeAddMilestoneAndActions, MilestoneSourceSuggestion, MessageTypeSuggestMilestoneAndActions, MessageTypePlainText } from "@/common/consts"
+import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires, MessageTypeAddMilestoneAndActions, MilestoneSourceSuggestion, MessageTypeSuggestMilestoneAndActions, MessageTypePlainText, MessageTypeNextMilestoneAndActions } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
 import { Conversation, MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
-import { getConversation, getSmartQuestions, getUserMilestones, updateById as updateConversationById, updateSmartQuestionAnswer } from "../api/conversations.services"
+import { getConversation, getSmartQuestions, getUserMilestones, updateById as updateConversationById, updateSmartQuestionAnswer, updateSuggestedMilestone } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
@@ -48,7 +48,8 @@ export class BotResponseFactory {
         return new AnswerSmartQuestionResponse(currentMessage, user)
 
       case MessageTypeAddMilestoneAndActions:
-        return new AddMilestoneAndActionsResponse(currentMessage, user)
+      case MessageTypeNextMilestoneAndActions:
+        return new NextMilestoneAndActionsResponse(currentMessage, user)
 
       default:
         return new EmptyResponse()
@@ -293,10 +294,10 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
   }
 
   private async buildAckSummaryMessages(): Promise<Message[]> {
-    // const summary = await this.summarizeSmartQuestions()
-    const summary = "I want to achieve an IELTS score of 7.0 by August 1, 2024. I can dedicate 5 hours per week to studying, and I need to improve my writing and speaking skills. I don't have any study materials or a plan yet, but I am motivated by the requirement to immigrate to Australia and my desire to improve my English ability overall."
+    const summary = await this.summarizeSmartQuestions()
+    // const summary = "I want to achieve an IELTS score of 7.0 by August 1, 2024. I can dedicate 5 hours per week to studying, and I need to improve my writing and speaking skills. I don't have any study materials or a plan yet, but I am motivated by the requirement to immigrate to Australia and my desire to improve my English ability overall."
 
-    this.updateDescription(this.conversation._id, summary)
+    await this.updateDescription(this.conversation._id, summary)
 
     const i18ns = await I18nDao.getByCode(I18nDbCodeSummarizeQuestionnaires, this.user.locale)
     const messageType = MessageTypeAckSummaryQuestionnaires
@@ -437,7 +438,8 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
   }
 }
 
-export class AddMilestoneAndActionsResponse implements IResponse {
+export class NextMilestoneAndActionsResponse implements IResponse {
+  private milestoneIdToSuggest: ObjectId
   constructor(private currentMessage: Message, private user: User) { }
 
   addObserver(observer: IResponseObserver): void { }
@@ -449,17 +451,17 @@ export class AddMilestoneAndActionsResponse implements IResponse {
     const conversation = await getConversation(this.currentMessage.conversationId)
     if (!conversation) return null
 
-    const sentSuggestionsCount = conversation.userMilestones.filter(m => m.source === MilestoneSourceSuggestion).length
-    const isAllSuggestionSent = sentSuggestionsCount >= conversation.milestoneSuggestions.milestones.length
+    const milestoneToSuggest = conversation.milestoneSuggestions.milestones.find(m => !m.isSuggested)
 
     let messageContent: string, messageType: number
-    if (isAllSuggestionSent) {
+    if (!milestoneToSuggest) {
       messageContent = conversation.milestoneSuggestions.additionalContent
       messageType = MessageTypePlainText
     } else {
-      const nextMilestoneSuggestion = conversation.milestoneSuggestions.milestones[sentSuggestionsCount]
+      console.log('milestoneToSuggest._id: ', typeof milestoneToSuggest._id)
+      this.milestoneIdToSuggest = milestoneToSuggest._id
       messageType = MessageTypeSuggestMilestoneAndActions
-      messageContent = JSON.stringify(nextMilestoneSuggestion)
+      messageContent = JSON.stringify(milestoneToSuggest)
     }
 
     const message: Message = {
@@ -474,5 +476,9 @@ export class AddMilestoneAndActionsResponse implements IResponse {
     return [message]
   }
 
-  async postprocess(): Promise<void> { }
+  async postprocess(): Promise<void> {
+    if (!this.milestoneIdToSuggest) return
+
+    await updateSuggestedMilestone(this.currentMessage.conversationId, this.milestoneIdToSuggest)
+  }
 }

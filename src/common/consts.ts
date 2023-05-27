@@ -103,12 +103,13 @@ export const MessageTypeConfirmNoQuestionnaires = 11
 export const MessageTypeAckSummaryQuestionnaires = 12
 export const MessageTypeSuggestMilestoneAndActions = 13
 export const MessageTypeAddMilestoneAndActions = 14
+export const MessageTypeNextMilestoneAndActions = 15
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
   MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeSummaryQuestionnaires,
   MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
-  MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions
+  MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions
 ]
 
 export const MilestoneSourceSuggestion = 1

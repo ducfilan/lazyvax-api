@@ -36,6 +36,8 @@ export type UserMilestone = {
 }
 
 export type MilestoneSuggestion = {
+  _id?: ObjectId,
+  isSuggested?: boolean,
   milestone: string,
   actions: string[],
 }

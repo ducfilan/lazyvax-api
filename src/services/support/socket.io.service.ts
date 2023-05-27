@@ -2,12 +2,12 @@ import ConfigsDao from "@/dao/configs.dao"
 import { Server as HttpServer } from 'http'
 import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage } from "@/common/types"
+import { AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addUserMilestone, createConversation, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
+import { addUserMilestone, createConversation, generateFirstMessages, isParticipantInConversation, updateSuggestedMilestone } from "../api/conversations.services"
+import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -29,6 +29,7 @@ export const EventNameEndTypingUser = "user end typing"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
 export const EventNameCreateNewGoal = "create goal"
 export const EventNameAddMilestoneAndActions = "add milestone & actions"
+export const EventNameNextMilestoneAndActions = "next milestone & actions"
 
 export let io: Server
 
@@ -71,6 +72,7 @@ export function registerSocketIo(server: HttpServer) {
       socket.on(EventNameFinishQuestionnaires, finishQuestionnairesListener)
       socket.on(EventNameCreateNewGoal, createNewGoal)
       socket.on(EventNameAddMilestoneAndActions, addMilestoneAndActions)
+      socket.on(EventNameNextMilestoneAndActions, nextMilestoneAndActions)
 
       socket.on('disconnect', () => {
         console.log('User disconnected')
@@ -101,20 +103,7 @@ export function registerSocketIo(server: HttpServer) {
             senderId: socket.user._id,
           })
 
-          emitTypingUser(chatMessage.conversationId, BotUserName)
-
-          const builder = BotResponseFactory.createResponseBuilder(message, socket.user)
-          await builder.preprocess()
-          const responseMessages = await builder.getResponses()
-          if (responseMessages && responseMessages.length) {
-            for (const responseMessage of responseMessages) {
-              await saveMessage(responseMessage)
-              emitConversationMessage(chatMessage.conversationId, responseMessage)
-            }
-
-            emitEndTypingUser(chatMessage.conversationId, BotUserName)
-          }
-          builder.postprocess()
+          await respondMessage(message)
         } catch (error) {
           console.log(error)
         }
@@ -180,45 +169,64 @@ export function registerSocketIo(server: HttpServer) {
 
       async function addMilestoneAndActions(message: AddMilestoneAndActionsMessage, ack: any) {
         const conversationId = new ObjectId(message.conversationId)
-        const isParticipant = await isParticipantInConversation(socket.user._id, conversationId)
+        const milestoneId = new ObjectId(message.milestoneId)
 
-        if (isParticipant) {
-          const milestoneId = new ObjectId()
-          await addUserMilestone(conversationId, {
-            _id: milestoneId,
-            milestone: message.milestone,
-            source: MilestoneSourceSuggestion,
-            actions: message.actions.map(action => ({
-              _id: new ObjectId(),
-              action,
-            })),
-          })
-          ack(milestoneId)
+        await addUserMilestone(conversationId, {
+          _id: milestoneId,
+          milestone: message.milestone,
+          source: MilestoneSourceSuggestion,
+          actions: message.actions.map(action => ({
+            _id: new ObjectId(),
+            action,
+          })),
+        })
+        ack(milestoneId)
 
-          emitTypingUser(message.conversationId, BotUserName)
-
-          const builder = BotResponseFactory.createResponseBuilder({
-            conversationId,
-            type: MessageTypeAddMilestoneAndActions,
-            authorId: socket.user._id,
-            authorName: socket.user.name,
-            timestamp: new Date(),
-            content: ""
-          }, socket.user)
-          await builder.preprocess()
-          const responseMessages = await builder.getResponses()
-          if (responseMessages && responseMessages.length) {
-            for (const responseMessage of responseMessages) {
-              await saveMessage(responseMessage)
-              emitConversationMessage(message.conversationId, responseMessage)
-            }
-
-            emitEndTypingUser(message.conversationId, BotUserName)
-          }
-          builder.postprocess()
-        } else {
-          ack(null)
+        const fakeCurrentMessage = {
+          conversationId,
+          type: MessageTypeAddMilestoneAndActions,
+          authorId: socket.user._id,
+          authorName: socket.user.name,
+          timestamp: new Date(),
+          content: ""
         }
+
+        await respondMessage(fakeCurrentMessage)
+      }
+
+      async function nextMilestoneAndActions(message: NextMilestoneAndActionsMessage, ack: any) {
+        const conversationId = new ObjectId(message.conversationId)
+
+        const fakeCurrentMessage: Message = {
+          conversationId,
+          type: MessageTypeNextMilestoneAndActions,
+          authorId: socket.user._id,
+          authorName: socket.user.name,
+          timestamp: new Date(),
+          content: ""
+        }
+
+        await respondMessage(fakeCurrentMessage)
+        ack(true)
+      }
+
+      async function respondMessage(currentMessage: Message) {
+        const conversationIdHex = currentMessage.conversationId.toHexString()
+
+        emitTypingUser(conversationIdHex, BotUserName)
+
+        const builder = BotResponseFactory.createResponseBuilder(currentMessage, socket.user)
+        await builder.preprocess()
+        const responseMessages = await builder.getResponses()
+        if (responseMessages && responseMessages.length) {
+          for (const responseMessage of responseMessages) {
+            await saveMessage(responseMessage)
+            emitConversationMessage(conversationIdHex, responseMessage)
+          }
+
+          emitEndTypingUser(conversationIdHex, BotUserName)
+        }
+        await builder.postprocess()
       }
     })
   })

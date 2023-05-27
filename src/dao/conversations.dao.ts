@@ -87,8 +87,14 @@ export default class ConversationsDao {
                         'milestone',
                       ],
                       properties: {
+                        _id: {
+                          bsonType: 'objectId'
+                        },
                         milestone: {
                           type: 'string'
+                        },
+                        isSuggested: {
+                          bsonType: 'bool'
                         },
                         actions: {
                           type: 'array',
@@ -187,7 +193,7 @@ export default class ConversationsDao {
 
     if (!conversation) {
       conversation = await _conversations.findOne({ _id: id })
-      conversation && setCache(CacheKeyConversation(id.toHexString()), conversation)
+      conversation && await setCache(CacheKeyConversation(id.toHexString()), conversation)
     }
 
     if (conversation) {
@@ -202,10 +208,6 @@ export default class ConversationsDao {
     }
 
     return conversation
-  }
-
-  static async findByOne(condition) {
-    return _conversations.findOne(condition)
   }
 
   static async updateOne(findCondition, updateOperations) {
