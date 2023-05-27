@@ -92,5 +92,16 @@ export async function getConversationCache(key: string, ignoreError = true, fall
     q.answerUserId && (q.answerUserId = new ObjectId(q.answerUserId))
   })
 
+  cachedConversation.milestoneSuggestions.milestones?.forEach(m => {
+    m._id && (m._id = new ObjectId(m._id))
+  })
+
+  cachedConversation.userMilestones?.forEach(m => {
+    m._id && (m._id = new ObjectId(m._id))
+    m.actions && m.actions.length && m.actions.forEach(a => {
+      a._id && (a._id = new ObjectId(a._id))
+    })
+  })
+
   return cachedConversation as Conversation
 }
