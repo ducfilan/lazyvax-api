@@ -31,8 +31,9 @@ export async function addUserMilestone(conversationId: ObjectId, milestone: User
   )
 }
 
-export async function addMilestoneAction(conversationId: ObjectId, milestoneId: ObjectId, action: string) {
-  return ConversationsDao.updateOne(
+export async function addMilestoneAction(conversationId: ObjectId, milestoneId: ObjectId, action: string): Promise<ObjectId> {
+  const actionId = new ObjectId()
+  await ConversationsDao.updateOne(
     {
       _id: conversationId,
       'userMilestones._id': milestoneId,
@@ -40,11 +41,25 @@ export async function addMilestoneAction(conversationId: ObjectId, milestoneId: 
     {
       $push: {
         'userMilestones.$.actions': {
-          _id: new ObjectId(),
+          _id: actionId,
           action
         }
       }
     }
+  )
+
+  return actionId
+}
+
+export async function editMilestoneAction(conversationId: ObjectId, milestoneId: ObjectId, actionId: ObjectId, action: string, isDone?: boolean) {
+  const isDoneCondition = isDone !== undefined ? { "userMilestones.$[milestone].actions.$[action].isDone": isDone } : {}
+
+  return ConversationsDao.updateOne(
+    {
+      _id: conversationId
+    },
+    { $set: { "userMilestones.$[milestone].actions.$[action].action": action, ...isDoneCondition } },
+    { arrayFilters: [{ "milestone._id": milestoneId }, { "action._id": actionId }] }
   )
 }
 

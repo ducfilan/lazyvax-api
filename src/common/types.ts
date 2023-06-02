@@ -52,4 +52,12 @@ export type AddActionMessage = {
   action: string,
 }
 
+export type EditActionMessage = {
+  conversationId: string,
+  milestoneId: string,
+  actionId: string,
+  action: string,
+  isDone?: boolean,
+}
+
 export type MilestoneSource = typeof MilestoneSources[number]

@@ -210,12 +210,12 @@ export default class ConversationsDao {
     return conversation
   }
 
-  static async updateOne(findCondition, updateOperations) {
+  static async updateOne(findCondition, updateOperations, filterOption = {}) {
     try {
       if (!findCondition._id) throw new Error('No _id in findCondition')
 
       await delCache(CacheKeyConversation(findCondition._id.toHexString()))
-      await _conversations.findOneAndUpdate(findCondition, updateOperations)
+      await _conversations.updateOne(findCondition, updateOperations, filterOption)
       return true
     } catch (e) {
       console.log(arguments)

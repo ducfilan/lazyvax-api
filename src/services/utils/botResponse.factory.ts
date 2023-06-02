@@ -295,7 +295,6 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
   private async buildAckSummaryMessages(): Promise<Message[]> {
     const summary = await this.summarizeSmartQuestions()
-    // const summary = "I want to achieve an IELTS score of 7.0 by August 1, 2024. I can dedicate 5 hours per week to studying, and I need to improve my writing and speaking skills. I don't have any study materials or a plan yet, but I am motivated by the requirement to immigrate to Australia and my desire to improve my English ability overall."
 
     await this.updateDescription(this.conversation._id, summary)
 
