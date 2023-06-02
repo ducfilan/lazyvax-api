@@ -46,4 +46,10 @@ export type NextMilestoneAndActionsMessage = {
   milestoneId: string,
 }
 
+export type AddActionMessage = {
+  conversationId: string,
+  milestoneId: string,
+  action: string,
+}
+
 export type MilestoneSource = typeof MilestoneSources[number]

@@ -2,11 +2,11 @@ import ConfigsDao from "@/dao/configs.dao"
 import { Server as HttpServer } from 'http'
 import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addUserMilestone, createConversation, generateFirstMessages, isParticipantInConversation, updateSuggestedMilestone } from "../api/conversations.services"
+import { addMilestoneAction, addUserMilestone, createConversation, generateFirstMessages, isParticipantInConversation, updateSuggestedMilestone } from "../api/conversations.services"
 import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
@@ -30,6 +30,7 @@ export const EventNameFinishQuestionnaires = "fin questionnaires"
 export const EventNameCreateNewGoal = "create goal"
 export const EventNameAddMilestoneAndActions = "add milestone & actions"
 export const EventNameNextMilestoneAndActions = "next milestone & actions"
+export const EventNameAddAction = "add action"
 
 export let io: Server
 
@@ -73,6 +74,7 @@ export function registerSocketIo(server: HttpServer) {
       socket.on(EventNameCreateNewGoal, createNewGoal)
       socket.on(EventNameAddMilestoneAndActions, addMilestoneAndActions)
       socket.on(EventNameNextMilestoneAndActions, nextMilestoneAndActions)
+      socket.on(EventNameAddAction, addAction)
 
       socket.on('disconnect', () => {
         console.log('User disconnected')
@@ -227,6 +229,18 @@ export function registerSocketIo(server: HttpServer) {
           emitEndTypingUser(conversationIdHex, BotUserName)
         }
         await builder.postprocess()
+      }
+
+      async function addAction(message: AddActionMessage, ack: any) {
+        try {
+          const conversationId = new ObjectId(message.conversationId)
+          const milestoneId = new ObjectId(message.milestoneId)
+
+          await addMilestoneAction(conversationId, milestoneId, message.action)
+          ack(true)
+        } catch (error) {
+          ack(false)
+        }
       }
     })
   })
