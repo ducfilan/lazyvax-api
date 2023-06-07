@@ -80,12 +80,13 @@ export const AiModeChat = 'chat'
 
 export const ExtensionIdChrome = 'fnobmpemmefaajmifmdkioliggjjfibj'
 export const ExtensionIdEdge = 'caigmdkjonhkmnmglimmdkkgkomgkakl'
-export const BrowserToExtensionId = {
-  'chrome': ExtensionIdChrome,
-  'edge': ExtensionIdEdge,
+export const TargetPlatformToHost = {
+  'web': `http://localhost:9500`,
+  'chrome': `chrome-extension://${ExtensionIdChrome}`,
+  'edge': `chrome-extension://${ExtensionIdEdge}`,
 }
 
-export const OAuth2TokenReceiver = (extensionId: string) => `chrome-extension://${extensionId}/pages/oauth.html`
+export const OAuth2TokenReceiver = (host: string) => `${host}/pages/oauth.html`
 
 export const ConversationTypeGoal = 'goal'
 

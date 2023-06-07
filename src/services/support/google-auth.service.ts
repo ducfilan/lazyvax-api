@@ -24,7 +24,6 @@ export const getEmailFromGoogleToken = async (serviceAccessToken: string): Promi
     const { email } = await oAuth2Client.getTokenInfo(serviceAccessToken)
     return email
   } catch (error) {
-    console.log('getEmailFromGoogleToken:')
     console.log(error)
     return null
   }

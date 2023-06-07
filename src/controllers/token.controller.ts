@@ -1,4 +1,4 @@
-import { BrowserToExtensionId, ExtensionIdChrome, OAuth2TokenReceiver } from '@common/consts'
+import { TargetPlatformToHost, ExtensionIdChrome, OAuth2TokenReceiver } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 
 export default class TokenController {
@@ -28,11 +28,11 @@ export default class TokenController {
   static async oauth2callback(req, res, next) {
     try {
       const { state, code } = req.query
-      const targetBrowser = state.split("_")[0]
+      const targetPlatform = state.split("_")[0]
 
       const redirectParams = new URLSearchParams(Object.entries({ state, code })).toString()
 
-      res.redirect(`${OAuth2TokenReceiver(browserToTargetId(targetBrowser))}?${redirectParams}`)
+      res.redirect(`${OAuth2TokenReceiver(getTargetIdFromPlatform(targetPlatform))}?${redirectParams}`)
     } catch (e) {
       console.log(`api, ${e}`)
       if (e.code) {
@@ -44,6 +44,6 @@ export default class TokenController {
   }
 }
 
-function browserToTargetId(browser: string) {
-  return BrowserToExtensionId[browser.toLowerCase()] || ExtensionIdChrome
+function getTargetIdFromPlatform(targetPlatform: string) {
+  return TargetPlatformToHost[targetPlatform.toLowerCase()] || ExtensionIdChrome
 }
