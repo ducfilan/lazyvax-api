@@ -21,7 +21,7 @@ export default class ConfigsDao {
     }
   }
 
-  static async getAllowedOrigins() {
+  static async getAllowedOrigins(): Promise<string[]> {
     let projection = {
       _id: 0,
       origins: 1
@@ -35,7 +35,7 @@ export default class ConfigsDao {
           projection
         })
 
-      const origins = config?.origins
+      const origins = config?.origins || []
 
       return origins
     } catch (e) {

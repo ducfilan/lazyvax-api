@@ -6,7 +6,8 @@ import { ObjectId } from 'mongodb'
 
 export default async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '')
+    console.log('req.cookies: ', req.cookies)
+    const token = req.cookies['authToken']
     const loginType = req.header('X-Login-Type')
     if (!token) return next()
 

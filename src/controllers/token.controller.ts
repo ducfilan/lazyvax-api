@@ -1,12 +1,22 @@
-import { TargetPlatformToHost, ExtensionIdChrome, OAuth2TokenReceiver } from '@common/consts'
+import { TargetPlatformToHost, ExtensionIdChrome, OAuth2TokenReceiver, Env, Envs } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 
 export default class TokenController {
+  private static cookieOptions = {
+    httpOnly: true,
+    secure: Env == Envs.prod,
+    sameSite: 'none'
+  }
+
   static async apiGetTokenFromCode(req, res, next) {
     try {
       const { code } = req.query
 
       const tokens = await getTokenFromCode(code)
+
+      res.cookie('authToken', tokens.access_token, this.cookieOptions)
+      res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)
+
       return res.json(tokens)
     } catch (e) {
       console.log(`api, ${e}`)
@@ -16,9 +26,17 @@ export default class TokenController {
 
   static async refreshAccessToken(req, res, next) {
     try {
-      const { refreshToken } = req.query
+      const refreshToken = req.query.refreshToken || req.cookies['refreshToken']
+
+      if (!refreshToken) {
+        return res.status(401).json({ error: 'Refresh token not found' })
+      }
 
       const tokens = await refreshAccessToken(refreshToken)
+
+      res.cookie('authToken', tokens.access_token, this.cookieOptions)
+      res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)
+
       return res.json(tokens)
     } catch (e) {
       res.status(500).json(e)

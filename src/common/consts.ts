@@ -86,6 +86,12 @@ export const TargetPlatformToHost = {
   'edge': `chrome-extension://${ExtensionIdEdge}`,
 }
 
+export const Env = process.env.NODE_ENV || 'dev'
+export const Envs = {
+  dev: 'dev',
+  prod: 'prod'
+}
+
 export const OAuth2TokenReceiver = (host: string) => `${host}/pages/oauth.html`
 
 export const ConversationTypeGoal = 'goal'

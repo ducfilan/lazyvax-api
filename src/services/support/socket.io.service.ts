@@ -1,5 +1,6 @@
 import ConfigsDao from "@/dao/configs.dao"
 import { Server as HttpServer } from 'http'
+import { parse } from "cookie"
 import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
 import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
@@ -15,6 +16,7 @@ import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client
 import { User } from "@/models/User"
 import MessagesDao from "@/dao/messages.dao"
 import { BotResponseFactory } from "../utils/botResponse.factory"
+import { getOrigins } from "@/app"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -48,19 +50,19 @@ export function emitTypingUser(conversationId: string, userName: any) {
 }
 
 export function registerSocketIo(server: HttpServer) {
-  ConfigsDao.getAllowedOrigins()
-    .catch(() => {
-      console.log("Error getting allowed origins")
-    })
+  getOrigins()
     .then((origins) => {
       io = new Server(server, {
         cors: {
           origin: origins,
+          credentials: true,
         },
       })
 
       io.use(async (socket: ISocket, next) => {
-        if (isGoogleTokenValid(socket.handshake.auth.token, socket.handshake.auth.email)) {
+        const { authToken: token } = parse(socket.request.headers.cookie)
+
+        if (isGoogleTokenValid(token || socket.handshake.auth.email, socket.handshake.auth.email)) {
           const email = socket.handshake.auth.email
           const user = await usersServices.getUserByEmail(email)
           socket.user = user
