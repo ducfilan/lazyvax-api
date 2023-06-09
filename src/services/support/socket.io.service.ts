@@ -38,6 +38,7 @@ export const EventNameEditAction = "edit action"
 export let io: Server
 
 export function emitConversationMessage(conversationId: string, message: any) {
+  console.log('message: ', message)
   io.in(`conversation:${conversationId}`).emit(EventNameConversationMessage, message)
 }
 
@@ -110,7 +111,7 @@ export function registerSocketIo(server: HttpServer) {
             emitConversationMessage(chatMessage.conversationId, {
               ...chatMessage,
               id: messageId,
-              senderId: socket.user._id,
+              authorId: socket.user._id,
             })
 
             await respondMessage(message)
@@ -150,7 +151,7 @@ export function registerSocketIo(server: HttpServer) {
 
             chatMessage._id = await saveMessage(chatMessage)
 
-            io.in(`conversation:${message.conversationId}`).emit(EventNameConversationMessage, chatMessage)
+            emitConversationMessage(message.conversationId, chatMessage)
           } catch (error) {
             console.log(error)
           }
