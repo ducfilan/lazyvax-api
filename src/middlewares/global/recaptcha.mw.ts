@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 import { CaptchaVerificationUrl } from '@common/consts'
 import { HttpBadRequest, HttpServerError } from '@common/http-codes'
+import logger from '@/common/logger'
 
 export default async (req, res, next) => {
   try {
@@ -17,7 +18,7 @@ export default async (req, res, next) => {
       res.status(HttpBadRequest).send({ error: 'Bad Request' })
     }
   } catch (error) {
-    console.log(error)
+    logger.error(error)
     res.status(HttpServerError).send({ error: 'Server Error' })
   }
 }

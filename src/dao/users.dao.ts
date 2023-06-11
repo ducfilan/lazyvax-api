@@ -11,6 +11,7 @@ import I18nDao from './i18n'
 import { I18n } from '@/models/I18n'
 import { getGreetingTime } from '@/common/utils/stringUtils'
 import { delCache } from '@/common/redis'
+import logger from '@/common/logger'
 
 let _users: Collection<User>
 let _db: Db
@@ -81,7 +82,7 @@ export default class UsersDao {
         }
       })
     } catch (e) {
-      console.error(
+      logger.error(
         `Unable to establish a collection handle in usersDao: ${e}`,
       )
     }
@@ -95,8 +96,8 @@ export default class UsersDao {
     try {
       return await _users.findOne({ email }, projection)
     } catch (e) {
-      console.log(arguments)
-      console.error(`Error, ${e}, ${e.stack}`)
+      logger.error(arguments)
+      logger.error(`Error, ${e}, ${e.stack}`)
       return false
     }
   }
@@ -109,8 +110,8 @@ export default class UsersDao {
       await _users.findOneAndUpdate(findCondition, updateOperations, defaultProjection)
       return true
     } catch (e) {
-      console.log(arguments)
-      console.error(`Error, ${e}, ${e.stack}`)
+      logger.error(arguments)
+      logger.error(`Error, ${e}, ${e.stack}`)
       return false
     }
   }

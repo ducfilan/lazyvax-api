@@ -3,6 +3,7 @@ import { getEmailFromGoogleToken } from '@services/support/google-auth.service'
 import { CacheKeyUser, LoginTypes } from '@common/consts'
 import { getCache, setCache } from '@/common/redis'
 import { ObjectId } from 'mongodb'
+import logger from '@/common/logger'
 
 export default async (req, res, next) => {
   try {
@@ -39,7 +40,7 @@ export default async (req, res, next) => {
     req.user = user
     return next()
   } catch (error) {
-    console.log(error)
+    logger.error(error)
     return next()
   }
 }

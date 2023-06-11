@@ -2,6 +2,7 @@ import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { MaxInt, MessagesCollectionName } from '@common/consts'
 import { Message } from '@/models/Message'
+import logger from '@/common/logger'
 
 let _messages: Collection<Message>
 let _db: Db
@@ -65,7 +66,7 @@ export default class MessagesDao {
         }
       })
     } catch (e) {
-      console.error(
+      logger.error(
         `Unable to establish a collection handle in messagesDao: ${e}`,
       )
     }

@@ -7,6 +7,7 @@ import publicRouteIndex from '@routes/public.index'
 import securedRouteIndex from '@routes/secured.index'
 
 import ConfigsDao from '@dao/configs.dao'
+import logger from './common/logger'
 
 const app = express()
 
@@ -32,7 +33,7 @@ let corsOptions = {
       if (sameSite || origins.includes(origin) || !isProdEnv) {
         callback(null, origin)
       } else {
-        console.error(`cors error, not allowed: ${origin}`)
+        logger.error(`cors error, not allowed: ${origin}`)
         callback(`cors error, not allowed: ${origin}`)
       }
     })

@@ -1,6 +1,7 @@
 import usersServices from '@services/api/users.services'
 import { ObjectId } from 'mongodb'
 import { deleteCache } from '@services/support/redis.service'
+import logger from '@/common/logger'
 
 export default class UsersController {
   static async me(req, res) {
@@ -24,7 +25,7 @@ export default class UsersController {
 
       res.status(200).send(registeredUser)
     } catch (e) {
-      console.log(`api, ${e}`)
+      logger.error(`api, ${e}`)
       res.status(500).json({ error: e.message })
     }
   }
@@ -58,7 +59,7 @@ export default class UsersController {
 
       res.status(200).send()
     } catch (e) {
-      console.log(`api, ${e}`)
+      logger.error(`api, ${e}`)
       res.status(500).json({ error: e })
     }
   }

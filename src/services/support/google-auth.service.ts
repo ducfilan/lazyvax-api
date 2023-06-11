@@ -1,3 +1,4 @@
+import logger from '@/common/logger'
 import { OAuth2Client } from 'google-auth-library'
 
 const oAuth2Client = new OAuth2Client({
@@ -13,8 +14,8 @@ export const isGoogleTokenValid = async (serviceAccessToken: string, requestEmai
     const { email: tokenInfoEmail } = await oAuth2Client.getTokenInfo(serviceAccessToken)
     return tokenInfoEmail?.toLowerCase() === requestEmail.toLowerCase()
   } catch (error) {
-    console.log('isGoogleTokenValid:')
-    console.log(error)
+    logger.error('isGoogleTokenValid:')
+    logger.error(error)
     return false
   }
 }
@@ -24,7 +25,7 @@ export const getEmailFromGoogleToken = async (serviceAccessToken: string): Promi
     const { email } = await oAuth2Client.getTokenInfo(serviceAccessToken)
     return email
   } catch (error) {
-    console.log(error)
+    logger.error(error)
     return null
   }
 }

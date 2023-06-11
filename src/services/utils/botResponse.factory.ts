@@ -12,6 +12,7 @@ import UsersDao from "@/dao/users.dao"
 import { ObjectId } from "mongodb"
 import { MessageType } from "@/common/types"
 import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver } from "./responseObservers"
+import logger from "@/common/logger"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void
@@ -36,7 +37,7 @@ export class BotResponseFactory {
       case MessageTypeConfirmYesQuestionnaires:
         const builderSummary = new ConfirmYesQuestionnairesResponse(currentMessage, user)
         builderSummary.addObserver(new MilestoneSuggestionObserver(currentMessage, (responseMessage) => {
-          console.log('responseMessage', responseMessage)
+          logger.debug('responseMessage', responseMessage)
 
           const conversationId = currentMessage.conversationId.toHexString()
           responseMessage && emitConversationMessage(conversationId, responseMessage)
@@ -182,7 +183,7 @@ export class StateGoalResponse implements IResponse {
 
     } catch (error) {
       // TODO: Handle the error.
-      console.error(error)
+      logger.error(error)
     }
   }
 
@@ -368,7 +369,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
           }
         }
       } catch (error) {
-        console.log('fetch milestone suggestion failed: ', error)
+        logger.error('fetch milestone suggestion failed: ', error)
       }
     }).bind(this))
   }
@@ -457,7 +458,7 @@ export class NextMilestoneAndActionsResponse implements IResponse {
       messageContent = conversation.milestoneSuggestions.additionalContent
       messageType = MessageTypePlainText
     } else {
-      console.log('milestoneToSuggest._id: ', typeof milestoneToSuggest._id)
+      logger.debug('milestoneToSuggest._id: ', typeof milestoneToSuggest._id)
       this.milestoneIdToSuggest = milestoneToSuggest._id
       messageType = MessageTypeSuggestMilestoneAndActions
       messageContent = JSON.stringify(milestoneToSuggest)

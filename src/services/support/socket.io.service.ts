@@ -17,6 +17,7 @@ import { User } from "@/models/User"
 import MessagesDao from "@/dao/messages.dao"
 import { BotResponseFactory } from "../utils/botResponse.factory"
 import { getOrigins } from "@/app"
+import logger from "@/common/logger"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -38,7 +39,7 @@ export const EventNameEditAction = "edit action"
 export let io: Server
 
 export function emitConversationMessage(conversationId: string, message: any) {
-  console.log('message: ', message)
+  logger.debug('message: ', message)
   io.in(`conversation:${conversationId}`).emit(EventNameConversationMessage, message)
 }
 
@@ -70,7 +71,7 @@ export function registerSocketIo(server: HttpServer) {
 
           next()
         } else {
-          console.log('socket.io not authenticated' + socket.handshake.auth.email)
+          logger.error('socket.io not authenticated' + socket.handshake.auth.email)
           next(new Error('invalid/expired token'))
         }
       })
@@ -86,7 +87,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameEditAction, editAction)
 
         socket.on('disconnect', () => {
-          console.log('User disconnected')
+          logger.info('User disconnected')
         })
 
         async function sendMessageListener(chatMessage: ChatMessage, ack: any) {
@@ -116,7 +117,7 @@ export function registerSocketIo(server: HttpServer) {
 
             await respondMessage(message)
           } catch (error) {
-            console.log(error)
+            logger.error(error)
           }
         }
 
@@ -132,7 +133,7 @@ export function registerSocketIo(server: HttpServer) {
               ack(null)
             }
           } catch (error) {
-            console.log(error)
+            logger.error(error)
           }
         }
 
@@ -153,7 +154,7 @@ export function registerSocketIo(server: HttpServer) {
 
             emitConversationMessage(message.conversationId, chatMessage)
           } catch (error) {
-            console.log(error)
+            logger.error(error)
           }
         }
 
@@ -174,7 +175,7 @@ export function registerSocketIo(server: HttpServer) {
               ack(conversationId)
             }, transactionOptions)
           } catch (error) {
-            console.log(error)
+            logger.error(error)
           }
         }
 

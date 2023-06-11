@@ -3,6 +3,7 @@ import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { CacheKeyConversation, ConversationsCollectionName } from '@common/consts'
 import { Conversation } from '@/models/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
+import logger from '@/common/logger'
 
 let _conversations: Collection<Conversation>
 let _db: Db
@@ -178,7 +179,7 @@ export default class ConversationsDao {
         }
       })
     } catch (e) {
-      console.error(
+      logger.error(
         `Unable to establish a collection handle in conversationsDao: ${e}`,
       )
     }
@@ -218,8 +219,8 @@ export default class ConversationsDao {
       await _conversations.updateOne(findCondition, updateOperations, filterOption)
       return true
     } catch (e) {
-      console.log(arguments)
-      console.error(`Error, ${e}, ${e.stack}`)
+      logger.error(arguments)
+      logger.error(`Error, ${e}, ${e.stack}`)
       return false
     }
   }

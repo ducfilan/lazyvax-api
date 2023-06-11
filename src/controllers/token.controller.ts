@@ -1,3 +1,4 @@
+import logger from '@/common/logger'
 import { TargetPlatformToHost, ExtensionIdChrome, OAuth2TokenReceiver, Env, Envs } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 
@@ -19,7 +20,7 @@ export default class TokenController {
 
       return res.json(tokens)
     } catch (e) {
-      console.log(`api, ${e}`)
+      logger.error(`api, ${e}`)
       res.status(500).json({ error: e })
     }
   }
@@ -52,7 +53,7 @@ export default class TokenController {
 
       res.redirect(`${OAuth2TokenReceiver(getTargetIdFromPlatform(targetPlatform))}?${redirectParams}`)
     } catch (e) {
-      console.log(`api, ${e}`)
+      logger.error(`api, ${e}`)
       if (e.code) {
         res.status(parseInt(e.code)).json(e)
       } else {

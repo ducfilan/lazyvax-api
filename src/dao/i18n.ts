@@ -3,6 +3,7 @@ import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { DefaultLangCode, I18nCollectionName, SupportingUiLanguages } from '@common/consts'
 import { LangCode } from '@/common/types'
 import { I18n } from '@/models/I18n'
+import logger from '@/common/logger'
 
 let _i18n: Collection<I18n>
 let _db: Db
@@ -59,7 +60,7 @@ export default class I18nDao {
         }
       })
     } catch (e) {
-      console.error(
+      logger.error(
         `Unable to establish a collection handle in messagesDao: ${e}`,
       )
     }

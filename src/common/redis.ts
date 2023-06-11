@@ -1,6 +1,7 @@
 import { Conversation } from '@/models/Conversation'
 import Redis from 'ioredis'
 import { ObjectId } from 'mongodb'
+import logger from './logger'
 
 let redis: Redis = null
 
@@ -11,14 +12,14 @@ export function getClient() {
     }
 
     const url = `${process.env.REDIS_SCHEME}://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_ENDPOINT}:${process.env.REDIS_PORT}`
-    console.info('connecting to redis server: ' + process.env.REDIS_ENDPOINT)
+    logger.info('connecting to redis server: ' + process.env.REDIS_ENDPOINT)
 
     redis = new Redis(url)
 
     return redis
   }
   catch (error) {
-    console.error(error)
+    logger.error(error)
   }
 }
 
