@@ -78,12 +78,10 @@ export const AiProviderOpenAi = 'openai'
 export const AiModeCompletion = 'completion'
 export const AiModeChat = 'chat'
 
-export const ExtensionIdChrome = 'fnobmpemmefaajmifmdkioliggjjfibj'
-export const ExtensionIdEdge = 'caigmdkjonhkmnmglimmdkkgkomgkakl'
 export const TargetPlatformToHost = {
-  'web': `http://localhost:9500`,
-  'chrome': `chrome-extension://${ExtensionIdChrome}`,
-  'edge': `chrome-extension://${ExtensionIdEdge}`,
+  web: process.env.CLIENT_HOST_WEB,
+  chrome: process.env.CLIENT_HOST_CHROME_EXT,
+  edge: process.env.CLIENT_HOST_EDGE_EXT,
 }
 
 export const Env = process.env.NODE_ENV || 'dev'

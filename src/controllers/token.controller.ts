@@ -1,5 +1,5 @@
 import logger from '@/common/logger'
-import { TargetPlatformToHost, ExtensionIdChrome, OAuth2TokenReceiver, Env, Envs } from '@common/consts'
+import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 
 export default class TokenController {
@@ -51,7 +51,7 @@ export default class TokenController {
 
       const redirectParams = new URLSearchParams(Object.entries({ state, code })).toString()
 
-      res.redirect(`${OAuth2TokenReceiver(getTargetIdFromPlatform(targetPlatform))}?${redirectParams}`)
+      res.redirect(`${OAuth2TokenReceiver(getClientHostFromPlatform(targetPlatform))}?${redirectParams}`)
     } catch (e) {
       logger.error(`api, ${e}`)
       if (e.code) {
@@ -63,6 +63,6 @@ export default class TokenController {
   }
 }
 
-function getTargetIdFromPlatform(targetPlatform: string) {
-  return TargetPlatformToHost[targetPlatform.toLowerCase()] || ExtensionIdChrome
+function getClientHostFromPlatform(targetPlatform: string) {
+  return TargetPlatformToHost[targetPlatform.toLowerCase()] || TargetPlatformToHost.chrome
 }
