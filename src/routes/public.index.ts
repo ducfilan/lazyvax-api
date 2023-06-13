@@ -4,6 +4,7 @@ import tokenRouter from '@routes/token.route'
 
 let publicRouter = Router()
 
+publicRouter.use('/', (req, res) => res.status(200).send())
 publicRouter.use('/users', publicUserRouter)
 publicRouter.use('/token', tokenRouter)
 

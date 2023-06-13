@@ -1,4 +1,3 @@
-import ConfigsDao from "@/dao/configs.dao"
 import { Server as HttpServer } from 'http'
 import { parse } from "cookie"
 import { Server, Socket } from "socket.io"
@@ -7,7 +6,7 @@ import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNew
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addMilestoneAction, addUserMilestone, createConversation, editMilestoneAction, generateFirstMessages, isParticipantInConversation, updateSuggestedMilestone } from "../api/conversations.services"
+import { addMilestoneAction, addUserMilestone, createConversation, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
 import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
