@@ -386,7 +386,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
         action && actions.push(action)
       }
 
-      const milestoneSuggestion: MilestoneSuggestion = { milestone, actions }
+      const milestoneSuggestion: MilestoneSuggestion = { _id: new ObjectId(), milestone, actions }
 
       this.notifyObservers(milestoneSuggestion)
     }
