@@ -60,14 +60,12 @@ export class BotResponseFactory {
 
 export class StateGoalResponse implements IResponse {
   private prompt: string
-  private smartQuestions: SmartQuestion[]
   private firstQuestion: SmartQuestion
   private firstQuestionObservers: IResponseObserver[]
   private questionMatchRegex: RegExp
 
   constructor(private currentMessage: Message, private user: User) {
     this.prompt = this.buildPrompt()
-    this.smartQuestions = []
     this.firstQuestion = null
     this.firstQuestionObservers = []
     this.questionMatchRegex = /#Q#(.*?)#Q#\s-\s#A#(.*?)::(.*?)?#A#/g
@@ -128,14 +126,6 @@ export class StateGoalResponse implements IResponse {
     return question
   }
 
-  private parseAiResponse(response: string) {
-    let questionMatch;
-    this.questionMatchRegex.lastIndex = 0
-    while ((questionMatch = this.questionMatchRegex.exec(response))) {
-      this.smartQuestions.push(this.parseQuestion(questionMatch))
-    }
-  }
-
   async preprocess(): Promise<void> {
     try {
       ChatAiService.preprocess(this.user)
@@ -151,27 +141,34 @@ export class StateGoalResponse implements IResponse {
               const chunk = line.toString().replace(/^data: /, '')
               const isEnd = chunk === '[DONE]'
               if (isEnd) {
-                this.parseAiResponse(fullResult)
                 updateConversationById(this.currentMessage.conversationId, {
-                  $push: {
-                    smartQuestions: { $each: this.smartQuestions }
+                  $set: {
+                    smartQuestionFetchDone: true
                   }
                 })
                 resolve()
               }
 
               const parsed = JSON.parse(chunk)
-              fullResult += parsed.choices[0].delta?.content || ''
+              fullResult += parsed.choices?.[0].delta?.content || ''
 
-              if (!this.firstQuestion) {
+              this.questionMatchRegex.lastIndex = 0
+              const isQuestionAvailable = this.questionMatchRegex.test(fullResult)
+              if (isQuestionAvailable) {
                 this.questionMatchRegex.lastIndex = 0
-                const isFirstQuestionAvailable = this.questionMatchRegex.test(fullResult)
-                if (isFirstQuestionAvailable) {
-                  this.questionMatchRegex.lastIndex = 0
-                  const questionMatches = this.questionMatchRegex.exec(fullResult)
-                  this.firstQuestion = this.parseQuestion(questionMatches)
+                const questionMatches = this.questionMatchRegex.exec(fullResult)
+                const question = this.parseQuestion(questionMatches)
+                fullResult = ''
+
+                if (!this.firstQuestion) {
+                  this.firstQuestion = question
                   this.notifyObservers(this.firstQuestion)
-                  fullResult = ''
+                } else {
+                  updateConversationById(this.currentMessage.conversationId, {
+                    $push: {
+                      smartQuestions: question
+                    }
+                  })
                 }
               }
             }
@@ -209,6 +206,7 @@ export class EmptyResponse implements IResponse {
 }
 
 export class AnswerSmartQuestionResponse implements IResponse {
+  private conversation: Conversation
   constructor(private currentMessage: Message, private user: User) { }
 
   addObserver(observer: IResponseObserver): void { }
@@ -219,7 +217,8 @@ export class AnswerSmartQuestionResponse implements IResponse {
   }
 
   async getResponses(): Promise<Message[]> {
-    const smartQuestions = await getSmartQuestions(this.currentMessage.conversationId)
+    this.conversation = await getConversation(this.currentMessage.conversationId)
+    const smartQuestions = this.conversation.smartQuestions
     if (!smartQuestions) return null
 
     const nextQuestion = smartQuestions.find((question: SmartQuestion) => !question.answer)
