@@ -40,9 +40,9 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
-    new winston.transports.Console(),
     errorTransport,
-    infoTransport
+    infoTransport,
+    debugTransport
   ]
 })
 
