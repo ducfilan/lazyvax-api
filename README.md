@@ -28,7 +28,7 @@
 	REDIS_PORT=6379
 	REDIS_PASSWORD=zUCXCkxt
 	REDIS_USERNAME=default
-	REDIS_SCHEME=redis
+	REDIS_SECURE=false
 	```
 - Run `docker-compose up` from terminal
 #### Usage:

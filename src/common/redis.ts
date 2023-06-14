@@ -11,10 +11,20 @@ export function getClient() {
       return redis
     }
 
-    const url = `${process.env.REDIS_SCHEME}://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_ENDPOINT}:${process.env.REDIS_PORT}`
     logger.info('connecting to redis server: ' + process.env.REDIS_ENDPOINT)
 
-    redis = new Redis(url)
+    const tlsOptions = JSON.parse(process.env.REDIS_SECURE) ? { tls: {} } : {}
+    const authOptions = process.env.REDIS_USERNAME ? {
+      username: process.env.REDIS_USERNAME,
+      password: process.env.REDIS_PASSWORD,
+    } : {}
+
+    redis = new Redis({
+      host: process.env.REDIS_ENDPOINT,
+      port: parseInt(process.env.REDIS_PORT),
+      ...authOptions,
+      ...tlsOptions,
+    })
 
     return redis
   }
