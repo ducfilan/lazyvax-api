@@ -40,8 +40,12 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
   constructor(private currentMessage: Message, private callback: Function) { }
 
   async work(milestoneSuggestion: MilestoneSuggestion) {
-    await updateConversationById(this.currentMessage.conversationId, { $push: { 'milestoneSuggestions.milestones': milestoneSuggestion } })
-    
+    await updateConversationById(this.currentMessage.conversationId, {
+      $push: {
+        'milestoneSuggestions.milestones': { ...milestoneSuggestion, isSuggested: true } as MilestoneSuggestion
+      }
+    })
+
     if (!this.isRespondedToClient) {
       const responseMessage: Message = {
         authorId: BotUserId,
@@ -57,6 +61,8 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
 
       this.isRespondedToClient = true
       this.callback(responseMessage)
+    } else {
+      await updateConversationById(this.currentMessage.conversationId, { $push: { 'milestoneSuggestions.milestones': milestoneSuggestion } })
     }
   }
 }
