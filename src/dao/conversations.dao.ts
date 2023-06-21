@@ -31,6 +31,7 @@ export default class ConversationsDao {
               title: { bsonType: 'string' },
               description: { bsonType: 'string' },
               unreadCount: { bsonType: 'int' },
+              notes: { bsonType: 'string' },
               userMilestones: {
                 type: 'array',
                 items: {

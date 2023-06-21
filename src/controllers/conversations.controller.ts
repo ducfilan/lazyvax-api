@@ -1,4 +1,4 @@
-import { getConversation } from '@/services/api/conversations.services'
+import { getConversation, updateById } from '@/services/api/conversations.services'
 import { getMessages } from '@services/api/messages.services'
 
 export default class ConversationsController {
@@ -8,6 +8,17 @@ export default class ConversationsController {
       const conversationInfo = await getConversation(conversationId)
 
       res.status(200).send(conversationInfo)
+    } catch (e) {
+      res.status(500).json({ error: e.message })
+    }
+  }
+
+  static async updateConversation(req, res) {
+    try {
+      const { conversationId } = req.params
+      await updateById(conversationId, { $set: req.body.updateProperties })
+
+      res.sendStatus(200)
     } catch (e) {
       res.status(500).json({ error: e.message })
     }

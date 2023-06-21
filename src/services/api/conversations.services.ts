@@ -6,6 +6,7 @@ import { I18n } from "@/models/I18n"
 import { ObjectId } from "mongodb"
 
 export async function isParticipantInConversation(userId: ObjectId, conversationId: ObjectId): Promise<boolean> {
+  // TODO: Add cache.
   const conversation = await ConversationsDao.findById(conversationId)
   return conversation.participants.some(((p) => p._id?.equals(userId)))
 }
