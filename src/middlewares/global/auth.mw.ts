@@ -39,7 +39,7 @@ export default async (req, res, next) => {
     req.user = user
     next()
   } catch (error) {
-    res.status(401).send({ error: `Not authorized to access this resource, ${error.message}` })
+    res.status(401).send({ error: error.message })
     next(error)
   }
 }
