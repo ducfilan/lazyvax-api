@@ -1,5 +1,5 @@
 import logger from '@/common/logger'
-import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs } from '@common/consts'
+import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 
 export default class TokenController {
@@ -14,9 +14,6 @@ export default class TokenController {
       const { code } = req.query
 
       const tokens = await getTokenFromCode(code)
-
-      res.cookie('authToken', tokens.access_token, this.cookieOptions)
-      res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)
 
       return res.json(tokens)
     } catch (e) {
@@ -49,9 +46,17 @@ export default class TokenController {
       const { state, code } = req.query
       const targetPlatform = state.split("_")[0]
 
-      const redirectParams = new URLSearchParams(Object.entries({ state, code })).toString()
+      if (targetPlatform === TargetPlatformWeb) {
+        const tokens = await getTokenFromCode(code)
 
-      res.redirect(`${OAuth2TokenReceiver(getClientHostFromPlatform(targetPlatform))}?${redirectParams}`)
+        res.cookie('authToken', tokens.access_token, this.cookieOptions)
+        res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)
+
+        res.redirect(OAuth2TokenReceiver(getClientHostFromPlatform(targetPlatform), targetPlatform))
+      } else {
+        const redirectParams = new URLSearchParams(Object.entries({ state, code })).toString()
+        res.redirect(`${OAuth2TokenReceiver(getClientHostFromPlatform(targetPlatform), targetPlatform)}?${redirectParams}`)
+      }
     } catch (e) {
       logger.error(`api, ${e}`)
       if (e.code) {

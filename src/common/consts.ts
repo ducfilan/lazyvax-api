@@ -78,8 +78,10 @@ export const AiProviderOpenAi = 'openai'
 export const AiModeCompletion = 'completion'
 export const AiModeChat = 'chat'
 
+export const TargetPlatformWeb = "web"
+
 export const TargetPlatformToHost = {
-  web: process.env.CLIENT_HOST_WEB,
+  [TargetPlatformWeb]: process.env.CLIENT_HOST_WEB,
   chrome: process.env.CLIENT_HOST_CHROME_EXT,
   edge: process.env.CLIENT_HOST_EDGE_EXT,
 }
@@ -90,7 +92,13 @@ export const Envs = {
   prod: 'prod'
 }
 
-export const OAuth2TokenReceiver = (host: string) => `${host}/pages/oauth.html`
+export const OAuth2TokenReceiver = (host: string, targetPlatform: string) => {
+  if (targetPlatform === TargetPlatformWeb) {
+    return host
+  }
+
+  return `${host}/pages/oauth.html`
+}
 
 export const ConversationTypeGoal = 'goal'
 
