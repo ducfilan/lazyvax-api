@@ -41,6 +41,7 @@ export const BaseCollectionProperties = () => ({
   delFlag: false
 })
 
+export const GetUserInfoUrl = (accessToken: string) => `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`
 export const CaptchaVerificationUrl = (response) => `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${response}`;
 
 export const DoSpaceName = 'lazyvax-static'
@@ -141,3 +142,5 @@ export const I18nDbCodeIntroduceHowItWorks = 'introduce-how-it-works'
 export const I18nDbCodeGoalFirstMessage = 'goal-first-message'
 export const I18nDbCodeConfirmQuestionnaires = 'confirm-questionnaires'
 export const I18nDbCodeSummarizeQuestionnaires = 'summarize-questionnaires'
+
+export const RegisterStep = 1

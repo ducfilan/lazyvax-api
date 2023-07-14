@@ -30,8 +30,10 @@ export default async (req, res, next) => {
     } else {
       user = await UsersDao.findByEmail(email)
 
-      const cacheKeyId = CacheKeyUser(user._id.toHexString())
-      await Promise.all([setCache(cacheKeyEmail, user), setCache(cacheKeyId, user)])
+      if (user) {
+        const cacheKeyId = CacheKeyUser(user._id.toHexString())
+        await Promise.all([setCache(cacheKeyEmail, user), setCache(cacheKeyId, user)])
+      }
     }
 
     if (!user) throw new Error('not found user with email: ' + email)

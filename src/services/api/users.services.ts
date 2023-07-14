@@ -14,6 +14,7 @@ export async function getUserById(userId: ObjectId) {
     user._id = new ObjectId(user._id)
   } else {
     user = await UsersDao.findOne({ _id: userId })
+    if (!user) return null
 
     const cacheKeyId = CacheKeyUser(user._id.toHexString())
     await Promise.all([setCache(cacheKeyId, user), setCache(cacheKeyId, user)])
@@ -30,6 +31,7 @@ export async function getUserByEmail(email: string) {
     user._id = new ObjectId(user._id)
   } else {
     user = await UsersDao.findByEmail(email)
+    if (!user) return null
 
     const cacheKeyId = CacheKeyUser(user._id.toHexString())
     await Promise.all([setCache(cacheKeyEmail, user), setCache(cacheKeyId, user)])

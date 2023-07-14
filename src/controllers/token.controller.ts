@@ -1,6 +1,9 @@
 import logger from '@/common/logger'
-import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb } from '@common/consts'
+import { GoogleUserInfo } from '@/common/types'
+import usersServices from '@/services/api/users.services'
+import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb, GetUserInfoUrl, RegisterStep, LoginTypes } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
+import fetch from 'node-fetch'
 
 export default class TokenController {
   private static cookieOptions = {
@@ -52,6 +55,13 @@ export default class TokenController {
         res.cookie('authToken', tokens.access_token, this.cookieOptions)
         res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)
 
+        const userInfo = await getUserFromAccessToken(tokens.access_token)
+        const registeredUser = await usersServices.getUserByEmail(userInfo.email)
+
+        if (!registeredUser) {
+          await usersServices.register(userInfo)
+        }
+
         res.redirect(OAuth2TokenReceiver(getClientHostFromPlatform(targetPlatform), targetPlatform))
       } else {
         const redirectParams = new URLSearchParams(Object.entries({ state, code })).toString()
@@ -70,4 +80,15 @@ export default class TokenController {
 
 function getClientHostFromPlatform(targetPlatform: string) {
   return TargetPlatformToHost[targetPlatform.toLowerCase()] || TargetPlatformToHost.chrome
+}
+
+async function getUserFromAccessToken(accessToken: string): Promise<any> {
+  const resp = await fetch(GetUserInfoUrl(accessToken))
+  const userInfo: GoogleUserInfo = await resp.json()
+  userInfo.locale = userInfo.locale.substring(0, 2)
+  const type = LoginTypes.google
+  const serviceAccessToken = accessToken
+  const finishedRegisterStep = RegisterStep
+
+  return { type, serviceAccessToken, finishedRegisterStep, ...userInfo }
 }

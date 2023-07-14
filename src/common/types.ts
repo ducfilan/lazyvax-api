@@ -60,4 +60,14 @@ export type EditActionMessage = {
   isDone?: boolean,
 }
 
+export type GoogleUserInfo = {
+  email: string
+  email_verified: boolean
+  family_name: string
+  given_name: string
+  locale: string
+  name: string
+  picture: string
+}
+
 export type MilestoneSource = typeof MilestoneSources[number]
