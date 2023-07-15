@@ -82,6 +82,7 @@ export class StateGoalResponse implements IResponse {
   private buildPrompt(): string {
     // TODO: Move to DB/cache and load with other languages.
     return `Give me questions and answer type (I explain below) for me to answer to make this goal S.M.A.R.T. It is important to give me enough question so that after answer those questions, the goal will be S.M.A.R.T.
+    You are an expert in goal setting so don't ask so obvious questions, you can assume that.
     Add the answer type, like "date", "number", "text", "selection". If it's "selection", output selection options in this format: [single or multiple]-[option 1||option 2||option n] (specify those options). If it's "number", output the measurement unit next to number if possible, e.g. "number" (days).
 
     ###Answer format:###
@@ -273,13 +274,15 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
   async summarizeSmartQuestions(): Promise<string> {
     // TODO: Move to DB/cache and load with other languages.
-    const request = `Summary this conversation to support the goal: "${this.conversation.title}", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
+    const request = `Summarize this conversation between me and you for me to look at to remember what I stated, the conversation is to support the goal: "${this.conversation.title}", concisely but enough information, with the "I" pronoun:\n###Conversation:###`
 
     const qa = this.conversation.smartQuestions.map((question) => {
-      return `Q: ${question.content}\nA: ${question.answer}`
+      return `Your question: ${question.content}\nMy answer: ${question.answer}`
     }).join('\n\n')
 
-    const prompt = `${request}\n${qa}`
+    const answerTemplate = `###Your summary:###\nI want to...`
+
+    const prompt = `${request}\n${qa}\n${answerTemplate}`
     return await ChatAiService.query<string>(prompt)
   }
 
@@ -311,7 +314,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
   private async buildSuggestMilestoneAndActions() {
     const prompt = `My goal: "${this.conversation.description}"
-    I want you to break it down to very manageable, specific, executable, achievable milestones to check over time when each one is achieved. Make it easier to take action and harder to procrastinate. Make it enough to reach the goal after finishing all milestones. Make milestones and actions very concise, as concise as possible but enough information.
+    I want you to break it down to very actionable, manageable, specific, executable, achievable milestones to check over time when each one is achieved. Make it easier to take action and harder to procrastinate. Make it enough to reach the goal after finishing all milestones. Make milestones and actions very concise, as concise as possible but enough information.
     
     ###Answer template:###
     @#M#{milestone 1}#M#

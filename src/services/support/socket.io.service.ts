@@ -38,7 +38,7 @@ export const EventNameEditAction = "edit action"
 export let io: Server
 
 export function emitConversationMessage(conversationId: string, message: any) {
-  logger.debug('message: ', message)
+  logger.debug('message: ' + message)
   io.in(`conversation:${conversationId}`).emit(EventNameConversationMessage, message)
 }
 
