@@ -453,9 +453,11 @@ export class NextMilestoneAndActionsResponse implements IResponse {
     let messageContent: string, messageType: number
     if (!milestoneToSuggest) {
       messageContent = conversation.milestoneSuggestions.additionalContent
+      if (!messageContent) return Promise.resolve([])
+
       messageType = MessageTypePlainText
     } else {
-      logger.debug('milestoneToSuggest._id: ', typeof milestoneToSuggest._id)
+      logger.debug('milestoneToSuggest._id: ' + typeof milestoneToSuggest._id)
       this.milestoneIdToSuggest = milestoneToSuggest._id
       messageType = MessageTypeSuggestMilestoneAndActions
       messageContent = JSON.stringify(milestoneToSuggest)
