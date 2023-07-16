@@ -185,7 +185,7 @@ export function registerSocketIo(server: HttpServer) {
           await addUserMilestone(conversationId, {
             _id: milestoneId,
             milestone: message.milestone,
-            source: MilestoneSourceSuggestion,
+            source: message.source || MilestoneSourceSuggestion,
             actions: message.actions.map(action => ({
               _id: new ObjectId(),
               action,
@@ -193,16 +193,18 @@ export function registerSocketIo(server: HttpServer) {
           })
           ack(milestoneId)
 
-          const fakeCurrentMessage = {
-            conversationId,
-            type: MessageTypeAddMilestoneAndActions,
-            authorId: socket.user._id,
-            authorName: socket.user.name,
-            timestamp: new Date(),
-            content: ""
-          }
+          if (message.source === MilestoneSourceSuggestion) {
+            const fakeCurrentMessage = {
+              conversationId,
+              type: MessageTypeAddMilestoneAndActions,
+              authorId: socket.user._id,
+              authorName: socket.user.name,
+              timestamp: new Date(),
+              content: ""
+            }
 
-          await respondMessage(fakeCurrentMessage)
+            await respondMessage(fakeCurrentMessage)
+          }
         }
 
         async function nextMilestoneAndActions(message: NextMilestoneAndActionsMessage, ack: any) {

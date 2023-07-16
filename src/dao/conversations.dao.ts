@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { CacheKeyConversation, ConversationsCollectionName } from '@common/consts'
+import { CacheKeyConversation, ConversationsCollectionName, MilestoneSources } from '@common/consts'
 import { Conversation } from '@/models/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
 import logger from '@/common/logger'
@@ -47,7 +47,8 @@ export default class ConversationsDao {
                       bsonType: 'string'
                     },
                     source: {
-                      bsonType: 'number'
+                      bsonType: 'number',
+                      enum: MilestoneSources
                     },
                     isDone: {
                       bsonType: 'bool'
