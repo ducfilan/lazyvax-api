@@ -42,6 +42,12 @@ export type AddMilestoneAndActionsMessage = {
   actions: string[]
 }
 
+export type EditMilestoneMessage = {
+  conversationId: string,
+  milestoneId: string,
+  milestone: string,
+}
+
 export type NextMilestoneAndActionsMessage = {
   conversationId: string,
   milestoneId: string,

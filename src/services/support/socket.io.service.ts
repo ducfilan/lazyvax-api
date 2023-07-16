@@ -2,11 +2,11 @@ import { Server as HttpServer } from 'http'
 import { parse } from "cookie"
 import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addMilestoneAction, addUserMilestone, createConversation, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
+import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
 import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
@@ -31,6 +31,7 @@ export const EventNameEndTypingUser = "user end typing"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
 export const EventNameCreateNewGoal = "create goal"
 export const EventNameAddMilestoneAndActions = "add milestone & actions"
+export const EventNameEditMilestoneAndActions = "edit milestone & actions"
 export const EventNameNextMilestoneAndActions = "next milestone & actions"
 export const EventNameAddAction = "add action"
 export const EventNameEditAction = "edit action"
@@ -81,6 +82,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameFinishQuestionnaires, finishQuestionnairesListener)
         socket.on(EventNameCreateNewGoal, createNewGoal)
         socket.on(EventNameAddMilestoneAndActions, addMilestoneAndActions)
+        socket.on(EventNameEditMilestoneAndActions, editMilestoneAndActions)
         socket.on(EventNameNextMilestoneAndActions, nextMilestoneAndActions)
         socket.on(EventNameAddAction, addAction)
         socket.on(EventNameEditAction, editAction)
@@ -180,16 +182,16 @@ export function registerSocketIo(server: HttpServer) {
 
         async function addMilestoneAndActions(message: AddMilestoneAndActionsMessage, ack: any) {
           const conversationId = new ObjectId(message.conversationId)
-          const milestoneId = new ObjectId(message.milestoneId)
+          const milestoneId = message.milestoneId ? new ObjectId(message.milestoneId) : new ObjectId()
 
           await addUserMilestone(conversationId, {
             _id: milestoneId,
             milestone: message.milestone,
             source: message.source || MilestoneSourceSuggestion,
-            actions: message.actions.map(action => ({
+            actions: message.actions?.map(action => ({
               _id: new ObjectId(),
               action,
-            })),
+            })) || [],
           })
           ack(milestoneId)
 
@@ -205,6 +207,14 @@ export function registerSocketIo(server: HttpServer) {
 
             await respondMessage(fakeCurrentMessage)
           }
+        }
+
+        async function editMilestoneAndActions(message: EditMilestoneMessage, ack: any) {
+          const conversationId = new ObjectId(message.conversationId)
+          const milestoneId = new ObjectId(message.milestoneId)
+
+          await editMilestone(conversationId, milestoneId, message.milestone)
+          ack(milestoneId)
         }
 
         async function nextMilestoneAndActions(message: NextMilestoneAndActionsMessage, ack: any) {

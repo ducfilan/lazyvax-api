@@ -52,6 +52,22 @@ export async function addMilestoneAction(conversationId: ObjectId, milestoneId: 
   return actionId
 }
 
+export async function editMilestone(conversationId: ObjectId, milestoneId: ObjectId, milestone: string): Promise<ObjectId> {
+  await ConversationsDao.updateOne(
+    {
+      _id: conversationId,
+      'userMilestones._id': milestoneId,
+    },
+    {
+      $set: {
+        'userMilestones.$.milestone': milestone
+      }
+    }
+  )
+
+  return milestoneId
+}
+
 export async function editMilestoneAction(conversationId: ObjectId, milestoneId: ObjectId, actionId: ObjectId, action: string, isDone?: boolean) {
   const isDoneCondition = isDone !== undefined ? { "userMilestones.$[milestone].actions.$[action].isDone": isDone } : {}
 
