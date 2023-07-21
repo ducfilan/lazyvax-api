@@ -64,7 +64,7 @@ export function registerSocketIo(server: HttpServer) {
       io.use(async (socket: ISocket, next) => {
         const { authToken: token } = parse(socket.request.headers.cookie)
 
-        if (isGoogleTokenValid(token || socket.handshake.auth.email, socket.handshake.auth.email)) {
+        if (isGoogleTokenValid(token || socket.handshake.auth.token, socket.handshake.auth.email)) {
           const email = socket.handshake.auth.email
           const user = await usersServices.getUserByEmail(email)
           socket.user = user
