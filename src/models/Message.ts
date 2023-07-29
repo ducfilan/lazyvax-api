@@ -12,6 +12,7 @@ export type Message = {
   content: string,
   parentContent?: string,
   parentId?: ObjectId,
+  isResponded?: boolean,
   timestamp: Date,
 }
 

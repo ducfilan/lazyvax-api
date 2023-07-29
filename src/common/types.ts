@@ -11,6 +11,7 @@ export type ChatMessage = {
   content: string,
   parentContent?: string,
   parentId?: string,
+  needResponse?: boolean,
   conversationId: string,
 }
 

@@ -58,6 +58,9 @@ export default class MessagesDao {
               parentId: {
                 bsonType: 'objectId'
               },
+              isResponded: {
+                bsonType: 'bool'
+              },
               timestamp: {
                 bsonType: 'date'
               }
@@ -78,6 +81,19 @@ export default class MessagesDao {
 
   static async insertMany(messages: Message[]) {
     return _messages.insertMany(messages, {})
+  }
+
+  static async updateOne(findCondition, updateOperations, filterOption = {}) {
+    try {
+      if (!findCondition._id) throw new Error('No _id in findCondition')
+
+      await _messages.updateOne(findCondition, updateOperations, filterOption)
+      return true
+    } catch (e) {
+      logger.error(arguments)
+      logger.error(`Error, ${e}, ${e.stack}`)
+      return false
+    }
   }
 
   static async getMessages(conversationId: ObjectId, skip: number = 0, limit: number = MaxInt) {

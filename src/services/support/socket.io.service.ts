@@ -4,7 +4,7 @@ import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
 import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
-import { saveMessage } from "../api/messages.services"
+import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
 import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
@@ -61,13 +61,17 @@ export function registerSocketIo(server: HttpServer) {
         },
       })
 
-      io.use(async (socket: ISocket, next) => {
+      io.use((socket: ISocket, next) => {
         const { authToken: token } = parse(socket.request.headers.cookie)
 
         if (isGoogleTokenValid(token || socket.handshake.auth.token, socket.handshake.auth.email)) {
           const email = socket.handshake.auth.email
-          const user = await usersServices.getUserByEmail(email)
-          socket.user = user
+          usersServices.getUserByEmail(email)
+            .then((user) => socket.user = user)
+            .catch(err => {
+              logger.error(err)
+              next(new Error('cannot get user by email'))
+            })
 
           next()
         } else {
@@ -106,6 +110,7 @@ export function registerSocketIo(server: HttpServer) {
 
             chatMessage.parentContent && (message.parentContent = chatMessage.parentContent)
             chatMessage.parentId && (message.parentId = new ObjectId(chatMessage.parentId))
+            chatMessage.needResponse && (message.isResponded = false)
 
             const messageId = await saveMessage(message)
             ack(messageId)
@@ -241,11 +246,13 @@ export function registerSocketIo(server: HttpServer) {
           const builder = BotResponseFactory.createResponseBuilder(currentMessage, socket.user)
           await builder.preprocess()
           const responseMessages = await builder.getResponses()
-          if (responseMessages && responseMessages.length) {
+          if (responseMessages?.length) {
             for (const responseMessage of responseMessages) {
               await saveMessage(responseMessage)
               emitConversationMessage(conversationIdHex, responseMessage)
             }
+
+            currentMessage.isResponded === false && (await markMessageResponded(currentMessage._id))
 
             emitEndTypingUser(conversationIdHex, BotUserName)
           }
