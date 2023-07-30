@@ -316,7 +316,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
   private async buildSuggestMilestoneAndActions() {
     const prompt = `My goal: "${this.conversation.description}"
-    I want you to break it down to very actionable, manageable, specific, executable, achievable milestones to check over time when each one is achieved. Make it easier to take action and harder to procrastinate. Make it enough to reach the goal after finishing all milestones. Make milestones and actions very concise, as concise as possible but enough information.
+    I want you to break it down to very actionable, manageable, specific, executable, achievable milestones to check over time when each one is achieved. Make it easier to take action and harder to procrastinate. Make it enough to reach the goal after finishing all milestones. Make milestones and actions very concise, as concise as possible but enough information. Remember to add motivation message at the end.
     
     ###Answer template:###
     @#M#{milestone 1}#M#
@@ -331,18 +331,18 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
     #A#{milestone n's action 1}#A#
     #A#{milestone n's action 2}#A#
     #A#{milestone n's action n}#A#@
-    #E#{Anything else you want to say concisely}#E#
+    #E#{motivation message}#E#
     
     ###Sample:###
-    @#M#Milestone 1: Define Product Vision#M#
-    #A#Clearly articulate the problem your software product aims to solve.#A#
-    #A#Identify the target audience and understand their needs and pain points.#A#
-    #A#Visualize the positive impact your product will have on users' lives.#A#@
-    @#M#Milestone 2: Build a Cross-Functional Team#M#
-    #A#Identify and recruit team members with complementary skills in development, marketing, and business.#A#
-    #A#Define roles and responsibilities for each team member to ensure smooth collaboration.#A#
-    #A#Establish effective communication channels to foster teamwork and shared vision.#A#@
-    #E#Remember, changing the world requires persistence, adaptability, and a strong belief in your product's potential. Stay committed to your vision, seek feedback from users, and continuously iterate to improve your software product. Surround yourself with a supportive team and leverage their expertise. Your determination and dedication will pave the way for a product that positively impacts people's lives. Good luck on your journey to create meaningful change!#E#`
+    @#M#Milestone 1: ...#M#
+    #A#...#A#
+    #A#...#A#
+    #A#...#A#@
+    @#M#Milestone 2: ...#M#
+    #A#...#A#
+    #A#...#A#
+    #A#...#A#@
+    #E#{motivation message}#E#`
 
     const stream = await ChatAiService.query<Readable>(prompt, true)
 
