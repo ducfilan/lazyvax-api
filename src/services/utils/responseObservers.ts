@@ -57,6 +57,9 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
         parentId: this.currentMessage._id,
         parentContent: this.currentMessage.content,
       }
+
+      !responseMessage.parentId && (delete responseMessage.parentId)
+
       responseMessage._id = await saveMessage(responseMessage)
 
       this.isRespondedToClient = true

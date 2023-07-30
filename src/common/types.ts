@@ -79,3 +79,11 @@ export type GoogleUserInfo = {
 }
 
 export type MilestoneSource = typeof MilestoneSources[number]
+
+export type MessageContent = {
+  type: number,
+  content: string,
+  parentId?: string,
+  isResponded?: boolean,
+  parentContent?: string
+}

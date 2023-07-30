@@ -37,6 +37,8 @@ export class BotResponseFactory {
       case MessageTypeConfirmYesQuestionnaires:
         const builderSummary = new ConfirmYesQuestionnairesResponse(currentMessage, user)
         builderSummary.addObserver(new MilestoneSuggestionObserver(currentMessage, (responseMessage) => {
+          if (!responseMessage._id) return
+
           const conversationId = currentMessage.conversationId.toHexString()
           responseMessage && emitConversationMessage(conversationId, responseMessage)
           emitEndTypingUser(conversationId, BotUserName)

@@ -2,12 +2,12 @@ import { Server as HttpServer } from 'http'
 import { parse } from "cookie"
 import { Server, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, JoinConversationMessage, NextMilestoneAndActionsMessage } from "@/common/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MilestoneSourceSuggestion } from "@/common/consts"
+import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -17,6 +17,7 @@ import MessagesDao from "@/dao/messages.dao"
 import { BotResponseFactory } from "../utils/botResponse.factory"
 import { getOrigins } from "@/app"
 import logger from "@/common/logger"
+import { tryParseJson } from '@/common/utils/stringUtils'
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -99,32 +100,49 @@ export function registerSocketIo(server: HttpServer) {
           // TODO: Validate message.
 
           try {
-            const message: Message = {
-              conversationId: new ObjectId(chatMessage.conversationId),
-              authorId: socket.user._id,
-              authorName: socket.user.name,
-              content: chatMessage.content,
-              type: chatMessage.type,
-              timestamp: new Date(),
-            }
-
-            chatMessage.parentContent && (message.parentContent = chatMessage.parentContent)
-            chatMessage.parentId && (message.parentId = new ObjectId(chatMessage.parentId))
-            chatMessage.needResponse && (message.isResponded = false)
-
-            const messageId = await saveMessage(message)
-            ack(messageId)
-
-            emitConversationMessage(chatMessage.conversationId, {
-              ...chatMessage,
-              id: messageId,
-              authorId: socket.user._id,
-            })
+            const message = await processIncomingMessage(chatMessage)
+            ack(message._id)
 
             await respondMessage(message)
           } catch (error) {
             logger.error(error)
           }
+        }
+
+        async function processIncomingMessage(chatMessage: ChatMessage): Promise<Message> {
+          const message: Message = {
+            conversationId: new ObjectId(chatMessage.conversationId),
+            authorId: socket.user._id,
+            authorName: socket.user.name,
+            content: chatMessage.content,
+            type: chatMessage.type,
+            timestamp: new Date(),
+          }
+
+          chatMessage.parentContent && (message.parentContent = chatMessage.parentContent)
+          chatMessage.parentId && (message.parentId = new ObjectId(chatMessage.parentId))
+          chatMessage.needResponse && (message.isResponded = false)
+
+          switch (message.type) {
+            case MessageTypeRetryGetResponse:
+              const retryMessageContent = tryParseJson<MessageContent>(message.content)
+              message.content = retryMessageContent.content
+              message.type = retryMessageContent.type
+              message._id = new ObjectId(retryMessageContent.parentId)
+
+              return message
+
+            default:
+              const messageId = await saveMessage(message)
+
+              emitConversationMessage(message.conversationId.toHexString(), {
+                ...chatMessage,
+                id: messageId,
+                authorId: socket.user._id,
+              })
+          }
+
+          return message
         }
 
         async function joinConversationListener(message: JoinConversationMessage, ack: any) {

@@ -83,3 +83,11 @@ export function formatString(template: string, args?: string[]): string {
     return args[index] ?? match;
   })
 }
+
+export const tryParseJson = <T>(json: string, fallback: any = {}): T => {
+  try {
+    return JSON.parse(json) as T
+  } catch (e) {
+    return fallback
+  }
+}
