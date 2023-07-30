@@ -14,8 +14,7 @@ export const isGoogleTokenValid = async (serviceAccessToken: string, requestEmai
     const { email: tokenInfoEmail } = await oAuth2Client.getTokenInfo(serviceAccessToken)
     return tokenInfoEmail?.toLowerCase() === requestEmail.toLowerCase()
   } catch (error) {
-    logger.error('isGoogleTokenValid:')
-    logger.error(error)
+    logger.error('isGoogleTokenValid', error)
     return false
   }
 }

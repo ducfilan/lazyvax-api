@@ -15,7 +15,7 @@ import logger from '@/common/logger'
 
 let _users: Collection<User>
 let _db: Db
-let defaultProjection = { projection: { password: 0 } }
+let defaultProjection = { projection: { password: 0, serviceAccessToken: 0 } }
 
 export default class UsersDao {
   static injectDB(conn: MongoClient) {
