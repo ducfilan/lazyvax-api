@@ -76,7 +76,6 @@ export class OpenAiCompletionService implements IAiService {
 export class OpenAiChatService implements IAiService {
   client: OpenAIApi
   modelInfo: AiModelInfo
-  user: User
   systemMessage: ChatCompletionRequestMessage
 
   private buildUserInfoTemplate(user: User): string {
@@ -129,7 +128,7 @@ export class OpenAiChatService implements IAiService {
         {
           content: prompt,
           role: 'user',
-          name: this.user._id.toHexString(),
+          name: user._id.toHexString(),
         }
       ],
       temperature: 0,
