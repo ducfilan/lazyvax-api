@@ -12,14 +12,12 @@ export type AiModelInfo = {
 }
 
 export interface IAiService {
-  preprocess(user: User): void
-  query<T>(prompt: string, isReturnStream?: boolean): Promise<T>
+  query<T>(user: User, prompt: string, isReturnStream?: boolean): Promise<T>
 }
 
 export class OpenAiCompletionService implements IAiService {
   client: OpenAIApi
   modelInfo: AiModelInfo
-  user: User
 
   constructor(modelInfo: AiModelInfo) {
     this.client = new OpenAIApi(new Configuration({
@@ -50,12 +48,9 @@ export class OpenAiCompletionService implements IAiService {
     }
   }
 
-  preprocess(user: User): void {
-    this.user = user
-  }
-
-  async query<T>(prompt: string): Promise<T> {
-    const userInfo = this.buildUserInfoTemplate(this.user)
+  async query<T>(user: User, prompt: string): Promise<T> {
+    const userInfo = this.buildUserInfoTemplate(user)
+    logger.debug('prompt: ' + prompt)
 
     const response = await this.client.createCompletion({
       model: this.modelInfo.name,
@@ -73,6 +68,7 @@ export class OpenAiCompletionService implements IAiService {
       presence_penalty: 0.0,
     })
 
+    logger.debug('response: ' + response.data.choices[0].text)
     return response.data.choices[0].text as T
   }
 }
@@ -110,7 +106,7 @@ export class OpenAiChatService implements IAiService {
     this.systemMessage = {
       content: `Your name is Lava, you are a member of product named Lazyvax that helps people achieve their goals better. You act like an expert in goal setting and goal execution, a motivational coach, helping people to break in down better, clearer, achieve their goal better. I will provide you with some information about someone's goals and challenges, and it will be your job to come up with strategies that can help this person achieve their goals. This could involve providing positive affirmations, giving helpful advice or suggesting activities they can do to reach their end goal. Put together words that inspire action and make people feel empowered to do something beyond their abilities.
       ${userInfo}`,
-      role: 'user',
+      role: 'system',
     }
   }
 
@@ -122,14 +118,10 @@ export class OpenAiChatService implements IAiService {
     this.modelInfo = modelInfo
   }
 
-  preprocess(user: User): void {
-    this.user = user
-    this.buildSystemMessage(user)
-  }
-
-  async query<T>(prompt: string, isReturnStream: boolean = false): Promise<T> {
+  async query<T>(user: User, prompt: string, isReturnStream: boolean = false): Promise<T> {
     logger.debug('prompt: ' + prompt)
 
+    this.buildSystemMessage(user)
     const response: any = await this.client.createChatCompletion({
       model: this.modelInfo.name,
       messages: [

@@ -129,8 +129,7 @@ export class StateGoalResponse implements IResponse {
 
   async preprocess(): Promise<void> {
     try {
-      ChatAiService.preprocess(this.user)
-      const stream = await ChatAiService.query<Readable>(this.prompt, true)
+      const stream = await ChatAiService.query<Readable>(this.user, this.prompt, true)
 
       return new Promise((resolve, reject) => {
         let fullResult = ''
@@ -271,7 +270,6 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
 
   async preprocess(): Promise<void> {
     this.conversation = await getConversation(this.currentMessage.conversationId)
-    ChatAiService.preprocess(this.user)
   }
 
   async summarizeSmartQuestions(): Promise<string> {
@@ -285,7 +283,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
     const answerTemplate = `###Your summary:###\nI want to...`
 
     const prompt = `${request}\n${qa}\n${answerTemplate}`
-    return await ChatAiService.query<string>(prompt)
+    return await ChatAiService.query<string>(this.user, prompt)
   }
 
   async getResponses(): Promise<Message[]> {
@@ -344,7 +342,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
     #A#...#A#@
     #E#{motivation message}#E#`
 
-    const stream = await ChatAiService.query<Readable>(prompt, true)
+    const stream = await ChatAiService.query<Readable>(this.user, prompt, true)
 
     let aiResponse = ''
 
