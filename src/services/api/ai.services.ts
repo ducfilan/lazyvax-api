@@ -17,11 +17,13 @@ export async function getActionCompletion(user: User, conversationId: ObjectId, 
 async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Promise<string> {
   const conversation = await getConversation(conversationId)
   if (!conversation) {
+    logger.info("not match conversation", conversationId)
     return null
   }
 
   const milestone = conversation.userMilestones?.find(m => m._id.equals(milestoneId))
   if (!milestone) {
+    logger.info("not match milestone", milestoneId)
     return null
   }
 
