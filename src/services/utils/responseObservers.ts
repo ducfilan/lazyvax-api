@@ -16,7 +16,7 @@ export class FirstQuestionObserver implements IResponseObserver {
     const responseMessage: Message = {
       authorId: BotUserId,
       authorName: BotUserName,
-      content: smartQuestion.content,
+      content: JSON.stringify(smartQuestion),
       conversationId: this.currentMessage.conversationId,
       type: MessageTypeAskUserSmartQuestion,
       timestamp: new Date(),

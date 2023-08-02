@@ -222,7 +222,7 @@ export class AnswerSmartQuestionResponse implements IResponse {
     if (!smartQuestions) return null
 
     const nextQuestion = smartQuestions.find((question: SmartQuestion) => !question.answer)
-    let messageContent = nextQuestion?.content, messageType = MessageTypeAskUserSmartQuestion
+    let messageContent = JSON.stringify(nextQuestion), messageType = MessageTypeAskUserSmartQuestion
 
     const isAllQuestionAnswered = !nextQuestion
 
