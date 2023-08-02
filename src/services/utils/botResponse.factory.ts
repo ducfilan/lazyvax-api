@@ -13,6 +13,7 @@ import { ObjectId } from "mongodb"
 import { MessageType } from "@/common/types"
 import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver } from "./responseObservers"
 import logger from "@/common/logger"
+import { markMessageResponded } from "../api/messages.services"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void
@@ -28,7 +29,11 @@ export class BotResponseFactory {
         const builderStateGoal = new StateGoalResponse(currentMessage, user)
         builderStateGoal.addObserver(new FirstQuestionObserver(currentMessage, (responseMessage) => {
           const conversationId = currentMessage.conversationId.toHexString()
-          responseMessage && emitConversationMessage(conversationId, responseMessage)
+          if (responseMessage) {
+            emitConversationMessage(conversationId, responseMessage)
+            markMessageResponded(currentMessage._id)
+              .catch(err => logger.error("failed to mark message state goal responded", err))
+          }
           emitEndTypingUser(conversationId, BotUserName)
         }))
 

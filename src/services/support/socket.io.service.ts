@@ -65,20 +65,22 @@ export function registerSocketIo(server: HttpServer) {
       io.use((socket: ISocket, next) => {
         const { authToken: token } = parse(socket.request.headers.cookie)
 
-        if (isGoogleTokenValid(token || socket.handshake.auth.token, socket.handshake.auth.email)) {
-          const email = socket.handshake.auth.email
-          usersServices.getUserByEmail(email)
-            .then((user) => socket.user = user)
-            .catch(err => {
-              logger.error(err)
-              next(new Error('cannot get user by email'))
-            })
+        isGoogleTokenValid(token || socket.handshake.auth.token, socket.handshake.auth.email).then((isTokenValid) => {
+          if (isTokenValid) {
+            const email = socket.handshake.auth.email
+            usersServices.getUserByEmail(email)
+              .then((user) => socket.user = user)
+              .catch(err => {
+                logger.error(err)
+                next(new Error('cannot get user by email'))
+              })
 
-          next()
-        } else {
-          logger.error('socket.io not authenticated' + socket.handshake.auth.email)
-          next(new Error('invalid/expired token'))
-        }
+            next()
+          } else {
+            logger.error('socket.io not authenticated' + socket.handshake.auth.email)
+            next(new Error('invalid/expired token'))
+          }
+        })
       })
 
       io.on('connection', async (socket: ISocket) => {
