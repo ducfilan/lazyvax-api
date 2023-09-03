@@ -9,6 +9,7 @@ export type Conversation = {
   unreadCount: number,
   userMilestones?: UserMilestone[],
   milestonesFetchDone?: boolean,
+  smartQuestionFetchDone?: boolean,
   milestoneSuggestions?: {
     milestones: MilestoneSuggestion[],
     additionalContent?: string,

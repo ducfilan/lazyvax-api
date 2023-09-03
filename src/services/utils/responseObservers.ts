@@ -3,10 +3,11 @@ import { MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
 import { Message } from "@/models/Message"
 import { saveMessage } from "../api/messages.services"
 import { updateById as updateConversationById } from "../api/conversations.services"
+import { emitWaitResponse } from "../support/socket.io.service"
 
 
 export interface IResponseObserver {
-  work(question: any): void
+  work(data: any): void
 }
 
 export class FirstQuestionObserver implements IResponseObserver {
@@ -71,5 +72,13 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
         }
       })
     }
+  }
+}
+
+export class WaitResponseObserver implements IResponseObserver {
+  constructor(private currentMessage: Message) { }
+
+  work(messageType: any): void {
+    emitWaitResponse(this.currentMessage.authorId.toHexString(), messageType)
   }
 }

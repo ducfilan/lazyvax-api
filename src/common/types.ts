@@ -23,6 +23,11 @@ export type FinishQuestionnairesMessage = {
   conversationId: string,
 }
 
+export type GetNextSmartQuestionMessage = {
+  authorId: string,
+  conversationId: string,
+}
+
 export type CreateNewGoalMessage = {
   conversation: {
     type: string,

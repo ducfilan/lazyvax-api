@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb'
 
 export async function saveMessage(message: Message) {
   try {
-    return MessagesDao.insertOne(message)
+    return await MessagesDao.insertOne(message)
   } catch (error) {
     logger.error("failed to save message, ", message, error)
   }

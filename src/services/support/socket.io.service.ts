@@ -1,13 +1,13 @@
 import { Server as HttpServer } from 'http'
 import { parse } from "cookie"
-import { Server, Socket } from "socket.io"
+import { Server as SocketServer, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GetNextSmartQuestionMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices, { addConversation as addUserConversation } from "../api/users.services"
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
+import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, getConversation, isParticipantInConversation } from "../api/conversations.services"
+import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeConfirmQuestionnaires, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeAskUserSmartQuestion, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -18,6 +18,7 @@ import { BotResponseFactory } from "../utils/botResponse.factory"
 import { getOrigins } from "@/app"
 import logger from "@/common/logger"
 import { tryParseJson } from '@/common/utils/stringUtils'
+import { SmartQuestion } from '@/models/Conversation'
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -36,11 +37,12 @@ export const EventNameEditMilestoneAndActions = "edit milestone & actions"
 export const EventNameNextMilestoneAndActions = "next milestone & actions"
 export const EventNameAddAction = "add action"
 export const EventNameEditAction = "edit action"
+export const EventNameWaitResponse = "wait response"
+export const EventNameGetNextSmartQuestion = "get next smart question"
 
-export let io: Server
+export let io: SocketServer
 
 export function emitConversationMessage(conversationId: string, message: any) {
-  logger.debug('message: ' + message)
   io.in(`conversation:${conversationId}`).emit(EventNameConversationMessage, message)
 }
 
@@ -52,10 +54,14 @@ export function emitTypingUser(conversationId: string, userName: any) {
   io.in(`conversation:${conversationId}`).emit(EventNameTypingUser, userName)
 }
 
+export function emitWaitResponse(userId: string, responseType: any) {
+  io.in(`user:${userId}`).emit(EventNameWaitResponse, responseType)
+}
+
 export function registerSocketIo(server: HttpServer) {
   getOrigins()
     .then((origins) => {
-      io = new Server(server, {
+      io = new SocketServer(server, {
         cors: {
           origin: origins,
           credentials: true,
@@ -93,6 +99,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameNextMilestoneAndActions, nextMilestoneAndActions)
         socket.on(EventNameAddAction, addAction)
         socket.on(EventNameEditAction, editAction)
+        socket.on(EventNameGetNextSmartQuestion, getNextSmartQuestion)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -271,11 +278,10 @@ export function registerSocketIo(server: HttpServer) {
               await saveMessage(responseMessage)
               emitConversationMessage(conversationIdHex, responseMessage)
             }
-
-            currentMessage.isResponded === false && (await markMessageResponded(currentMessage._id))
-
-            emitEndTypingUser(conversationIdHex, BotUserName)
           }
+
+          currentMessage.isResponded === false && (await markMessageResponded(currentMessage._id))
+          emitEndTypingUser(conversationIdHex, BotUserName)
           await builder.postprocess()
         }
 
@@ -299,6 +305,46 @@ export function registerSocketIo(server: HttpServer) {
 
             await editMilestoneAction(conversationId, milestoneId, actionId, message.action, message.isDone)
             ack(true)
+          } catch (error) {
+            ack(false)
+          }
+        }
+
+        async function getNextSmartQuestion(message: GetNextSmartQuestionMessage, ack: any) {
+          try {
+            const conversationId = new ObjectId(message.conversationId)
+
+            const conversation = await getConversation(conversationId)
+            const smartQuestions = conversation.smartQuestions
+            if (!smartQuestions) return null
+
+            const nextQuestion = smartQuestions.find((question: SmartQuestion) => !question.answer)
+            let messageContent = JSON.stringify(nextQuestion), messageType = MessageTypeAskUserSmartQuestion
+
+            const isAllQuestionAnswered = !nextQuestion && conversation.smartQuestionFetchDone
+
+            if (isAllQuestionAnswered) {
+              const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
+              messageContent = i18ns[0].content
+              messageType = MessageTypeAskConfirmQuestionnaires
+            }
+
+            if (!conversation.smartQuestionFetchDone) {
+              emitWaitResponse(message.authorId, MessageTypeAnswerSmartQuestion)
+              ack(null)
+              return
+            }
+
+            const respMessage: Message = {
+              authorId: BotUserId,
+              authorName: BotUserName,
+              content: messageContent,
+              conversationId: this.currentMessage.conversationId,
+              type: messageType,
+              timestamp: new Date(),
+            }
+
+            ack(respMessage)
           } catch (error) {
             ack(false)
           }

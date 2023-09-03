@@ -1,17 +1,17 @@
-import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires, MessageTypeAddMilestoneAndActions, MilestoneSourceSuggestion, MessageTypeSuggestMilestoneAndActions, MessageTypePlainText, MessageTypeNextMilestoneAndActions } from "@/common/consts"
+import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires, MessageTypeAddMilestoneAndActions, MessageTypeSuggestMilestoneAndActions, MessageTypePlainText, MessageTypeNextMilestoneAndActions } from "@/common/consts"
 import { Message } from "@/models/Message"
 import { ChatAiService } from "../support/ai.services"
 import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
 import { Conversation, MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
-import { getConversation, getSmartQuestions, getUserMilestones, updateById as updateConversationById, updateSmartQuestionAnswer, updateSuggestedMilestone } from "../api/conversations.services"
+import { getConversation, updateById as updateConversationById, updateSmartQuestionAnswer, updateSuggestedMilestone } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
 import { ObjectId } from "mongodb"
 import { MessageType } from "@/common/types"
-import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver } from "./responseObservers"
+import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver, WaitResponseObserver } from "./responseObservers"
 import logger from "@/common/logger"
 import { markMessageResponded } from "../api/messages.services"
 
@@ -24,10 +24,12 @@ export interface IResponse {
 
 export class BotResponseFactory {
   static createResponseBuilder(currentMessage: Message, user: User): IResponse {
+    let builder: IResponse
+
     switch (currentMessage.type) {
       case MessageTypeStateGoal:
-        const builderStateGoal = new StateGoalResponse(currentMessage, user)
-        builderStateGoal.addObserver(new FirstQuestionObserver(currentMessage, (responseMessage) => {
+        builder = new StateGoalResponse(currentMessage, user)
+        builder.addObserver(new FirstQuestionObserver(currentMessage, (responseMessage) => {
           const conversationId = currentMessage.conversationId.toHexString()
           if (responseMessage) {
             emitConversationMessage(conversationId, responseMessage)
@@ -37,21 +39,23 @@ export class BotResponseFactory {
           emitEndTypingUser(conversationId, BotUserName)
         }))
 
-        return builderStateGoal
+        return builder
 
       case MessageTypeConfirmYesQuestionnaires:
-        const builderSummary = new ConfirmYesQuestionnairesResponse(currentMessage, user)
-        builderSummary.addObserver(new MilestoneSuggestionObserver(currentMessage, (responseMessage) => {
+        builder = new ConfirmYesQuestionnairesResponse(currentMessage, user)
+        builder.addObserver(new MilestoneSuggestionObserver(currentMessage, (responseMessage) => {
           if (!responseMessage._id) return
 
           const conversationId = currentMessage.conversationId.toHexString()
           responseMessage && emitConversationMessage(conversationId, responseMessage)
           emitEndTypingUser(conversationId, BotUserName)
         }))
-        return builderSummary
+        return builder
 
       case MessageTypeAnswerSmartQuestion:
-        return new AnswerSmartQuestionResponse(currentMessage, user)
+        builder = new AnswerSmartQuestionResponse(currentMessage, user)
+        builder.addObserver(new WaitResponseObserver(currentMessage))
+        return builder
 
       case MessageTypeAddMilestoneAndActions:
       case MessageTypeNextMilestoneAndActions:
@@ -211,10 +215,19 @@ export class EmptyResponse implements IResponse {
 }
 
 export class AnswerSmartQuestionResponse implements IResponse {
-  private conversation: Conversation
+  private waitSendingObservers: IResponseObserver[]
+
   constructor(private currentMessage: Message, private user: User) { }
 
-  addObserver(observer: IResponseObserver): void { }
+  addObserver(observer: IResponseObserver): void {
+    this.waitSendingObservers.push(observer)
+  }
+
+  notifyObservers(data: any): void {
+    for (const observer of this.waitSendingObservers) {
+      observer.work(data)
+    }
+  }
 
   async preprocess(): Promise<void> {
     const { conversationId, parentContent, content, authorId } = this.currentMessage
@@ -222,19 +235,24 @@ export class AnswerSmartQuestionResponse implements IResponse {
   }
 
   async getResponses(): Promise<Message[]> {
-    this.conversation = await getConversation(this.currentMessage.conversationId)
-    const smartQuestions = this.conversation.smartQuestions
+    const conversation = await getConversation(this.currentMessage.conversationId)
+    const smartQuestions = conversation.smartQuestions
     if (!smartQuestions) return null
 
     const nextQuestion = smartQuestions.find((question: SmartQuestion) => !question.answer)
     let messageContent = JSON.stringify(nextQuestion), messageType = MessageTypeAskUserSmartQuestion
 
-    const isAllQuestionAnswered = !nextQuestion
+    const isAllQuestionAnswered = !nextQuestion && conversation.smartQuestionFetchDone
 
     if (isAllQuestionAnswered) {
       const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
       messageContent = i18ns[0].content
       messageType = MessageTypeAskConfirmQuestionnaires
+    }
+
+    if (!conversation.smartQuestionFetchDone) {
+      this.notifyObservers(MessageTypeAnswerSmartQuestion)
+      return []
     }
 
     const message: Message = {
