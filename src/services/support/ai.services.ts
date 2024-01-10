@@ -1,7 +1,8 @@
 import { AiModeChat, AiModeCompletion, AiProviderOpenAi } from '@/common/consts'
 import logger from '@/common/logger'
 import { User } from '@/models/User'
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai'
+import OpenAI from "openai"
+import { ChatCompletionMessageParam } from 'openai/resources/chat'
 
 const AiProviders = [AiProviderOpenAi]
 
@@ -16,13 +17,11 @@ export interface IAiService {
 }
 
 export class OpenAiCompletionService implements IAiService {
-  client: OpenAIApi
+  client: OpenAI
   modelInfo: AiModelInfo
 
   constructor(modelInfo: AiModelInfo) {
-    this.client = new OpenAIApi(new Configuration({
-      apiKey: process.env.OPENAI_API_KEY,
-    }))
+    this.client = new OpenAI()
 
     this.modelInfo = modelInfo
   }
@@ -52,10 +51,9 @@ export class OpenAiCompletionService implements IAiService {
     const userInfo = this.buildUserInfoTemplate(user)
     logger.debug('prompt: ' + prompt)
 
-    const response = await this.client.createCompletion({
+    const response = await this.client.completions.create({
       model: this.modelInfo.name,
-      prompt: `Your name is Lava, you are a member of product named Lazyvax that helps people achieve their goals better.
-      You act like an expert in goal setting and goal execution, a motivational coach, helping people to break in down better, clearer, achieve their goal better. I will provide you with some information about someone's goals and challenges, and it will be your job to come up with strategies that can help this person achieve their goals. This could involve providing positive affirmations, giving helpful advice or suggesting activities they can do to reach their end goal. Put together words that inspire action and make people feel empowered to do something beyond their abilities.
+      prompt: `You are a great personal life coach to help people to make them understand themselves, make them happy in their life, make their life purposeful, productive, less time wasted, less distracted, willing to do tasks.
       You are humorous, you give funny answers.
       ${userInfo}
 
@@ -68,15 +66,15 @@ export class OpenAiCompletionService implements IAiService {
       presence_penalty: 0.0,
     })
 
-    logger.debug('response: ' + response.data.choices[0].text)
-    return response.data.choices[0].text as T
+    logger.debug('response: ' + response.choices[0].text)
+    return response.choices[0].text as T
   }
 }
 
 export class OpenAiChatService implements IAiService {
-  client: OpenAIApi
+  client: OpenAI
   modelInfo: AiModelInfo
-  systemMessage: ChatCompletionRequestMessage
+  systemMessage: ChatCompletionMessageParam
 
   private buildUserInfoTemplate(user: User): string {
     if (!user.preferences) return ""
@@ -110,10 +108,7 @@ export class OpenAiChatService implements IAiService {
   }
 
   constructor(modelInfo: AiModelInfo) {
-    this.client = new OpenAIApi(new Configuration({
-      apiKey: process.env.OPENAI_API_KEY,
-    }))
-
+    this.client = new OpenAI()
     this.modelInfo = modelInfo
   }
 
@@ -121,7 +116,7 @@ export class OpenAiChatService implements IAiService {
     logger.debug('prompt: ' + prompt)
 
     this.buildSystemMessage(user)
-    const response: any = await this.client.createChatCompletion({
+    const response: any = await this.client.chat.completions.create({
       model: this.modelInfo.name,
       messages: [
         this.systemMessage,
@@ -137,7 +132,8 @@ export class OpenAiChatService implements IAiService {
       frequency_penalty: 0.2,
       presence_penalty: 0.0,
       stream: isReturnStream,
-    }, { responseType: isReturnStream ? 'stream' : 'json' })
+      response_format: { type: isReturnStream ? 'text' : 'json_object' }
+    })
 
     if (isReturnStream) {
       return response.data as T
@@ -175,6 +171,6 @@ export let ChatAiService: IAiService
 
 export function registerAiServices(provider: AiProvider): void {
   const factory = new AiServiceFactory()
-  CompletionAiService = factory.createAiService(provider, AiModeCompletion, { name: 'text-davinci-003' })
+  CompletionAiService = factory.createAiService(provider, AiModeCompletion, { name: 'gpt-3.5-turbo-instruct' })
   ChatAiService = factory.createAiService(provider, AiModeChat, { name: 'gpt-3.5-turbo' })
 }
