@@ -6,6 +6,7 @@ import { validateApiGetActionCompletion } from '@/validators/ai.validator'
 const securedAiRouter = Router()
 
 securedAiRouter.route('/completion/action').get(auth, validateApiGetActionCompletion, AiController.getActionCompletion)
+securedAiRouter.route('/future-self/suggestions').get(auth, AiController.getFutureSelfSuggestions)
 
 export {
   securedAiRouter

@@ -34,3 +34,22 @@ async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Pro
   ${milestone.actions.map(a => a.action).join("\n")}
   Answer concisely in 1 sentence, don't say anything else, don't mention action number.`
 }
+
+export async function getFutureSelfSuggestions(user: User) {
+  const prompt = `
+    What are the possible adjectives that can describe the best version of myself with good habits and avoid bad habits to pursuit? Including basic factors as well like health, financial etc.
+    Answer in json structure and nothing else:
+    [
+      {
+        "aspect": "",
+        "suggestions": [
+          {
+            "adj": "",
+            "explain": ""
+          }
+        ]
+      }
+    ]`
+
+  return CompletionAiService.query<string>(user, prompt)
+}

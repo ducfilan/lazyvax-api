@@ -95,7 +95,7 @@ export const Envs = {
 
 export const OAuth2TokenReceiver = (host: string, targetPlatform: string) => {
   if (targetPlatform === TargetPlatformWeb) {
-    return host
+    return `${host}?step=${RegisterStep}`
   }
 
   return `${host}/pages/oauth.html`
