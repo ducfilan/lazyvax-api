@@ -7,7 +7,8 @@ export const validateApiGetActionCompletion = [
     .customSanitizer(id => new ObjectId(id))
     .custom(async (conversationId, { req }) => {
       const userId = req.user._id
-      if (!isParticipantInConversation(userId, conversationId)) {
+      const inConversation = await isParticipantInConversation(userId, conversationId)
+      if (!inConversation) {
         throw new Error('You are not part of this conversation')
       }
     }),

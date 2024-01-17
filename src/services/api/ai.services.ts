@@ -37,8 +37,8 @@ async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Pro
 
 export async function getFutureSelfSuggestions(user: User) {
   const prompt = `
-    What are the possible adjectives that can describe the best version of myself with good habits and avoid bad habits to pursuit? Including basic factors as well like health, financial etc.
-    Answer in json structure and nothing else:
+    What are the possible adjectives in many diverse aspects of life (example aspects are "Relationships", "Health", "Financial", "Personal Growth"), provide total 6 aspects personalized for me that can describe the best version of me to be happy, fulfilled, more good habits and avoid bad habits to pursuit? Add an icon before each adj, sample: "adj": "🏃 Active". Adjectives in each aspect should be related to the person and diverse.
+    Answer in json structure, nothing else:
     [
       {
         "aspect": "",

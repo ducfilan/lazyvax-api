@@ -31,7 +31,7 @@ export class OpenAiCompletionService implements IAiService {
 
     const { userCategory, age, gender, workerType, occupation, degree, studyCourse } = user.preferences
 
-    const commonInfo = `You are talking with a ${userCategory}, ${gender}, in ${age} years old`
+    const commonInfo = `I am a ${userCategory}, ${gender}, in ${age} years old`
     const professionalInfo = `working as ${workerType == "both" ? "both individual and manager" : workerType} in the organization, in the field "${occupation}"`
     const studentInfo = `studying the ${degree} degree of ${studyCourse} field`
 
