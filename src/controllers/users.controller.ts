@@ -32,7 +32,17 @@ export default class UsersController {
 
   static async update(req, res) {
     try {
-      const isSuccess = await usersServices.update(req.user, req.body.updateProperties)
+      const properties = req.body.updateProperties
+
+      if (properties.hasOwnProperty("preferences")) {
+        Object.keys(properties.preferences).forEach(key => {
+          properties[`preferences.${key}`] = properties.preferences[key]
+        })
+
+        delete properties.preferences
+      }
+
+      const isSuccess = await usersServices.update(req.user, properties)
       if (!isSuccess) {
         res.status(400).json({ error: 'update user failed' })
       }

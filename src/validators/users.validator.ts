@@ -23,11 +23,11 @@ export const validateApiUpdateUser = [
     .isString()
     .isLength({ min: 0, max: 100 })
     .bail(),
-  check('preferences.lifeGoals')
+  check('preferences.futureSelf')
     .optional({ nullable: true, checkFalsy: true })
     .isArray()
     .bail(),
-  check('preferences.lifeGoals.*')
+  check('preferences.futureSelf.*')
     .isString()
     .custom(value => {
       if (value.length > GoalMaxLength) {

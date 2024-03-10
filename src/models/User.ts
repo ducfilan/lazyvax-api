@@ -24,7 +24,7 @@ export type Preference = {
   occupation?: string,
   degree?: string,
   studyCourse?: string,
-  lifeGoals?: string[],
+  futureSelf?: string[],
 }
 
 export type UserCategory = "professional" | "student"

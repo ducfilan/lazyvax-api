@@ -57,7 +57,7 @@ export default class UsersDao {
                   occupation: { bsonType: 'string', maxLength: OccupationLength },
                   degree: { bsonType: 'string', 'enum': ['k-12', 'undergraduate', 'graduate'] },
                   studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
-                  lifeGoals: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } }
+                  futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } }
                 },
                 additionalProperties: false
               },
