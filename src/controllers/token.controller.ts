@@ -1,7 +1,7 @@
 import logger from '@/common/logger'
 import { GoogleUserInfo } from '@/common/types'
 import usersServices from '@/services/api/users.services'
-import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb, GetUserInfoUrl, RegisterStep, LoginTypes } from '@common/consts'
+import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb, GetUserInfoUrl, RegisterStep, LoginTypes, DefaultLangCode } from '@common/consts'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 import fetch from 'node-fetch'
 
@@ -85,7 +85,7 @@ function getClientHostFromPlatform(targetPlatform: string) {
 async function getUserFromAccessToken(accessToken: string): Promise<any> {
   const resp = await fetch(GetUserInfoUrl(accessToken))
   const userInfo: GoogleUserInfo = await resp.json()
-  userInfo.locale = userInfo.locale.substring(0, 2)
+  userInfo.locale = userInfo.locale?.substring(0, 2) ?? DefaultLangCode
   const type = LoginTypes.google
   const serviceAccessToken = accessToken
   const finishedRegisterStep = RegisterStep
