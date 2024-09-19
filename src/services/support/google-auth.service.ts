@@ -1,7 +1,7 @@
 import logger from '@/common/logger'
 import { OAuth2Client } from 'google-auth-library'
 
-const oAuth2Client = new OAuth2Client({
+export const oAuth2Client = new OAuth2Client({
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   redirectUri: process.env.GOOGLE_REDIRECT_URI,
@@ -31,6 +31,10 @@ export const getEmailFromGoogleToken = async (serviceAccessToken: string): Promi
 
 export const getTokenFromCode = async (code: string) => {
   let { tokens: { access_token, refresh_token } } = await oAuth2Client.getToken(code)
+  oAuth2Client.setCredentials({
+    access_token,
+    refresh_token
+  })
 
   return { access_token, refresh_token }
 }
@@ -41,6 +45,10 @@ export const refreshAccessToken = async (refreshToken: string) => {
   })
 
   let { token } = await oAuth2Client.getAccessToken()
+  oAuth2Client.setCredentials({
+    access_token: token,
+    refresh_token: refreshToken
+  })
 
   return { access_token: token, refresh_token: refreshToken }
 }
