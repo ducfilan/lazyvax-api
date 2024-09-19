@@ -49,6 +49,7 @@
     "@google-cloud/text-to-speech": "^4.2.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "debug": "~4.3.4",
     "dotenv": "^16.0.3",
     "express": "~4.20.0",

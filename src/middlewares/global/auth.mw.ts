@@ -1,19 +1,24 @@
 import UsersDao from '@dao/users.dao'
-import { getEmailFromGoogleToken } from '@services/support/google-auth.service'
+import { getEmailFromGoogleToken, oAuth2Client } from '@services/support/google-auth.service'
 import { CacheKeyUser, LoginTypes } from '@common/consts'
 import { getCache, setCache } from '@common/redis'
 import { ObjectId } from 'mongodb'
 
 export default async (req, res, next) => {
   try {
-    const token = req.cookies['authToken'] || req.header('Authorization')?.replace('Bearer ', '')
+    const accessToken = req.cookies['authToken'] || req.header('Authorization')?.replace('Bearer ', '')
+    const refreshToken = req.cookies['refreshToken']
     const loginType = req.header('X-Login-Type')
-    if (!token) throw new Error('no Authorization token provided!')
+    if (!accessToken) throw new Error('no Authorization token provided!')
 
     let email: string | null
     switch (loginType) {
       case LoginTypes.google:
-        email = await getEmailFromGoogleToken(token)
+        oAuth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+        email = await getEmailFromGoogleToken(accessToken)
         break
 
       default:

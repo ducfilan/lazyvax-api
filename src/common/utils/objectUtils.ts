@@ -1,4 +1,4 @@
 export function isEmpty(obj: object): boolean {
-  for (var _ in obj) return false
+  for (let _ in obj) return false
   return true
 }
