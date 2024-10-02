@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { CacheKeyConversation, ConversationsCollectionName, MilestoneSources } from '@common/consts'
+import { CacheKeyConversation, ConversationsCollectionName, ConversationTypes, ConversationTypeWeek, MilestoneSources } from '@common/consts'
 import { Conversation } from '@/models/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
 import logger from '@/common/logger'
@@ -27,139 +27,24 @@ export default class ConversationsDao {
             bsonType: 'object',
             properties: {
               _id: { bsonType: 'objectId' },
-              type: { bsonType: 'string' },
-              title: { bsonType: 'string' },
-              description: { bsonType: 'string' },
+              type: { enum: ConversationTypes },
               unreadCount: { bsonType: 'int' },
-              notes: { bsonType: 'string' },
-              userMilestones: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: [
-                    'milestone',
-                  ],
-                  properties: {
-                    _id: {
-                      bsonType: 'objectId'
-                    },
-                    milestone: {
-                      bsonType: 'string'
-                    },
-                    source: {
-                      bsonType: 'number',
-                      enum: MilestoneSources
-                    },
-                    isDone: {
-                      bsonType: 'bool'
-                    },
-                    actions: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
+              meta: {
+                bsonType: 'object',
+                oneOf: [
+                  {
+                    properties: {
+                      type: { enum: [ConversationTypeWeek] },
+                      meta: {
                         properties: {
-                          _id: {
-                            bsonType: 'objectId'
-                          },
-                          action: {
-                            bsonType: 'string'
-                          },
-                          isDone: {
-                            bsonType: 'bool'
-                          },
+                          startDate: { "bsonType": "date" }
                         },
+                        required: ["startDate"],
                         additionalProperties: false
                       }
                     }
-                  },
-                  additionalProperties: false
-                }
-              },
-              milestonesFetchDone: { bsonType: 'bool' },
-              milestoneSuggestions: {
-                type: 'object',
-                required: [
-                  'milestones'
-                ],
-                properties: {
-                  milestones: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      required: [
-                        'milestone',
-                      ],
-                      properties: {
-                        _id: {
-                          bsonType: 'objectId'
-                        },
-                        milestone: {
-                          type: 'string'
-                        },
-                        isSuggested: {
-                          bsonType: 'bool'
-                        },
-                        actions: {
-                          type: 'array',
-                          items: {
-                            type: 'string'
-                          }
-                        }
-                      },
-                      additionalProperties: false
-                    }
-                  },
-                  additionalContent: {
-                    type: 'string'
                   }
-                },
-                additionalProperties: false
-              },
-              smartQuestionFetchDone: { bsonType: 'bool' },
-              smartQuestions: {
-                bsonType: 'array',
-                items: {
-                  bsonType: 'object',
-                  required: [
-                    'content',
-                    'answerType',
-                  ],
-                  'properties': {
-                    content: {
-                      bsonType: 'string'
-                    },
-                    answerType: {
-                      bsonType: 'string'
-                    },
-                    answer: {
-                      bsonType: 'string'
-                    },
-                    answerUserId: {
-                      bsonType: 'objectId'
-                    },
-                    selection: {
-                      bsonType: 'object',
-                      'required': [
-                        'type',
-                        'options'
-                      ],
-                      'properties': {
-                        type: {
-                          bsonType: 'string'
-                        },
-                        options: {
-                          bsonType: 'array',
-                          items: {
-                            bsonType: 'string'
-                          }
-                        }
-                      }
-                    },
-                    unit: {
-                      bsonType: 'string'
-                    }
-                  }
-                }
+                ]
               },
               participants: {
                 bsonType: 'array',
@@ -175,7 +60,7 @@ export default class ConversationsDao {
                 }
               }
             },
-            required: ['type', 'title', 'unreadCount'],
+            required: ['type', 'unreadCount'],
             additionalProperties: false
           }
         }
