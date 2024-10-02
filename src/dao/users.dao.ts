@@ -60,21 +60,6 @@ export default class UsersDao {
                   futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } }
                 },
                 additionalProperties: false
-              },
-              conversations: {
-                bsonType: 'array',
-                items: {
-                  bsonType: 'object',
-                  properties: {
-                    _id: { bsonType: 'objectId' },
-                    type: { bsonType: 'string' },
-                    title: { bsonType: 'string' },
-                    description: { bsonType: 'string' },
-                    unreadCount: { bsonType: 'int' }
-                  },
-                  required: ['_id', 'type', 'title'],
-                  additionalProperties: false
-                }
               }
             },
             additionalProperties: false
