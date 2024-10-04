@@ -1,17 +1,17 @@
-import { CreateNewGoalMessage } from "@/common/types"
+import { CreateConversationGoalMessage } from "@/common/types"
 import { Conversation } from "@/models/Conversation"
 import { ObjectId } from "mongodb"
 import { getUserById } from "../api/users.services"
 
 export class ConversationBuilder {
-  private goalMessage: CreateNewGoalMessage
+  private conversationMessage: CreateConversationGoalMessage
 
-  constructor(goalMessage: CreateNewGoalMessage) {
-    this.goalMessage = goalMessage
+  constructor(goalMessage: CreateConversationGoalMessage) {
+    this.conversationMessage = goalMessage
   }
 
   async build(): Promise<Conversation> {
-    const participants = await Promise.all(this.goalMessage.conversation.participants.map(async (p) => {
+    const participants = await Promise.all(this.conversationMessage.conversation.participants.map(async (p) => {
       const _id = new ObjectId(p.userId)
       const user = await getUserById(_id)
 
@@ -23,16 +23,9 @@ export class ConversationBuilder {
     }))
 
     return {
-      description: this.goalMessage.conversation.description,
-      title: this.goalMessage.conversation.title,
       participants,
-      type: this.goalMessage.conversation.type,
-      unreadCount: this.goalMessage.conversation.unreadCount,
-      userMilestones: [],
-      smartQuestions: [],
-      milestoneSuggestions: {
-        milestones: []
-      },
+      type: this.conversationMessage.conversation.type,
+      unreadCount: this.conversationMessage.conversation.unreadCount,
     }
   }
 }

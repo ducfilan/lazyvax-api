@@ -1,11 +1,22 @@
-import { getConversation, updateById } from '@/services/api/conversations.services'
+import { getConversationById, getConversationByType, updateById } from '@/services/api/conversations.services'
 import { getMessages } from '@services/api/messages.services'
 
 export default class ConversationsController {
-  static async getConversation(req, res) {
+  static async getConversationById(req, res) {
     try {
       const { conversationId } = req.params
-      const conversationInfo = await getConversation(conversationId)
+      const conversationInfo = await getConversationById(conversationId)
+
+      res.status(200).send(conversationInfo)
+    } catch (e) {
+      res.status(500).json({ error: e.message })
+    }
+  }
+
+  static async getConversationByType(req, res) {
+    try {
+      const { type, meta } = req.params
+      const conversationInfo = await getConversationByType(type, meta)
 
       res.status(200).send(conversationInfo)
     } catch (e) {

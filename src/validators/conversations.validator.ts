@@ -1,10 +1,10 @@
-import { MaxInt, MaxPaginationLimit } from "@/common/consts"
+import { ConversationTypes, MaxInt, MaxPaginationLimit } from "@/common/consts"
 import { isEmpty } from "@/common/utils/objectUtils"
 import { isParticipantInConversation } from "@/services/api/conversations.services"
 import { check, validationResult } from "express-validator"
 import { ObjectId } from "mongodb"
 
-export const validateApiGetConversation = [
+export const validateApiGetConversationById = [
   check('conversationId')
     .customSanitizer(id => new ObjectId(id))
     .custom(async (conversationId, { req }) => {
@@ -13,6 +13,20 @@ export const validateApiGetConversation = [
         throw new Error('You are not part of this conversation')
       }
     }),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty())
+      return res.status(422).json({ errors: errors.array() })
+
+    next()
+  },
+]
+
+export const validateApiGetConversationByType = [
+  check('meta')
+    .customSanitizer(meta => JSON.parse(decodeURIComponent(meta))),
+  check('type')
+    .isIn(ConversationTypes),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty())

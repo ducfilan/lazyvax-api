@@ -18,7 +18,7 @@ export default class ConversationsDao {
       _db = conn.db(DatabaseName)
       _conversations = _db.collection(ConversationsCollectionName)
 
-      _conversations.createIndex({ title: 1 }, { unique: false, sparse: true })
+      _conversations.createIndex({ type: 1 }, { unique: false, sparse: true })
 
       _db.command({
         collMod: ConversationsCollectionName,
@@ -39,7 +39,7 @@ export default class ConversationsDao {
                         properties: {
                           startDate: { "bsonType": "date" }
                         },
-                        required: ["startDate"],
+                        required: ["type", "startDate"],
                         additionalProperties: false
                       }
                     }
@@ -83,6 +83,23 @@ export default class ConversationsDao {
       conversation = await _conversations.findOne({ _id: id })
       conversation && await setCache(CacheKeyConversation(id.toHexString()), conversation)
     }
+
+    if (conversation) {
+      for (const key in projection) {
+        if (Object.prototype.hasOwnProperty.call(projection, key)) {
+          const element = projection[key]
+          if (element && element === 0) {
+            delete conversation[key]
+          }
+        }
+      }
+    }
+
+    return conversation
+  }
+
+  static async findByType(type: string, meta: any, projection: any = {}) {
+    const conversation = await _conversations.findOne({ type, meta })
 
     if (conversation) {
       for (const key in projection) {

@@ -4,17 +4,7 @@ import { ObjectId } from "mongodb"
 export type Conversation = {
   _id?: ObjectId,
   type: string,
-  title: string,
-  description: string,
   unreadCount: number,
-  userMilestones?: UserMilestone[],
-  milestonesFetchDone?: boolean,
-  smartQuestionFetchDone?: boolean,
-  milestoneSuggestions?: {
-    milestones: MilestoneSuggestion[],
-    additionalContent?: string,
-  },
-  smartQuestions?: SmartQuestion[],
   participants: Participant[],
 }
 

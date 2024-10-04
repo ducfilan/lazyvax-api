@@ -1,6 +1,6 @@
 import { User } from "@/models/User";
 import { ObjectId } from "mongodb";
-import { getConversation } from "./conversations.services";
+import { getConversationById } from "./conversations.services";
 import { CompletionAiService } from "../support/ai.services";
 import logger from "@/common/logger";
 
@@ -15,7 +15,7 @@ export async function getActionCompletion(user: User, conversationId: ObjectId, 
 }
 
 async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Promise<string> {
-  const conversation = await getConversation(conversationId)
+  const conversation = await getConversationById(conversationId)
   if (!conversation) {
     logger.info("not match conversation", conversationId)
     return null

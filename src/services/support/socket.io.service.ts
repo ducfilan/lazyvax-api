@@ -2,11 +2,11 @@ import { Server as HttpServer } from 'http'
 import { parse } from "cookie"
 import { Server as SocketServer, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateNewGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GetNextSmartQuestionMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
-import usersServices, { addConversation as addUserConversation } from "../api/users.services"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GetNextSmartQuestionMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
+import usersServices from "../api/users.services"
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, getConversation, isParticipantInConversation } from "../api/conversations.services"
+import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, getConversationById, isParticipantInConversation } from "../api/conversations.services"
 import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeConfirmQuestionnaires, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeAskUserSmartQuestion, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
@@ -31,14 +31,13 @@ export const EventNameConversationMessage = "conversation message"
 export const EventNameTypingUser = "user typing"
 export const EventNameEndTypingUser = "user end typing"
 export const EventNameFinishQuestionnaires = "fin questionnaires"
-export const EventNameCreateNewGoal = "create goal"
+export const EventNameCreateConversation = "create conversation"
 export const EventNameAddMilestoneAndActions = "add milestone & actions"
 export const EventNameEditMilestoneAndActions = "edit milestone & actions"
 export const EventNameNextMilestoneAndActions = "next milestone & actions"
 export const EventNameAddAction = "add action"
 export const EventNameEditAction = "edit action"
 export const EventNameWaitResponse = "wait response"
-export const EventNameGetNextSmartQuestion = "get next smart question"
 
 export let io: SocketServer
 
@@ -93,13 +92,12 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameSendMessage, sendMessageListener)
         socket.on(EventNameJoinConversation, joinConversationListener)
         socket.on(EventNameFinishQuestionnaires, finishQuestionnairesListener)
-        socket.on(EventNameCreateNewGoal, createNewGoal)
+        socket.on(EventNameCreateConversation, createNewConversation)
         socket.on(EventNameAddMilestoneAndActions, addMilestoneAndActions)
         socket.on(EventNameEditMilestoneAndActions, editMilestoneAndActions)
         socket.on(EventNameNextMilestoneAndActions, nextMilestoneAndActions)
         socket.on(EventNameAddAction, addAction)
         socket.on(EventNameEditAction, editAction)
-        socket.on(EventNameGetNextSmartQuestion, getNextSmartQuestion)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -191,7 +189,7 @@ export function registerSocketIo(server: HttpServer) {
           }
         }
 
-        async function createNewGoal(message: CreateNewGoalMessage, ack: any) {
+        async function createNewConversation(message: CreateConversationGoalMessage, ack: any) {
           try {
             const conversation = await new ConversationBuilder(message).build()
 
@@ -203,9 +201,8 @@ export function registerSocketIo(server: HttpServer) {
               await MessagesDao.insertMany(new MessageGroupBuilder(firstMessages).build(conversationId))
 
               conversation._id = conversationId
-              await addUserConversation(socket.user, conversation)
 
-              ack(conversationId)
+              ack(conversation)
             }, transactionOptions)
           } catch (error) {
             logger.error(error)
@@ -305,46 +302,6 @@ export function registerSocketIo(server: HttpServer) {
 
             await editMilestoneAction(conversationId, milestoneId, actionId, message.action, message.isDone)
             ack(true)
-          } catch (error) {
-            ack(false)
-          }
-        }
-
-        async function getNextSmartQuestion(message: GetNextSmartQuestionMessage, ack: any) {
-          try {
-            const conversationId = new ObjectId(message.conversationId)
-
-            const conversation = await getConversation(conversationId)
-            const smartQuestions = conversation.smartQuestions
-            if (!smartQuestions) return null
-
-            const nextQuestion = smartQuestions.find((question: SmartQuestion) => !question.answer)
-            let messageContent = JSON.stringify(nextQuestion), messageType = MessageTypeAskUserSmartQuestion
-
-            const isAllQuestionAnswered = !nextQuestion && conversation.smartQuestionFetchDone
-
-            if (isAllQuestionAnswered) {
-              const i18ns = await I18nDao.getByCode(I18nDbCodeConfirmQuestionnaires, this.user.locale)
-              messageContent = i18ns[0].content
-              messageType = MessageTypeAskConfirmQuestionnaires
-            }
-
-            if (!conversation.smartQuestionFetchDone) {
-              emitWaitResponse(message.authorId, MessageTypeAnswerSmartQuestion)
-              ack(null)
-              return
-            }
-
-            const respMessage: Message = {
-              authorId: BotUserId,
-              authorName: BotUserName,
-              content: messageContent,
-              conversationId: this.currentMessage.conversationId,
-              type: messageType,
-              timestamp: new Date(),
-            }
-
-            ack(respMessage)
           } catch (error) {
             ack(false)
           }

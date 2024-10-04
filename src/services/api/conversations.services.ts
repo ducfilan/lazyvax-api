@@ -6,7 +6,6 @@ import { I18n } from "@/models/I18n"
 import { ObjectId } from "mongodb"
 
 export async function isParticipantInConversation(userId: ObjectId, conversationId: ObjectId): Promise<boolean> {
-  // TODO: Add cache.
   const conversation = await ConversationsDao.findById(conversationId)
   return conversation?.participants?.some(((p) => p._id?.equals(userId)))
 }
@@ -109,27 +108,18 @@ export async function updateSmartQuestionAnswer(conversationId: ObjectId, questi
   )
 }
 
-export async function getConversation(conversationId: ObjectId): Promise<Conversation | null> {
+export async function getConversationById(conversationId: ObjectId): Promise<Conversation | null> {
   const result = await ConversationsDao.findById(conversationId)
   if (!result) return null
 
   return result
 }
 
-export async function getSmartQuestions(conversationId: ObjectId): Promise<SmartQuestion[]> {
-  // TODO: Consider separate getting out of getConversation.
-  const conversation = await getConversation(conversationId)
-  if (!conversation) return []
+export async function getConversationByType(type: string, meta: any): Promise<Conversation | null> {
+  const result = await ConversationsDao.findByType(type, meta)
+  if (!result) return null
 
-  return conversation.smartQuestions
-}
-
-export async function getUserMilestones(conversationId: ObjectId): Promise<UserMilestone[]> {
-  // TODO: Consider separate getting out of getConversation.
-  const conversation = await getConversation(conversationId)
-  if (!conversation) return []
-
-  return conversation.userMilestones
+  return result
 }
 
 export async function generateFirstMessages(conversationType: string, locale: string): Promise<I18n[]> {

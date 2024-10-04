@@ -5,7 +5,7 @@ import { User } from "@/models/User"
 import { Readable } from "stream"
 import { emitConversationMessage, emitEndTypingUser } from "../support/socket.io.service"
 import { Conversation, MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
-import { getConversation, updateById as updateConversationById, updateSmartQuestionAnswer, updateSuggestedMilestone } from "../api/conversations.services"
+import { getConversationById, updateById as updateConversationById, updateSmartQuestionAnswer, updateSuggestedMilestone } from "../api/conversations.services"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
@@ -235,7 +235,7 @@ export class AnswerSmartQuestionResponse implements IResponse {
   }
 
   async getResponses(): Promise<Message[]> {
-    const conversation = await getConversation(this.currentMessage.conversationId)
+    const conversation = await getConversationById(this.currentMessage.conversationId)
     const smartQuestions = conversation.smartQuestions
     if (!smartQuestions) return null
 
@@ -292,7 +292,7 @@ export class ConfirmYesQuestionnairesResponse implements IResponse {
   }
 
   async preprocess(): Promise<void> {
-    this.conversation = await getConversation(this.currentMessage.conversationId)
+    this.conversation = await getConversationById(this.currentMessage.conversationId)
   }
 
   async summarizeSmartQuestions(): Promise<string> {
@@ -471,7 +471,7 @@ export class NextMilestoneAndActionsResponse implements IResponse {
   }
 
   async getResponses(): Promise<Message[]> {
-    const conversation = await getConversation(this.currentMessage.conversationId)
+    const conversation = await getConversationById(this.currentMessage.conversationId)
     if (!conversation) return null
 
     const milestoneToSuggest = conversation.milestoneSuggestions.milestones.find(m => !m.isSuggested)

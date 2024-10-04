@@ -4,7 +4,6 @@ import { isGoogleTokenValid } from '@services/support/google-auth.service'
 import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@common/consts'
 import { getCache, setCache } from '@common/redis'
 import { User } from '@/models/User'
-import { Conversation } from '@/models/Conversation'
 
 export async function getUserById(userId: ObjectId) {
   const cacheKeyId = CacheKeyUser(userId.toHexString())
@@ -80,18 +79,6 @@ export async function update({ _id, email }: User, updateItems) {
 }
 
 export async function logout({ _id, email }) {
-}
-
-export async function addConversation({ _id, email }: User, conversation: Conversation) {
-  delete conversation.participants
-  delete conversation.smartQuestions
-  delete conversation.userMilestones
-  delete conversation.milestoneSuggestions
-
-  await UsersDao.updateOne(
-    { _id, email },
-    { $push: { conversations: conversation } }
-  )
 }
 
 export default {

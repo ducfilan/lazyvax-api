@@ -28,11 +28,9 @@ export type GetNextSmartQuestionMessage = {
   conversationId: string,
 }
 
-export type CreateNewGoalMessage = {
+export type CreateConversationGoalMessage = {
   conversation: {
     type: string,
-    title: string,
-    description: string,
     unreadCount: number,
     participants: {
       userId: string
