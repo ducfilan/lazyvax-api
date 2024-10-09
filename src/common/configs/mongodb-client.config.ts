@@ -4,6 +4,7 @@ import UsersDao from '@dao/users.dao'
 import ConversationsDao from '@/dao/conversations.dao';
 import MessagesDao from '@/dao/messages.dao';
 import I18nDao from '@/dao/i18n';
+import ObjectivesDao from '@/dao/objectives.dao';
 
 const {
   NODE_ENV,
@@ -38,6 +39,7 @@ export const injectTables = async () => {
   MessagesDao.injectDB(client)
   ConfigsDao.injectDB(client)
   I18nDao.injectDB(client)
+  ObjectivesDao.injectDB(client)
 
   return client
 }
