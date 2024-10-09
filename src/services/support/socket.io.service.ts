@@ -131,13 +131,14 @@ export function registerSocketIo(server: HttpServer) {
           chatMessage.needResponse && (message.isResponded = false)
 
           switch (message.type) {
-            case MessageTypeRetryGetResponse:
+            case MessageTypeRetryGetResponse: {
               const retryMessageContent = tryParseJson<MessageContent>(message.content)
               message.content = retryMessageContent.content
               message.type = retryMessageContent.type
               message._id = new ObjectId(retryMessageContent.parentId)
 
               return message
+            }
 
             default:
               const messageId = await saveMessage(message)

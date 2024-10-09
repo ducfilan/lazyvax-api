@@ -31,6 +31,7 @@ export const ConversationsCollectionName = 'conversations'
 export const MessagesCollectionName = 'messages'
 export const I18nCollectionName = 'i18n'
 export const ConfigsCollectionName = 'configs'
+export const ObjectivesCollectionName = 'objectives'
 
 export const LoginTypes = {
   google: 'google'
@@ -154,3 +155,5 @@ export const I18nDbCodeConfirmQuestionnaires = 'confirm-questionnaires'
 export const I18nDbCodeSummarizeQuestionnaires = 'summarize-questionnaires'
 
 export const RegisterStep = 1
+
+export const ObjectiveTypes = ['life', 'long-term', 'short-term']
