@@ -14,7 +14,6 @@ export async function getObjectives(filter: {
 }
 
 export async function createObjective(objectiveData: {
-  userId: ObjectId,
   title: string,
   type: string,
   fromDate: Date,

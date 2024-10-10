@@ -30,6 +30,7 @@ export default class ObjectivesDao {
             required: ['title', 'type', 'fromDate', 'toDate'],
             properties: {
               _id: { bsonType: 'objectId' },
+              userId: { bsonType: 'objectId' },
               title: { bsonType: 'string', maxLength: 255 },
               type: { enum: ObjectiveTypes },
               fromDate: { bsonType: 'date' },
@@ -90,6 +91,7 @@ export default class ObjectivesDao {
 
   static async createObjective(objective: Objective) {
     try {
+      objective._id = new ObjectId()
       const result = await _objectives.insertOne(objective)
       return result.insertedId
     } catch (e) {

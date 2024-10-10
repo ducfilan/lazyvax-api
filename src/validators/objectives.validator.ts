@@ -20,16 +20,18 @@ export const validateObjectiveCreation = [
     .bail()
     .isIn(ObjectiveTypes)
     .withMessage('Invalid type'),
-  check('startDate')
+  check('fromDate')
     .optional()
     .isISO8601()
-    .withMessage('Start date must be a valid date'),
-  check('endDate')
+    .withMessage('Start date must be a valid date')
+    .customSanitizer(fromDate => new Date(fromDate)),
+  check('toDate')
     .optional()
     .isISO8601()
     .withMessage('End date must be a valid date')
-    .custom((endDate, { req }) => {
-      if (req.body.startDate && new Date(endDate) < new Date(req.body.startDate)) {
+    .customSanitizer(toDate => new Date(toDate))
+    .custom((toDate, { req }) => {
+      if (req.body.fromDate && toDate < req.body.fromDate) {
         throw new Error('End date must be after the start date')
       }
       return true
@@ -46,7 +48,7 @@ export const validateObjectiveCreation = [
     .isArray()
     .withMessage('Areas must be an array'),
   check('areas.*')
-    .isMongoId()
+    .isLength({ max: 50 })
     .withMessage('Areas must contain valid IDs'),
   (req, res, next) => {
     const errors = validationResult(req)
@@ -73,16 +75,16 @@ export const validateObjectiveUpdate = [
     .optional()
     .isIn(ObjectiveTypes)
     .withMessage('Invalid type'),
-  check('startDate')
+  check('fromDate')
     .optional()
     .isISO8601()
     .withMessage('Start date must be a valid date'),
-  check('endDate')
+  check('toDate')
     .optional()
     .isISO8601()
     .withMessage('End date must be a valid date')
-    .custom((endDate, { req }) => {
-      if (req.body.startDate && new Date(endDate) < new Date(req.body.startDate)) {
+    .custom((toDate, { req }) => {
+      if (req.body.fromDate && new Date(toDate) < new Date(req.body.fromDate)) {
         throw new Error('End date must be after the start date')
       }
       return true
@@ -122,16 +124,16 @@ export const validateObjectiveFilters = [
     .optional()
     .isIn(ObjectiveTypes)
     .withMessage('Invalid type'),
-  check('startDate')
+  check('fromDate')
     .optional()
     .isISO8601()
     .withMessage('Start date must be a valid date'),
-  check('endDate')
+  check('toDate')
     .optional()
     .isISO8601()
     .withMessage('End date must be a valid date')
-    .custom((endDate, { req }) => {
-      if (req.query.startDate && new Date(endDate) < new Date(req.query.startDate)) {
+    .custom((toDate, { req }) => {
+      if (req.query.fromDate && new Date(toDate) < new Date(req.query.fromDate)) {
         throw new Error('End date must be after the start date')
       }
       return true
