@@ -36,7 +36,7 @@ export default class ObjectivesDao {
               toDate: { bsonType: 'date' },
               detail: { bsonType: 'string' },
               alignTargets: { bsonType: 'array', items: { bsonType: 'objectId' } },
-              areas: { bsonType: 'array', items: { bsonType: 'objectId' } },
+              areas: { bsonType: 'array', items: { bsonType: 'string', maxLength: 50 } },
             },
             additionalProperties: false,
           },

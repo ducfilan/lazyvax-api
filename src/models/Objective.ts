@@ -7,6 +7,6 @@ export interface Objective {
   fromDate: Date;
   toDate: Date;
   detail?: string;
-  alignTargets: ObjectId[];
-  areas: ObjectId[];
+  alignTargets?: ObjectId[];
+  areas?: ObjectId[];
 }

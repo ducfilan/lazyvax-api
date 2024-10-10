@@ -8,7 +8,7 @@ export default class ObjectivesController {
   static async getObjectives(req: Request & { user: User }, res: Response) {
     try {
       const { type, fromDate, toDate, areaId, keyword } = req.query
-      const userId = new ObjectId(req.user._id)
+      const userId = req.user._id
 
       const filter = {
         userId,
@@ -29,7 +29,7 @@ export default class ObjectivesController {
 
   static async createObjective(req: Request & { user: User }, res: Response) {
     try {
-      const userId = new ObjectId(req.user._id)
+      const userId = req.user._id
       const objectiveData = {
         ...req.body,
         userId,
