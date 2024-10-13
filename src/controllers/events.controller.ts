@@ -1,14 +1,14 @@
 import logger from '@/common/logger'
-import { getEvents } from '@/services/api/events.services'
+import { getGoogleEvents } from '@/services/api/events.services'
 import { Request, Response } from 'express';
 import eventsService from '@services/api/events.services';
 import { ObjectId } from 'mongodb';
 import { User } from '@/models/User';
 
 export default class EventsController {
-  static async getEvents(req, res) {
+  static async getGoogleEvents(req, res) {
     try {
-      const events = await getEvents()
+      const events = await getGoogleEvents()
 
       res.status(200).send(events)
     } catch (e) {
@@ -16,7 +16,7 @@ export default class EventsController {
       res.status(500).json({ error: e.message })
     }
   }
-  
+
   static async getEvents(req: Request & { user: User }, res: Response) {
     try {
       const { start, end, calendarId, categories } = req.query;

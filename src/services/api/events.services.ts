@@ -7,7 +7,7 @@ import { Event } from '@/models/Event';
 
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
 
-export async function getEvents() {
+export async function getGoogleEvents() {
   const response = await calendar.events.list({
     calendarId: 'primary',
     timeMin: startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString(),

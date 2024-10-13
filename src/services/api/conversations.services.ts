@@ -1,7 +1,7 @@
 import { ConversationTypeObjective, ConversationTypeWeek, I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
-import { Conversation, SmartQuestion, UserMilestone } from "@/models/Conversation"
+import { Conversation, UserMilestone } from "@/models/Conversation"
 import { I18n } from "@/models/I18n"
 import { ObjectId } from "mongodb"
 
