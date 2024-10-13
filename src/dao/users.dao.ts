@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { AgeGroupMaxLength, BotUserId, BotUserName, CacheKeyUser, ConversationTypeGoal, GoalMaxLength, I18nDbCodeFirstConversationDescription, I18nDbCodeFirstConversationTitle, I18nDbCodeFirstMessages, OccupationLength, StudyCourseLength, SupportingLanguages, UsersCollectionName } from '@common/consts'
+import { AgeGroupMaxLength, BotUserId, BotUserName, CacheKeyUser, ConversationTypeObjective, GoalMaxLength, I18nDbCodeFirstConversationDescription, I18nDbCodeFirstConversationTitle, I18nDbCodeFirstMessages, OccupationLength, StudyCourseLength, SupportingLanguages, UsersCollectionName } from '@common/consts'
 import { User } from '@/models/User'
 import ConversationsDao from './conversations.dao'
 import { Conversation } from '@/models/Conversation'
@@ -144,7 +144,7 @@ async function generateFirstConversation(locale: LangCode, userInfo: User) {
     title,
     description,
     unreadCount: 1,
-    type: ConversationTypeGoal,
+    type: ConversationTypeObjective,
     participants: [{
       _id: userInfo._id,
       name: userInfo.name,

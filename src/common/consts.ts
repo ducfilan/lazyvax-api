@@ -32,6 +32,7 @@ export const MessagesCollectionName = 'messages'
 export const I18nCollectionName = 'i18n'
 export const ConfigsCollectionName = 'configs'
 export const ObjectivesCollectionName = 'objectives'
+export const EventsCollectionName = 'events'
 
 export const LoginTypes = {
   google: 'google'
@@ -110,8 +111,6 @@ export const OAuth2TokenReceiver = (host: string, targetPlatform: string) => {
   return `${host}/pages/oauth.html`
 }
 
-export const ConversationTypeGoal = 'goal'
-
 export const MessageTypeBeforeLogin = 1
 export const MessageTypePlainText = 2
 export const MessageTypeAskQuestionnaires = 3
@@ -128,13 +127,17 @@ export const MessageTypeSuggestMilestoneAndActions = 13
 export const MessageTypeAddMilestoneAndActions = 14
 export const MessageTypeNextMilestoneAndActions = 15
 export const MessageTypeRetryGetResponse = 16
+export const MessageTypeHardcodedMapping = 17
+export const MessageTypeAskToGenerateWeekPlanFull = 18
+export const MessageTypeConfirmToGenerateWeekPlanFull = 19
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
   MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeSummaryQuestionnaires,
   MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
   MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions,
-  MessageTypeRetryGetResponse
+  MessageTypeRetryGetResponse, MessageTypeHardcodedMapping, MessageTypeAskToGenerateWeekPlanFull,
+  MessageTypeConfirmToGenerateWeekPlanFull
 ]
 
 export const MilestoneSourceSuggestion = 1
@@ -151,6 +154,7 @@ export const I18nDbCodeFirstConversationTitle = 'first-conversation-title'
 export const I18nDbCodeFirstConversationDescription = 'first-conversation-description'
 export const I18nDbCodeIntroduceHowItWorks = 'introduce-how-it-works'
 export const I18nDbCodeGoalFirstMessage = 'goal-first-message'
+export const I18nDbCodeWeekFirstMessage = 'week-first-message'
 export const I18nDbCodeConfirmQuestionnaires = 'confirm-questionnaires'
 export const I18nDbCodeSummarizeQuestionnaires = 'summarize-questionnaires'
 

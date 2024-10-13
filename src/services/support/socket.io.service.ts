@@ -2,12 +2,12 @@ import { Server as HttpServer } from 'http'
 import { parse } from "cookie"
 import { Server as SocketServer, Socket } from "socket.io"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GetNextSmartQuestionMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, GetNextSmartQuestionMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
 import usersServices from "../api/users.services"
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, getConversationById, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, ConversationTypeGoal, DefaultLangCode, I18nDbCodeConfirmQuestionnaires, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeAskUserSmartQuestion, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
+import { BotUserId, BotUserName, ConversationTypeObjective, DefaultLangCode, I18nDbCodeConfirmQuestionnaires, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeAskUserSmartQuestion, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/models/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -38,6 +38,7 @@ export const EventNameNextMilestoneAndActions = "next milestone & actions"
 export const EventNameAddAction = "add action"
 export const EventNameEditAction = "edit action"
 export const EventNameWaitResponse = "wait response"
+export const EventNameConfirmToGenerateWeekPlanFull = "confirm generate week plan full"
 
 export let io: SocketServer
 
@@ -98,6 +99,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameNextMilestoneAndActions, nextMilestoneAndActions)
         socket.on(EventNameAddAction, addAction)
         socket.on(EventNameEditAction, editAction)
+        socket.on(EventNameConfirmToGenerateWeekPlanFull, generateWeekPlanFull)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -198,7 +200,7 @@ export function registerSocketIo(server: HttpServer) {
             await session.withTransaction(async () => {
               const conversationId = await createConversation(conversation)
 
-              const firstMessages = await generateFirstMessages(ConversationTypeGoal, socket.user?.locale || DefaultLangCode)
+              const firstMessages = await generateFirstMessages(message.conversation.type, socket.user?.locale || DefaultLangCode)
               await MessagesDao.insertMany(new MessageGroupBuilder(firstMessages).build(conversationId))
 
               conversation._id = conversationId
@@ -305,6 +307,17 @@ export function registerSocketIo(server: HttpServer) {
             ack(true)
           } catch (error) {
             ack(false)
+          }
+        }
+
+        async function generateWeekPlanFull(message: GenerateWeekPlanFullMessage, ack: any) {
+          try {
+            const conversationId = new ObjectId(message.conversationId)
+
+            const weekPlan = await generateWeekPlan(conversationId, socket.user?.locale || DefaultLangCode)
+            ack(weekPlan)
+          } catch (error) {
+            logger.error(error)
           }
         }
       })

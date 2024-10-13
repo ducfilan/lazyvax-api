@@ -1,4 +1,4 @@
-import { ConversationTypeGoal, I18nDbCodeGoalFirstMessage } from "@/common/consts"
+import { ConversationTypeObjective, ConversationTypeWeek, I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import { Conversation, SmartQuestion, UserMilestone } from "@/models/Conversation"
@@ -124,8 +124,11 @@ export async function getConversationByType(type: string, meta: any): Promise<Co
 
 export async function generateFirstMessages(conversationType: string, locale: string): Promise<I18n[]> {
   switch (conversationType) {
-    case ConversationTypeGoal:
+    case ConversationTypeObjective:
       return I18nDao.getByCode(I18nDbCodeGoalFirstMessage, locale)
+
+    case ConversationTypeWeek:
+      return I18nDao.getByCode(I18nDbCodeWeekFirstMessage, locale)
 
     default:
       return []

@@ -90,3 +90,7 @@ export type MessageContent = {
   isResponded?: boolean,
   parentContent?: string
 }
+
+export type GenerateWeekPlanFullMessage = {
+  conversationId: string,
+}

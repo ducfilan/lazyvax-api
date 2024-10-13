@@ -1,5 +1,5 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
-import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config';
+import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { ObjectivesCollectionName, ObjectiveTypes } from '@common/consts';
 import logger from '@/common/logger';
 import { Objective } from '@/models/Objective';
