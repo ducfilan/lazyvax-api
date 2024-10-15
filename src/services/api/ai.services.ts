@@ -26,6 +26,195 @@ export async function queryGenerateWeekPlan(user: User, conversationId: ObjectId
   const response = `
   [
     {
+      "date": "Monday",
+      "activity": "Breakfast",
+      "start_time": "2024-10-14T07:30:00+08:00",
+      "end_time": "2024-10-14T08:00:00+08:00",
+      "reason": "Start the day with a good meal."
+    },
+    {
+      "date": "Monday",
+      "activity": "Commute to work",
+      "start_time": "2024-10-14T08:00:00+08:00",
+      "end_time": "2024-10-14T09:00:00+08:00",
+      "reason": "Get to work on time and settle in."
+    },
+    {
+      "date": "Monday",
+      "activity": "9-5 job",
+      "start_time": "2024-10-14T09:00:00+08:00",
+      "end_time": "2024-10-14T17:00:00+08:00",
+      "reason": "Focus on work tasks."
+    },
+    {
+      "date": "Monday",
+      "activity": "Lunch break",
+      "start_time": "2024-10-14T12:00:00+08:00",
+      "end_time": "2024-10-14T13:00:00+08:00",
+      "reason": "Take a break and recharge."
+    },
+    {
+      "date": "Monday",
+      "activity": "Evening commute",
+      "start_time": "2024-10-14T17:00:00+08:00",
+      "end_time": "2024-10-14T18:00:00+08:00",
+      "reason": "Head back home."
+    },
+    {
+      "date": "Monday",
+      "activity": "Family dinner",
+      "start_time": "2024-10-14T18:30:00+08:00",
+      "end_time": "2024-10-14T19:30:00+08:00",
+      "reason": "Spend quality time with family."
+    },
+    {
+      "date": "Monday",
+      "activity": "Child playtime",
+      "start_time": "2024-10-14T19:30:00+08:00",
+      "end_time": "2024-10-14T20:00:00+08:00",
+      "reason": "Enjoy time with your son."
+    },
+    {
+      "date": "Monday",
+      "activity": "Finish Self-Assessment form (progress: 10%)",
+      "start_time": "2024-10-14T20:15:00+08:00",
+      "end_time": "2024-10-14T21:15:00+08:00",
+      "reason": "High priority task for work."
+    },
+    {
+      "date": "Monday",
+      "activity": "Quick workout",
+      "start_time": "2024-10-14T21:30:00+08:00",
+      "end_time": "2024-10-14T22:00:00+08:00",
+      "reason": "Stay fit and active."
+    },
+    {
+      "date": "Monday",
+      "activity": "Shower",
+      "start_time": "2024-10-14T22:00:00+08:00",
+      "end_time": "2024-10-14T22:15:00+08:00",
+      "reason": "Refresh and relax."
+    },
+    {
+      "date": "Monday",
+      "activity": "Couple time",
+      "start_time": "2024-10-14T22:15:00+08:00",
+      "end_time": "2024-10-14T22:45:00+08:00",
+      "reason": "Connect with your partner."
+    },
+    {
+      "date": "Monday",
+      "activity": "Reading",
+      "start_time": "2024-10-14T22:45:00+08:00",
+      "end_time": "2024-10-14T23:15:00+08:00",
+      "reason": "Relax before bedtime."
+    },
+    {
+      "date": "Monday",
+      "activity": "Sleep",
+      "start_time": "2024-10-14T23:15:00+08:00",
+      "end_time": "2024-10-15T07:00:00+08:00",
+      "reason": "Rest and recharge for the next day."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Breakfast",
+      "start_time": "2024-10-15T07:30:00+08:00",
+      "end_time": "2024-10-15T08:00:00+08:00",
+      "reason": "Start the day with a good meal."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Commute to work",
+      "start_time": "2024-10-15T08:00:00+08:00",
+      "end_time": "2024-10-15T09:00:00+08:00",
+      "reason": "Get to work on time and settle in."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "9-5 job",
+      "start_time": "2024-10-15T09:00:00+08:00",
+      "end_time": "2024-10-15T17:00:00+08:00",
+      "reason": "Focus on work tasks."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Lunch break",
+      "start_time": "2024-10-15T12:00:00+08:00",
+      "end_time": "2024-10-15T13:00:00+08:00",
+      "reason": "Take a break and recharge."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Evening commute",
+      "start_time": "2024-10-15T17:00:00+08:00",
+      "end_time": "2024-10-15T18:00:00+08:00",
+      "reason": "Head back home."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Family dinner",
+      "start_time": "2024-10-15T18:30:00+08:00",
+      "end_time": "2024-10-15T19:30:00+08:00",
+      "reason": "Spend quality time with family."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Child playtime",
+      "start_time": "2024-10-15T19:30:00+08:00",
+      "end_time": "2024-10-15T20:00:00+08:00",
+      "reason": "Enjoy time with your son."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Work on air ticket & hotel booking",
+      "start_time": "2024-10-15T20:15:00+08:00",
+      "end_time": "2024-10-15T21:00:00+08:00",
+      "reason": "Start planning for the Taiwan trip."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Podcast listening",
+      "start_time": "2024-10-15T21:00:00+08:00",
+      "end_time": "2024-10-15T21:30:00+08:00",
+      "reason": "Wind down with some learning."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Language learning",
+      "start_time": "2024-10-15T21:30:00+08:00",
+      "end_time": "2024-10-15T22:00:00+08:00",
+      "reason": "Practice Mandarin for your Taiwan trip."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Shower",
+      "start_time": "2024-10-15T22:00:00+08:00",
+      "end_time": "2024-10-15T22:15:00+08:00",
+      "reason": "Refresh and prepare for bedtime."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Couple time",
+      "start_time": "2024-10-15T22:15:00+08:00",
+      "end_time": "2024-10-15T22:45:00+08:00",
+      "reason": "Connect with your partner."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Reading",
+      "start_time": "2024-10-15T22:45:00+08:00",
+      "end_time": "2024-10-15T23:15:00+08:00",
+      "reason": "Wind down with a good book."
+    },
+    {
+      "date": "Tuesday",
+      "activity": "Sleep",
+      "start_time": "2024-10-15T23:15:00+08:00",
+      "end_time": "2024-10-16T07:00:00+08:00",
+      "reason": "Rest and recharge for the next day."
+    },
+    {
       "date": "Wednesday",
       "activity": "Breakfast",
       "start_time": "2024-10-16T07:30:00+08:00",
