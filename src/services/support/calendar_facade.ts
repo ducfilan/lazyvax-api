@@ -1,6 +1,6 @@
 import { google } from "googleapis"
 import { startOfWeek } from "date-fns"
-import { oAuth2Client } from "../support/google-auth.service"
+import { oAuth2Client } from "./google-auth.service"
 
 import { Event } from "@/entities/Event"
 import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts";

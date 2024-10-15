@@ -21,7 +21,7 @@ import { BotResponseFactory } from "../utils/botResponse.factory"
 import logger from "@/common/logger"
 import { tryParseJson } from '@/common/utils/stringUtils'
 import { createMultipleEvents } from "../api/events.services"
-import { addEventsToGoogleCalendar } from "./calendar.services"
+import { addEventsToGoogleCalendar } from "./calendar_facade"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;

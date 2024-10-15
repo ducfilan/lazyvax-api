@@ -171,6 +171,7 @@ export let ChatAiService: IAiService
 
 export function registerAiServices(provider: AiProvider): void {
   const factory = new AiServiceFactory()
+  // TODO: Deprecated, should be removed.
   CompletionAiService = factory.createAiService(provider, AiModeCompletion, { name: 'gpt-3.5-turbo-instruct' })
-  ChatAiService = factory.createAiService(provider, AiModeChat, { name: 'gpt-3.5-turbo' })
+  ChatAiService = factory.createAiService(provider, AiModeChat, { name: 'gpt-4o-mini' })
 }
