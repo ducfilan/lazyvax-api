@@ -1,7 +1,7 @@
 import logger from '@/common/logger'
 import { OAuth2Client } from 'google-auth-library'
 
-export const oAuth2Client = new OAuth2Client({
+export const oAuth2Client: OAuth2Client = new OAuth2Client({
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   redirectUri: process.env.GOOGLE_REDIRECT_URI,

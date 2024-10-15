@@ -5,9 +5,9 @@ import { oAuth2Client } from "../support/google-auth.service"
 import { Event } from "@/entities/Event"
 import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts";
 
-const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
-
 export async function getEventsFromGoogleCalendar(): Promise<Event[]> {
+  const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
+
   const response = await calendar.events.list({
     calendarId: 'primary',
     timeMin: startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString(),
