@@ -1,10 +1,10 @@
-import { User } from "@/models/User";
+import { User } from "@/entities/User";
 import { ObjectId } from "mongodb";
 import { getConversationById } from "./conversations.services";
-import { CompletionAiService } from "../support/ai.services";
+import { CompletionAiService } from "../support/ai_querier";
 import logger from "@/common/logger";
 
-export async function getActionCompletion(user: User, conversationId: ObjectId, milestoneId: ObjectId) {
+export async function queryActionCompletion(user: User, conversationId: ObjectId, milestoneId: ObjectId) {
   const prompt = await buildPrompt(conversationId, milestoneId)
   if (!prompt) {
     logger.info(`cannot generate prompt from conversationId: ${conversationId}, milestoneId: ${milestoneId}`)
@@ -14,6 +14,269 @@ export async function getActionCompletion(user: User, conversationId: ObjectId, 
   return CompletionAiService.query<string>(user, prompt)
 }
 
+export async function queryGenerateWeekPlan(user: User, conversationId: ObjectId) {
+  const conversation = await getConversationById(conversationId)
+  if (!conversation) {
+    logger.info("not match conversation", conversationId)
+    return null
+  }
+
+  const prompt = ``
+
+  const response = `
+  [
+    {
+      "date": "Wednesday",
+      "activity": "Breakfast",
+      "start_time": "2024-10-16T07:30:00+08:00",
+      "end_time": "2024-10-16T08:00:00+08:00",
+      "reason": "Kickstart the day."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Commute",
+      "start_time": "2024-10-16T08:30:00+08:00",
+      "end_time": "2024-10-16T09:00:00+08:00",
+      "reason": "Office time."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "9-5 job",
+      "start_time": "2024-10-16T09:00:00+08:00",
+      "end_time": "2024-10-16T17:00:00+08:00",
+      "reason": "Workday."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Lunch break",
+      "start_time": "2024-10-16T12:30:00+08:00",
+      "end_time": "2024-10-16T13:30:00+08:00",
+      "reason": "Rest and eat."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Evening commute",
+      "start_time": "2024-10-16T17:00:00+08:00",
+      "end_time": "2024-10-16T17:30:00+08:00",
+      "reason": "Back home."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Guitar practice",
+      "start_time": "2024-10-16T18:00:00+08:00",
+      "end_time": "2024-10-16T19:00:00+08:00",
+      "reason": "Practice session."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Family dinner",
+      "start_time": "2024-10-16T19:15:00+08:00",
+      "end_time": "2024-10-16T20:00:00+08:00",
+      "reason": "Dinner with the family."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Finish self-assessment form",
+      "start_time": "2024-10-16T20:30:00+08:00",
+      "end_time": "2024-10-16T21:30:00+08:00",
+      "reason": "Progress on the work task."
+    },
+    {
+      "date": "Wednesday",
+      "activity": "Reading",
+      "start_time": "2024-10-16T22:00:00+08:00",
+      "end_time": "2024-10-16T22:30:00+08:00",
+      "reason": "Relax before bed."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Breakfast",
+      "start_time": "2024-10-17T07:30:00+08:00",
+      "end_time": "2024-10-17T08:00:00+08:00",
+      "reason": "Morning routine."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Commute",
+      "start_time": "2024-10-17T08:30:00+08:00",
+      "end_time": "2024-10-17T09:00:00+08:00",
+      "reason": "Head to work."
+    },
+    {
+      "date": "Thursday",
+      "activity": "9-5 job",
+      "start_time": "2024-10-17T09:00:00+08:00",
+      "end_time": "2024-10-17T17:00:00+08:00",
+      "reason": "Work on projects."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Lunch break",
+      "start_time": "2024-10-17T12:30:00+08:00",
+      "end_time": "2024-10-17T13:30:00+08:00",
+      "reason": "Time to recharge."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Evening commute",
+      "start_time": "2024-10-17T17:00:00+08:00",
+      "end_time": "2024-10-17T17:30:00+08:00",
+      "reason": "Return home."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Child playtime",
+      "start_time": "2024-10-17T18:00:00+08:00",
+      "end_time": "2024-10-17T18:45:00+08:00",
+      "reason": "Fun time with my son."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Family dinner",
+      "start_time": "2024-10-17T19:00:00+08:00",
+      "end_time": "2024-10-17T19:45:00+08:00",
+      "reason": "Dinner together."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Language learning",
+      "start_time": "2024-10-17T20:00:00+08:00",
+      "end_time": "2024-10-17T21:00:00+08:00",
+      "reason": "Improve my skills."
+    },
+    {
+      "date": "Thursday",
+      "activity": "Finish self-assessment form",
+      "start_time": "2024-10-17T21:15:00+08:00",
+      "end_time": "2024-10-17T22:15:00+08:00",
+      "reason": "Make progress on the important task."
+    },
+    {
+      "date": "Friday",
+      "activity": "Breakfast",
+      "start_time": "2024-10-18T07:30:00+08:00",
+      "end_time": "2024-10-18T08:00:00+08:00",
+      "reason": "Start the day right."
+    },
+    {
+      "date": "Friday",
+      "activity": "Commute",
+      "start_time": "2024-10-18T08:30:00+08:00",
+      "end_time": "2024-10-18T09:00:00+08:00",
+      "reason": "Head to the office."
+    },
+    {
+      "date": "Friday",
+      "activity": "9-5 job",
+      "start_time": "2024-10-18T09:00:00+08:00",
+      "end_time": "2024-10-18T17:00:00+08:00",
+      "reason": "Finish the workweek strong."
+    },
+    {
+      "date": "Friday",
+      "activity": "Lunch break",
+      "start_time": "2024-10-18T12:30:00+08:00",
+      "end_time": "2024-10-18T13:30:00+08:00",
+      "reason": "Midday meal."
+    },
+    {
+      "date": "Friday",
+      "activity": "Evening commute",
+      "start_time": "2024-10-18T17:00:00+08:00",
+      "end_time": "2024-10-18T17:30:00+08:00",
+      "reason": "Time to go home."
+    },
+    {
+      "date": "Friday",
+      "activity": "Local food tour",
+      "start_time": "2024-10-18T18:00:00+08:00",
+      "end_time": "2024-10-18T19:30:00+08:00",
+      "reason": "Explore new flavors with the family."
+    },
+    {
+      "date": "Friday",
+      "activity": "Couple time",
+      "start_time": "2024-10-18T21:00:00+08:00",
+      "end_time": "2024-10-18T22:00:00+08:00",
+      "reason": "Relax and unwind with my wife."
+    },
+    {
+      "date": "Saturday",
+      "activity": "Family picnic",
+      "start_time": "2024-10-19T09:00:00+08:00",
+      "end_time": "2024-10-19T12:00:00+08:00",
+      "reason": "Weekend family time outdoors."
+    },
+    {
+      "date": "Saturday",
+      "activity": "Lunch at home",
+      "start_time": "2024-10-19T12:30:00+08:00",
+      "end_time": "2024-10-19T13:30:00+08:00",
+      "reason": "A cozy family meal."
+    },
+    {
+      "date": "Saturday",
+      "activity": "Swimming",
+      "start_time": "2024-10-19T15:00:00+08:00",
+      "end_time": "2024-10-19T16:00:00+08:00",
+      "reason": "Enjoy a swim to stay active."
+    },
+    {
+      "date": "Saturday",
+      "activity": "Family dinner",
+      "start_time": "2024-10-19T19:00:00+08:00",
+      "end_time": "2024-10-19T20:00:00+08:00",
+      "reason": "Dinner together."
+    },
+    {
+      "date": "Saturday",
+      "activity": "Movie night",
+      "start_time": "2024-10-19T21:00:00+08:00",
+      "end_time": "2024-10-19T23:00:00+08:00",
+      "reason": "Relax and enjoy a film."
+    },
+    {
+      "date": "Sunday",
+      "activity": "Finish self-assessment form",
+      "start_time": "2024-10-20T09:00:00+08:00",
+      "end_time": "2024-10-20T11:00:00+08:00",
+      "reason": "Final push to complete before the deadline."
+    },
+    {
+      "date": "Sunday",
+      "activity": "Power nap",
+      "start_time": "2024-10-20T13:00:00+08:00",
+      "end_time": "2024-10-20T13:30:00+08:00",
+      "reason": "Recharge for the rest of the day."
+    },
+    {
+      "date": "Sunday",
+      "activity": "Guitar practice",
+      "start_time": "2024-10-20T15:00:00+08:00",
+      "end_time": "2024-10-20T16:00:00+08:00",
+      "reason": "Creative time with music."
+    },
+    {
+      "date": "Sunday",
+      "activity": "Family dinner",
+      "start_time": "2024-10-20T19:00:00+08:00",
+      "end_time": "2024-10-20T20:00:00+08:00",
+      "reason": "End the week with family."
+    },
+    {
+      "date": "Sunday",
+      "activity": "Reading",
+      "start_time": "2024-10-20T21:00:00+08:00",
+      "end_time": "2024-10-20T22:00:00+08:00",
+      "reason": "Wrap up the week with a good book."
+    }
+    ]`
+
+  return Promise.resolve(response);
+
+  // return CompletionAiService.query<string>(user, prompt)
+}
+
 async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Promise<string> {
   const conversation = await getConversationById(conversationId)
   if (!conversation) {
@@ -21,17 +284,10 @@ async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Pro
     return null
   }
 
-  const milestone = conversation.userMilestones?.find(m => m._id.equals(milestoneId))
-  if (!milestone) {
-    logger.info("not match milestone", milestoneId)
-    return null
-  }
-
-  return `${conversation.description}
+  return `
   The following is 1 of many milestones I have, with a list of current actions to support that milestone. Suggest me only 1 more action that is actionable, specific, executable, achievable.
-  Milestone: ${milestone.milestone}
+  Milestone: 
   Actions:
-  ${milestone.actions.map(a => a.action).join("\n")}
   Answer concisely in 1 sentence, don't say anything else, don't mention action number.`
 }
 

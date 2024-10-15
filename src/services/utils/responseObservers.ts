@@ -1,6 +1,6 @@
 import { BotUserId, BotUserName, MessageTypeAskUserSmartQuestion, MessageTypeSuggestMilestoneAndActions } from "@/common/consts"
-import { MilestoneSuggestion, SmartQuestion } from "@/models/Conversation"
-import { Message } from "@/models/Message"
+import { MilestoneSuggestion, SmartQuestion } from "@/entities/Conversation"
+import { Message } from "@/entities/Message"
 import { saveMessage } from "../api/messages.services"
 import { updateById as updateConversationById } from "../api/conversations.services"
 import { emitWaitResponse } from "../support/socket.io.service"

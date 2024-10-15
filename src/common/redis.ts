@@ -1,4 +1,4 @@
-import { Conversation } from '@/models/Conversation'
+import { Conversation } from '@/entities/Conversation'
 import Redis from 'ioredis'
 import { ObjectId } from 'mongodb'
 import logger from './logger'

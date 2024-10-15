@@ -3,7 +3,7 @@ import { getGoogleEvents } from '@/services/api/events.services'
 import { Request, Response } from 'express';
 import eventsService from '@services/api/events.services';
 import { ObjectId } from 'mongodb';
-import { User } from '@/models/User';
+import { User } from '@/entities/User';
 
 export default class EventsController {
   static async getGoogleEvents(req, res) {

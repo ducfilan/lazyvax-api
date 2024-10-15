@@ -4,7 +4,7 @@ import { injectTables } from '@common/configs/mongodb-client.config'
 
 import http from 'http'
 import { registerSocketIo } from './services/support/socket.io.service'
-import { registerAiServices } from './services/support/ai.services'
+import { registerAiServices } from './services/support/ai_querier'
 import { AiProviderOpenAi } from './common/consts'
 import logger from './common/logger'
 

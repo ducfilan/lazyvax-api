@@ -2,7 +2,7 @@ import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { EventsCollectionName } from '@common/consts';
 import logger from '@/common/logger';
-import { Event } from '@/models/Event';
+import { Event } from '@/entities/Event';
 
 let _events: Collection<Event>;
 let _db: Db;
@@ -101,6 +101,23 @@ export default class EventsDao {
       return result.insertedId;
     } catch (e) {
       logger.error(`Error creating event: ${e}`);
+      return null;
+    }
+  }
+
+  static async createMultipleEvents(events: Event[]) {
+    try {
+      const preparedEvents = events.map((event) => ({
+        _id: new ObjectId(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...event,
+      }));
+
+      const result = await _events.insertMany(preparedEvents);
+      return result.insertedIds;
+    } catch (e) {
+      logger.error(`Error creating multiple events: ${e}`);
       return null;
     }
   }

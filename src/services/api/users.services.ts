@@ -3,7 +3,7 @@ import UsersDao from '@dao/users.dao'
 import { isGoogleTokenValid } from '@services/support/google-auth.service'
 import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@common/consts'
 import { getCache, setCache } from '@common/redis'
-import { User } from '@/models/User'
+import { User } from '@/entities/User'
 
 export async function getUserById(userId: ObjectId) {
   const cacheKeyId = CacheKeyUser(userId.toHexString())

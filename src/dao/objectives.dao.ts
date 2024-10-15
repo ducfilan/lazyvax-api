@@ -2,7 +2,7 @@ import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { ObjectivesCollectionName, ObjectiveTypes } from '@common/consts';
 import logger from '@/common/logger';
-import { Objective } from '@/models/Objective';
+import { Objective } from '@/entities/Objective';
 
 let _objectives: Collection<Objective>;
 let _db: Db;

@@ -1,7 +1,7 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { CacheKeyConversation, ConversationsCollectionName, ConversationTypes, ConversationTypeWeek, MilestoneSources } from '@common/consts'
-import { Conversation } from '@/models/Conversation'
+import { Conversation } from '@/entities/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
 import logger from '@/common/logger'
 

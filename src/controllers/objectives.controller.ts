@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import objectivesService from '@services/api/objectives.services'
 import { ObjectId } from 'mongodb'
 import logger from '@/common/logger'
-import { User } from '@/models/User'
+import { User } from '@/entities/User'
 
 export default class ObjectivesController {
   static async getObjectives(req: Request & { user: User }, res: Response) {

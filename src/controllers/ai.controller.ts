@@ -1,11 +1,11 @@
 import logger from '@/common/logger'
-import { getActionCompletion, getFutureSelfSuggestions } from '@/services/api/ai.services'
+import { queryActionCompletion, getFutureSelfSuggestions } from '@/services/api/ai.services'
 
 export default class AiController {
   static async getActionCompletion(req, res) {
     try {
       const { conversationId, milestoneId } = req.query
-      const suggestedAction = await getActionCompletion(req.user, conversationId, milestoneId)
+      const suggestedAction = await queryActionCompletion(req.user, conversationId, milestoneId)
 
       res.status(200).send(suggestedAction)
     } catch (e) {

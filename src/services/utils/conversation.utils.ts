@@ -1,5 +1,5 @@
 import { CreateConversationGoalMessage } from "@/common/types"
-import { Conversation } from "@/models/Conversation"
+import { Conversation } from "@/entities/Conversation"
 import { ObjectId } from "mongodb"
 import { getUserById } from "../api/users.services"
 

@@ -1,7 +1,7 @@
 import { MaxInt } from '@/common/consts'
 import logger from '@/common/logger'
 import MessagesDao from '@/dao/messages.dao'
-import { Message } from '@/models/Message'
+import { Message } from '@/entities/Message'
 import { ObjectId } from 'mongodb'
 
 export async function saveMessage(message: Message) {

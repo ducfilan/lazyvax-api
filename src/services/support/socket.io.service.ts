@@ -1,24 +1,27 @@
-import { Server as HttpServer } from 'http'
-import { parse } from "cookie"
-import { Server as SocketServer, Socket } from "socket.io"
-import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, GetNextSmartQuestionMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
-import usersServices from "../api/users.services"
-import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { ObjectId } from "mongodb"
-import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, getConversationById, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, ConversationTypeObjective, DefaultLangCode, I18nDbCodeConfirmQuestionnaires, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeAskUserSmartQuestion, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
+import { parse } from "cookie"
+import { Server as HttpServer } from 'http'
+import { Server as SocketServer, Socket } from "socket.io"
+import { getOrigins } from "@/app"
+import { isGoogleTokenValid } from "./google-auth.service"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
+import { getUserByEmail } from "@services/api/users.services"
+import { queryGenerateWeekPlan } from '@services/api/ai.services'
+import { markMessageResponded, saveMessage } from "../api/messages.services"
+import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
+import { BotUserId, BotUserName, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
-import { Message, MessageGroupBuilder } from "@/models/Message"
+import { Message, MessageGroupBuilder } from "@/entities/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
 import { getDbClient, transactionOptions } from "@/common/configs/mongodb-client.config"
-import { User } from "@/models/User"
+import { User } from "@/entities/User"
+import { Event } from "@/entities/Event"
 import MessagesDao from "@/dao/messages.dao"
 import { BotResponseFactory } from "../utils/botResponse.factory"
-import { getOrigins } from "@/app"
 import logger from "@/common/logger"
 import { tryParseJson } from '@/common/utils/stringUtils'
-import { SmartQuestion } from '@/models/Conversation'
+import { createMultipleEvents } from "../api/events.services"
+import { addEventsToGoogleCalendar } from "./calendar.services"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -74,7 +77,7 @@ export function registerSocketIo(server: HttpServer) {
         isGoogleTokenValid(token || socket.handshake.auth.token, socket.handshake.auth.email).then((isTokenValid) => {
           if (isTokenValid) {
             const email = socket.handshake.auth.email
-            usersServices.getUserByEmail(email)
+            getUserByEmail(email)
               .then((user) => socket.user = user)
               .catch(err => {
                 logger.error(err)
@@ -314,8 +317,48 @@ export function registerSocketIo(server: HttpServer) {
           try {
             const conversationId = new ObjectId(message.conversationId)
 
-            const weekPlan = await generateWeekPlan(conversationId, socket.user?.locale || DefaultLangCode)
-            ack(weekPlan)
+            const chatMessage = {
+              conversationId: new ObjectId(message.conversationId),
+              authorId: BotUserId,
+              authorName: BotUserName,
+              content: "Generating, wait...", // TODO: i18n
+              type: MessageTypePlainText,
+              timestamp: new Date(),
+            } as Message
+
+            chatMessage._id = await saveMessage(chatMessage)
+
+            emitConversationMessage(message.conversationId, chatMessage)
+
+            const response = await queryGenerateWeekPlan(socket.user, conversationId)
+            const schedule = JSON.parse(response)
+
+            const events = schedule.map((item) => {
+              const startDate = new Date(item.start_time)
+              const endDate = new Date(item.end_time)
+
+              const event: Event = {
+                _id: new ObjectId(),
+                source: 'GoogleCalendar',
+                title: item.activity,
+                description: item.reason,
+                startDate,
+                endDate,
+                attendees: [{
+                  email: socket.user.email,
+                  name: socket.user.name,
+                  response: 'accepted'
+                }],
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+
+              return event
+            })
+            await createMultipleEvents(events)
+            ack(conversationId)
+
+            await addEventsToGoogleCalendar(events) // TODO: transaction handling, make sure it's added to Google Calendar.
           } catch (error) {
             logger.error(error)
           }

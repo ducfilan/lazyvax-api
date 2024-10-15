@@ -1,7 +1,7 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { MaxInt, MessagesCollectionName } from '@common/consts'
-import { Message } from '@/models/Message'
+import { Message } from '@/entities/Message'
 import logger from '@/common/logger'
 
 let _messages: Collection<Message>

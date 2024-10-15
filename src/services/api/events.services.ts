@@ -3,7 +3,7 @@ import { oAuth2Client } from "../support/google-auth.service"
 import { startOfWeek } from "date-fns"
 import { ObjectId } from 'mongodb';
 import EventsDao from '@dao/events.dao';
-import { Event } from '@/models/Event';
+import { Event } from '@/entities/Event';
 
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
 
@@ -24,6 +24,10 @@ export async function getEvents(filter: { start: Date; end: Date; calendarId?: O
 
 export async function createEvent(eventData: Event) {
   return await EventsDao.createEvent(eventData);
+}
+
+export async function createMultipleEvents(eventsData: Event[]) {
+  return await EventsDao.createMultipleEvents(eventsData);
 }
 
 export async function updateEvent(eventId: ObjectId, updateData: Partial<Event>) {

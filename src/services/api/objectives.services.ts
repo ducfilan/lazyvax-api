@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import ObjectivesDao from '@dao/objectives.dao'
-import { Objective } from '@/models/Objective'
+import { Objective } from '@/entities/Objective'
 
 export async function getObjectives(filter: {
   userId: ObjectId,

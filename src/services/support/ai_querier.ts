@@ -1,6 +1,6 @@
 import { AiModeChat, AiModeCompletion, AiProviderOpenAi } from '@/common/consts'
 import logger from '@/common/logger'
-import { User } from '@/models/User'
+import { User } from '@/entities/User'
 import OpenAI from "openai"
 import { ChatCompletionMessageParam } from 'openai/resources/chat'
 

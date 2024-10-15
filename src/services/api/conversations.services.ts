@@ -1,8 +1,8 @@
 import { ConversationTypeObjective, ConversationTypeWeek, I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
-import { Conversation, UserMilestone } from "@/models/Conversation"
-import { I18n } from "@/models/I18n"
+import { Conversation, UserMilestone } from "@/entities/Conversation"
+import { I18n } from "@/entities/I18n"
 import { ObjectId } from "mongodb"
 
 export async function isParticipantInConversation(userId: ObjectId, conversationId: ObjectId): Promise<boolean> {
