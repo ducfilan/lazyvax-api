@@ -34,15 +34,16 @@ export default class ConversationsDao {
                 oneOf: [
                   {
                     properties: {
-                      type: { enum: [ConversationTypeWeek] },
+                      type: { enum: ConversationTypes },
                       meta: {
                         properties: {
                           startDate: { "bsonType": "date" }
                         },
-                        required: ["type", "startDate"],
+                        required: ["startDate"],
                         additionalProperties: false
-                      }
-                    }
+                      },
+                    },
+                    additionalProperties: false
                   }
                 ]
               },
@@ -99,7 +100,17 @@ export default class ConversationsDao {
   }
 
   static async findByType(type: string, meta: any, projection: any = {}) {
-    const conversation = await _conversations.findOne({ type, meta })
+    const findCondition = { type }
+    switch (type) {
+      case ConversationTypeWeek:
+        findCondition["meta.meta.startDate"] = meta.startDate
+        break
+
+      default:
+        break
+    }
+
+    const conversation = await _conversations.findOne(findCondition)
 
     if (conversation) {
       for (const key in projection) {

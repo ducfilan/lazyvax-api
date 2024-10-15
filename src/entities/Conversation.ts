@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb"
 export type Conversation = {
   _id?: ObjectId,
   type: string,
+  meta?: object,
   unreadCount: number,
   participants: Participant[],
 }

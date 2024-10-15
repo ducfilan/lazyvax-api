@@ -28,14 +28,17 @@ export type GetNextSmartQuestionMessage = {
   conversationId: string,
 }
 
-export type CreateConversationGoalMessage = {
-  conversation: {
-    type: string,
-    unreadCount: number,
-    participants: {
-      userId: string
-    }[],
-  },
+export type CreateConversationMessage = {
+  conversation: CreateConversationMessageConversation,
+}
+
+export type CreateConversationMessageConversation = {
+  type: string,
+  meta: { [key: string]: any },
+  unreadCount: number,
+  participants: {
+    userId: string
+  }[],
 }
 
 export type AddMilestoneAndActionsMessage = {

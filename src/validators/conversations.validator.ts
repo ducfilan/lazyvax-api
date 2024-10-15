@@ -1,4 +1,4 @@
-import { ConversationTypes, MaxInt, MaxPaginationLimit } from "@/common/consts"
+import { ConversationTypes, ConversationTypeWeek, MaxInt, MaxPaginationLimit } from "@/common/consts"
 import { isEmpty } from "@/common/utils/objectUtils"
 import { isParticipantInConversation } from "@/services/api/conversations.services"
 import { check, validationResult } from "express-validator"
@@ -24,7 +24,20 @@ export const validateApiGetConversationById = [
 
 export const validateApiGetConversationByType = [
   check('meta')
-    .customSanitizer(meta => JSON.parse(decodeURIComponent(meta))),
+    .customSanitizer(meta => {
+      const metaObj = JSON.parse(decodeURIComponent(meta))
+      switch (metaObj.type) {
+        case ConversationTypeWeek:
+          metaObj.meta.startDate = new Date(metaObj.meta.startDate)
+
+          break;
+
+        default:
+          break;
+      }
+
+      return metaObj.meta
+    }),
   check('type')
     .isIn(ConversationTypes),
   (req, res, next) => {

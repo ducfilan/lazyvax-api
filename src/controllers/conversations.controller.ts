@@ -15,7 +15,7 @@ export default class ConversationsController {
 
   static async getConversationByType(req, res) {
     try {
-      const { type, meta } = req.params
+      const { type, meta } = req.query
       const conversationInfo = await getConversationByType(type, meta)
 
       res.status(200).send(conversationInfo)

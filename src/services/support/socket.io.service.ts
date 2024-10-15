@@ -4,7 +4,7 @@ import { Server as HttpServer } from 'http'
 import { Server as SocketServer, Socket } from "socket.io"
 import { getOrigins } from "@/app"
 import { isGoogleTokenValid } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationGoalMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
 import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
@@ -195,7 +195,7 @@ export function registerSocketIo(server: HttpServer) {
           }
         }
 
-        async function createNewConversation(message: CreateConversationGoalMessage, ack: any) {
+        async function createNewConversation(message: CreateConversationMessage, ack: any) {
           try {
             const conversation = await new ConversationBuilder(message).build()
 
