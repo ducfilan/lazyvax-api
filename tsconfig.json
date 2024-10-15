@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "target": "es2016",
+    "target": "es6",
     "outDir": "dist",
     "typeRoots": [
       "node_modules/@types"
     ],
     "module": "commonjs",
     "esModuleInterop": true,
+    "types": [
+      "request",
+      "tough-cookie"
+    ],
     "sourceMap": true,
     "moduleResolution": "node",
     "noImplicitAny": false,
