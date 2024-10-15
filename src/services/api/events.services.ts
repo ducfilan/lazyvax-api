@@ -1,22 +1,6 @@
-import { google } from "googleapis"
-import { oAuth2Client } from "../support/google-auth.service"
-import { startOfWeek } from "date-fns"
-import { ObjectId } from 'mongodb';
-import EventsDao from '@dao/events.dao';
-import { Event } from '@/entities/Event';
-
-const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
-
-export async function getGoogleEvents() {
-  const response = await calendar.events.list({
-    calendarId: 'primary',
-    timeMin: startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString(),
-    maxResults: 250,
-    singleEvents: true,
-    orderBy: 'startTime',
-  });
-  return response.data.items
-}
+import { ObjectId } from 'mongodb'
+import EventsDao from '@dao/events.dao'
+import { Event } from '@/entities/Event'
 
 export async function getEvents(filter: { start: Date; end: Date; calendarId?: ObjectId; categories?: string[] }) {
   return await EventsDao.getEvents(filter);

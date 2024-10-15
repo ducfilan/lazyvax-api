@@ -20,6 +20,7 @@ export type Event = {
   isDeleted?: boolean,
   createdAt?: Date,
   updatedAt?: Date,
+  meta?: any,
 };
 
 export type Reminder = {

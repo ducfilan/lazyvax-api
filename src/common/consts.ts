@@ -5,6 +5,9 @@ export default {
   tagsSelectLimit: 10,
 }
 
+export const AppName = "Lazyvax"
+export const AppDomain = "lazyvax.com"
+
 export const SupportingLanguages = ['ar', 'zh', 'nl', 'en', 'de', 'it', 'ja', 'ko', 'mn', 'pt', 'ru', 'sl', 'es', 'vi']
 export const SupportingLanguagesMap = {
   ar: true,
@@ -161,3 +164,5 @@ export const I18nDbCodeSummarizeQuestionnaires = 'summarize-questionnaires'
 export const RegisterStep = 1
 
 export const ObjectiveTypes = ['life', 'long-term', 'short-term']
+
+export const CalendarSourceGoogle = "Google Calendar"

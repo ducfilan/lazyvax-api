@@ -9,7 +9,7 @@ import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
-import { BotUserId, BotUserName, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
+import { AppName, BotUserId, BotUserName, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/entities/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -86,7 +86,7 @@ export function registerSocketIo(server: HttpServer) {
 
             next()
           } else {
-            logger.error('socket.io not authenticated' + socket.handshake.auth.email)
+            logger.error('socket.io not authenticated for ' + socket.handshake.auth.email)
             next(new Error('invalid/expired token'))
           }
         })
@@ -339,7 +339,7 @@ export function registerSocketIo(server: HttpServer) {
 
               const event: Event = {
                 _id: new ObjectId(),
-                source: 'GoogleCalendar',
+                source: AppName,
                 title: item.activity,
                 description: item.reason,
                 startDate,
