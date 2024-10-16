@@ -165,4 +165,4 @@ export const RegisterStep = 1
 
 export const ObjectiveTypes = ['life', 'long-term', 'short-term']
 
-export const CalendarSourceGoogle = "Google Calendar"
+export const CalendarSourceGoogle = "Google"

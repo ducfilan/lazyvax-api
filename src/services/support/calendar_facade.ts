@@ -2,11 +2,11 @@ import { google } from "googleapis"
 import { startOfWeek } from "date-fns"
 import { oAuth2Client } from "./google-auth.service"
 
-import { Event } from "@/entities/Event"
-import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts";
+import { Event, mapGoogleEventToAppEvent } from "@/entities/Event"
+import { AppDomain, AppName } from "@/common/consts";
 
 export async function getEventsFromGoogleCalendar(): Promise<Event[]> {
-  const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
+  const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
 
   const response = await calendar.events.list({
     calendarId: 'primary',
@@ -14,43 +14,22 @@ export async function getEventsFromGoogleCalendar(): Promise<Event[]> {
     maxResults: 250,
     singleEvents: true,
     orderBy: 'startTime',
-  });
+  })
 
-  return response.data.items.map(event => ({
-    source: CalendarSourceGoogle,
-    title: event.summary,
-    description: event.description,
-    startDate: new Date(event.start.dateTime),
-    endDate: new Date(event.end.dateTime),
-    allDayEvent: event.start.dateTime.split('T')[0] === event.end.dateTime.split('T')[0],
-    location: event.location,
-    reminders: event.reminders?.overrides?.map(reminder => ({
-      type: reminder.method,
-      time: reminder.minutes * 60000
-    })),
-    attendees: event.attendees?.map(attendee => ({
-      email: attendee.email,
-      name: attendee.displayName
-    })),
-    categories: [], // TODO: Extract categories from event details
-    taskIds: [], // TODO: Fetch related tasks
-    objectiveIds: [], // TODO: Fetch related objectives
-    meta: {
-      etag: event.etag
-    }
-  } as Event));
+  return response.data.items.map(mapGoogleEventToAppEvent)
 }
 
 export async function addEventsToGoogleCalendar(events: Event[]) {
-  const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
+  const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
 
   for (const event of events) {
     const calendarEvent = {
+      id: event._id.toHexString(),
       summary: event.title,
       description: event.description,
       start: {
         dateTime: event.startDate.toISOString(),
-        timeZone: 'Asia/Singapore'
+        timeZone: 'Asia/Singapore' // TODO: Set user's city timezone dynamically.
       },
       end: {
         dateTime: event.endDate.toISOString(),
@@ -68,8 +47,13 @@ export async function addEventsToGoogleCalendar(events: Event[]) {
       source: {
         title: `${AppName} task`,
         url: AppDomain
-      }
-    };
+      },
+      extendedProperties: {
+        private: {
+          appEventId: event._id.toString(),
+        },
+      },
+    }
 
     try {
       await calendar.events.insert({

@@ -1,8 +1,9 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
-import { EventsCollectionName } from '@common/consts';
+import { CalendarSourceGoogle, EventsCollectionName } from '@common/consts';
 import logger from '@/common/logger';
-import { Event } from '@/entities/Event';
+import { Event, EventMeta, GoogleCalendarMeta } from '@/entities/Event';
+import { oneOf } from 'express-validator';
 
 let _events: Collection<Event>;
 let _db: Db;
@@ -63,6 +64,21 @@ export default class EventsDao {
               objectiveIds: { bsonType: 'array', items: { bsonType: 'objectId' } },
               color: { bsonType: 'string' },
               calendarId: { bsonType: 'objectId' },
+              meta: {
+                bsonType: 'object',
+                oneOf: [
+                  {
+                    bsonType: 'object',
+                    properties: {
+                      id: { bsonType: 'string' },
+                      etag: { bsonType: 'string' },
+                    },
+                    required: ['id', 'etag'],
+                    additionalProperties: false,
+                  }
+                ],
+                additionalProperties: false,
+              },
               isPrivate: { bsonType: 'bool' },
               isDeleted: { bsonType: 'bool' },
               createdAt: { bsonType: 'date' },
@@ -150,5 +166,29 @@ export default class EventsDao {
       logger.error(`Error fetching event by ID: ${e}`);
       return null;
     }
+  }
+
+  static async findBySourceAndMeta(source: string, from: Date, to: Date, meta?: EventMeta) {
+    try {
+      const findCondition = { source }
+      if (meta) {
+        switch (source) {
+          case CalendarSourceGoogle:
+            findCondition["meta.id"] = (meta as GoogleCalendarMeta).id
+        }
+      }
+
+      const result = await _events.find(findCondition).toArray()
+
+      return result
+    } catch (error) {
+      logger.error(`Error finding event by source and meta: ${error}, arguments: ${JSON.stringify(arguments)}`)
+      return null
+    }
+  }
+
+  static async bulkWrite(condition) {
+    const result = await _events.bulkWrite(condition)
+    return result.isOk
   }
 }
