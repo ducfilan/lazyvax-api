@@ -35,7 +35,7 @@ export async function addEventsToGoogleCalendar(events: Event[]) {
         dateTime: event.endDate.toISOString(),
         timeZone: 'Asia/Singapore'
       },
-      attendees: event.attendees?.map(attendee => ({ email: attendee.email })),
+      attendees: event.attendees?.map(attendee => ({ email: attendee.email, responseStatus: 'accepted' })),
       reminders: {
         useDefault: false,
         overrides: event.reminders?.map(reminder => ({
@@ -43,7 +43,6 @@ export async function addEventsToGoogleCalendar(events: Event[]) {
           minutes: reminder.time / 60000
         })) || []
       },
-      status: 'confirmed',
       source: {
         title: `${AppName} task`,
         url: AppDomain
