@@ -331,14 +331,15 @@ export function registerSocketIo(server: HttpServer) {
             emitConversationMessage(message.conversationId, chatMessage)
 
             const response = await queryGenerateWeekPlan(socket.user, conversationId)
-            const schedule = JSON.parse(response)
+            const generatedEvents = JSON.parse(response)
 
-            const events = schedule.map((item) => {
+            const events = generatedEvents.map((item) => {
               const startDate = new Date(item.start_time)
               const endDate = new Date(item.end_time)
 
               const event: Event = {
                 _id: new ObjectId(),
+                userId: socket.user._id,
                 source: AppName,
                 title: item.activity,
                 description: item.reason,
@@ -349,9 +350,7 @@ export function registerSocketIo(server: HttpServer) {
                   name: socket.user.name,
                   response: 'accepted'
                 }],
-                createdAt: new Date(),
-                updatedAt: new Date()
-              };
+              }
 
               return event
             })

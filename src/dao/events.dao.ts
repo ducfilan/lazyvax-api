@@ -27,9 +27,10 @@ export default class EventsDao {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
-            required: ['title', 'startDate', 'endDate'],
+            required: ['userId', 'title', 'startDate', 'endDate'],
             properties: {
               _id: { bsonType: 'objectId' },
+              userId: { bsonType: 'objectId' },
               source: { bsonType: 'string' },
               title: { bsonType: 'string', maxLength: 255 },
               description: { bsonType: 'string' },

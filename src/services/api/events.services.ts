@@ -30,9 +30,7 @@ export async function getEventById(eventId: ObjectId) {
   return await EventsDao.getEventById(eventId)
 }
 
-async function syncEventsFromGoogle(from: Date, to: Date, googleCalendarId: string = "primary") {
-  const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
-
+async function syncEventsFromGoogle(userId: ObjectId, from: Date, to: Date, googleCalendarId: string = "primary") {
   const insertOps = []
   const updateOps = []
   const deleteOps = []
@@ -57,14 +55,14 @@ async function syncEventsFromGoogle(from: Date, to: Date, googleCalendarId: stri
     if (!eventInApp) {
       insertOps.push({
         insertOne: {
-          document: mapGoogleEventToAppEvent(googleEvent),
+          document: mapGoogleEventToAppEvent(userId, googleEvent),
         },
       })
     } else if (googleEvent.etag && (eventInApp.meta as GoogleCalendarMeta)?.etag != googleEvent?.etag) {
       updateOps.push({
         updateOne: {
           filter: { _id: new ObjectId(eventInApp._id) },
-          update: { $set: mapGoogleEventToAppEvent(googleEvent) },
+          update: { $set: mapGoogleEventToAppEvent(userId, googleEvent) },
         },
       })
     }

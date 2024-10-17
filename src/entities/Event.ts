@@ -6,6 +6,7 @@ export type EventMeta = GoogleCalendarMeta | AppleCalendarMeta | MicrosoftCalend
 
 export type Event = {
   _id?: ObjectId,
+  userId: ObjectId, // Reference to the user who created the event
   source: string, // GoogleCalendar, AppleCalendar, MicrosoftCalendar, Todoist, App, etc.
   title: string,
   description?: string,
@@ -55,7 +56,8 @@ export type Attendee = {
 
 export type AttendeeResponse = "accepted" | "declined" | "tentative";
 
-export const mapGoogleEventToAppEvent = (event: calendar_v3.Schema$Event) => ({
+export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Schema$Event) => ({
+  userId,
   source: CalendarSourceGoogle,
   title: event.summary,
   description: event.description,
