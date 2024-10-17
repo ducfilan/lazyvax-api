@@ -6,7 +6,7 @@ export default {
 }
 
 export const AppName = "Lazyvax"
-export const AppDomain = "lazyvax.com"
+export const AppDomain = "https://lazyvax.com"
 
 export const SupportingLanguages = ['ar', 'zh', 'nl', 'en', 'de', 'it', 'ja', 'ko', 'mn', 'pt', 'ru', 'sl', 'es', 'vi']
 export const SupportingLanguagesMap = {

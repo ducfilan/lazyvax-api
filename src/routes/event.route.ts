@@ -7,11 +7,14 @@ const securedEventRouter = Router()
 
 securedEventRouter.route('/')
   .post(auth, validateEventCreation, EventsController.createEvent)
-  .get(auth, validateEventFilters, EventsController.getEvents);
+  .get(auth, validateEventFilters, EventsController.getEvents)
+
+securedEventRouter.route('/google-events')
+  .get(auth, EventsController.syncEventsFromGoogle)
 
 securedEventRouter.route('/:eventId')
   .patch(auth, validateEventUpdate, EventsController.updateEvent)
-  .delete(auth, EventsController.deleteEvent);
+  .delete(auth, EventsController.deleteEvent)
 
 export {
   securedEventRouter

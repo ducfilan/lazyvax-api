@@ -1,4 +1,4 @@
-import { CalendarSourceGoogle } from "@/common/consts";
+import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts";
 import { calendar_v3 } from "googleapis";
 import { ObjectId } from "mongodb";
 
@@ -78,3 +78,33 @@ export const mapGoogleEventToAppEvent = (event: calendar_v3.Schema$Event) => ({
     etag: event.etag
   }
 } as Event)
+
+export const mapAppEventToGoogleEvent = (event: Event): calendar_v3.Schema$Event => ({
+  summary: event.title,
+  description: event.description,
+  start: {
+    dateTime: event.startDate.toISOString(),
+    timeZone: 'Asia/Singapore' // TODO: Set user's city timezone dynamically.
+  },
+  end: {
+    dateTime: event.endDate.toISOString(),
+    timeZone: 'Asia/Singapore'
+  },
+  attendees: event.attendees?.map(attendee => ({ email: attendee.email, responseStatus: 'accepted' })),
+  reminders: {
+    useDefault: false,
+    overrides: event.reminders?.map(reminder => ({
+      method: reminder.type,
+      minutes: reminder.time / 60000
+    })) || []
+  },
+  source: {
+    title: `${AppName}'s task`,
+    url: AppDomain
+  },
+  extendedProperties: {
+    private: {
+      appEventId: event._id.toString(),
+    },
+  },
+})

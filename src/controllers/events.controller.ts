@@ -72,4 +72,21 @@ export default class EventsController {
       res.status(500).json({ error: e.message });
     }
   }
+
+  static async syncEventsFromGoogle(req: Request & { user: User }, res: Response) {
+    try {
+      const { calendarId, from, to } = req.query;
+      if (!calendarId) {
+        return res.status(400).json({ error: 'Calendar ID is required' });
+      }
+
+      const googleCalendarMeta = await eventsService.syncEventsFromGoogle(
+        new Date(from as string), new Date(to as string), calendarId as string
+      )
+      res.status(200).json(googleCalendarMeta);
+    } catch (e) {
+      logger.error(`Error syncing events from Google: ${e}`);
+      res.status(500).json({ error: e.message });
+    }
+  }
 }

@@ -4,6 +4,7 @@ import { Event, GoogleCalendarMeta, mapGoogleEventToAppEvent } from '@/entities/
 import { google } from 'googleapis'
 import { oAuth2Client } from '../support/google-auth.service'
 import { CalendarSourceGoogle } from '@/common/consts'
+import { getEventsFromGoogleCalendar } from '../support/calendar_facade'
 
 export async function getEvents(filter: { start: Date; end: Date; calendarId?: ObjectId; categories?: string[] }) {
   return await EventsDao.getEvents(filter)
@@ -45,12 +46,7 @@ async function syncEventsFromGoogle(from: Date, to: Date, googleCalendarId: stri
     }
   })
 
-  const response = await calendar.events.list({
-    calendarId: googleCalendarId,
-    showDeleted: true,
-  })
-
-  const googleEvents = response.data.items
+  const googleEvents = await getEventsFromGoogleCalendar({ calendarId: googleCalendarId, showDeleted: true })
 
   googleEvents.forEach((googleEvent) => {
     const isEventOriginallyFromApp = googleEvent.extendedProperties.private.hasOwnProperty("appEventId")
