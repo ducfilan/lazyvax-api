@@ -9,7 +9,7 @@ import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation } from "../api/conversations.services"
-import { AppName, BotUserId, BotUserName, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
+import { BotUserId, BotUserName, CalendarSourceApp, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/entities/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -340,7 +340,7 @@ export function registerSocketIo(server: HttpServer) {
               const event: Event = {
                 _id: new ObjectId(),
                 userId: socket.user._id,
-                source: AppName,
+                source: CalendarSourceApp,
                 title: item.activity,
                 description: item.reason,
                 startDate,

@@ -9,9 +9,9 @@ export default class EventsController {
     try {
       const { start, end, calendarId, categories } = req.query
       const filter = {
-        start: new Date(start as string),
-        end: new Date(end as string),
-        calendarId: calendarId ? new ObjectId(calendarId as string) : undefined,
+        from: new Date(start as string),
+        to: new Date(end as string),
+        calendarId: calendarId as string,
         categories: categories ? (categories as string).split(',') : undefined,
       }
 
@@ -77,11 +77,13 @@ export default class EventsController {
     try {
       const { from, to } = req.query
 
-      const googleCalendarMeta = await eventsService.syncEventsFromGoogle(
+      const changedEventsCount = await eventsService.syncEventsFromGoogle(
         req.user._id,
         new Date(from as string), new Date(to as string)
       )
-      res.status(200).json(googleCalendarMeta)
+      res.status(200).json({
+        changedEventsCount
+      })
     } catch (e) {
       logger.error(`Error syncing events from Google: ${e}`)
       res.status(500).json({ error: e.message })

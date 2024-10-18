@@ -3,7 +3,6 @@ import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { CalendarSourceGoogle, EventsCollectionName } from '@common/consts';
 import logger from '@/common/logger';
 import { Event, EventMeta, GoogleCalendarMeta } from '@/entities/Event';
-import { oneOf } from 'express-validator';
 
 let _events: Collection<Event>;
 let _db: Db;
@@ -58,6 +57,8 @@ export default class EventsDao {
                     name: { bsonType: 'string' },
                     response: { enum: ['accepted', 'declined', 'tentative'] },
                   },
+                  required: ['email'],
+                  additionalProperties: false,
                 },
               },
               categories: { bsonType: 'array', items: { bsonType: 'string' } },
@@ -78,7 +79,6 @@ export default class EventsDao {
                     additionalProperties: false,
                   }
                 ],
-                additionalProperties: false,
               },
               isPrivate: { bsonType: 'bool' },
               isDeleted: { bsonType: 'bool' },
@@ -94,12 +94,19 @@ export default class EventsDao {
     }
   }
 
-  static async getEvents(filter: { start: Date; end: Date; calendarId?: ObjectId; categories?: string[] }) {
-    const { start, end, calendarId, categories } = filter;
-    const query: any = { startDate: { $gte: start }, endDate: { $lte: end } };
+  static async getEvents(filter: { from: Date, to: Date, source?: string, calendarId?: string, categories?: string[], meta?: EventMeta }) {
+    const { from, to, source, calendarId, categories, meta } = filter
+    const query: any = { startDate: { $gte: from }, endDate: { $lte: to } }
 
-    if (calendarId) query.calendarId = calendarId;
-    if (categories) query.categories = { $in: categories };
+    if (source) query.source = source
+    if (categories) query.categories = { $in: categories }
+    if (filter.meta) {
+      switch (source) {
+        case CalendarSourceGoogle:
+          query["meta.id"] = (meta as GoogleCalendarMeta).id
+      }
+    }
+    if (calendarId) query["meta.calendarId"] = calendarId
 
     try {
       return await _events.find(query).toArray();
@@ -166,25 +173,6 @@ export default class EventsDao {
     } catch (e) {
       logger.error(`Error fetching event by ID: ${e}`);
       return null;
-    }
-  }
-
-  static async findBySourceAndMeta(source: string, from: Date, to: Date, meta?: EventMeta) {
-    try {
-      const findCondition = { source }
-      if (meta) {
-        switch (source) {
-          case CalendarSourceGoogle:
-            findCondition["meta.id"] = (meta as GoogleCalendarMeta).id
-        }
-      }
-
-      const result = await _events.find(findCondition).toArray()
-
-      return result
-    } catch (error) {
-      logger.error(`Error finding event by source and meta: ${error}, arguments: ${JSON.stringify(arguments)}`)
-      return null
     }
   }
 

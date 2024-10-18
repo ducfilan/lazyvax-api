@@ -29,8 +29,8 @@ export type Event = {
 };
 
 export type GoogleCalendarMeta = {
-  id: string
-  etag: string
+  id?: string
+  etag?: string
 }
 
 // TODO: Not defined yet.
@@ -56,30 +56,36 @@ export type Attendee = {
 
 export type AttendeeResponse = "accepted" | "declined" | "tentative";
 
-export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Schema$Event) => ({
-  userId,
-  source: CalendarSourceGoogle,
-  title: event.summary,
-  description: event.description,
-  startDate: new Date(event.start.dateTime),
-  endDate: new Date(event.end.dateTime),
-  allDayEvent: event.start.dateTime.split('T')[0] === event.end.dateTime.split('T')[0],
-  location: event.location,
-  reminders: event.reminders?.overrides?.map(reminder => ({
-    type: reminder.method,
-    time: reminder.minutes * 60000
-  })),
-  attendees: event.attendees?.map(attendee => ({
-    email: attendee.email,
-    name: attendee.displayName
-  })),
-  categories: [], // TODO: Extract categories from event details
-  taskIds: [], // TODO: Fetch related tasks
-  objectiveIds: [], // TODO: Fetch related objectives
-  meta: {
-    etag: event.etag
-  }
-} as Event)
+export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Schema$Event) => {
+  const output = {
+    userId,
+    source: CalendarSourceGoogle,
+    title: event.summary,
+    description: event.description,
+    startDate: new Date(event.start.dateTime || event.start.date), // TODO: Timezone.
+    endDate: new Date(event.end.dateTime || event.end.date), // TODO: Timezone.
+    allDayEvent: !!event.start.date,
+    location: event.location,
+    reminders: event.reminders?.overrides?.map(reminder => ({
+      type: reminder.method,
+      time: reminder.minutes * 60000
+    })) || [],
+    attendees: event.attendees?.map(({ email, displayName: name }) => name ? ({ email, name }) : ({ email })) || [],
+    categories: [], // TODO: Extract categories from event details
+    taskIds: [], // TODO: Fetch related tasks
+    objectiveIds: [], // TODO: Fetch related objectives
+    meta: {
+      id: event.id,
+      etag: event.etag,
+    }
+  } as Event
+
+  if (!event.description) delete output.description
+  if (!event.location) delete output.location
+  if (!event.reminders?.overrides?.length) delete output.reminders
+
+  return output
+}
 
 export const mapAppEventToGoogleEvent = (event: Event): calendar_v3.Schema$Event => ({
   summary: event.title,

@@ -1,12 +1,10 @@
 import { ObjectId } from 'mongodb'
 import EventsDao from '@dao/events.dao'
 import { Event, GoogleCalendarMeta, mapGoogleEventToAppEvent } from '@/entities/Event'
-import { google } from 'googleapis'
-import { oAuth2Client } from '../support/google-auth.service'
-import { CalendarSourceGoogle } from '@/common/consts'
 import { getEventsFromGoogleCalendar } from '../support/calendar_facade'
+import { CalendarSourceApp } from '@/common/consts';
 
-export async function getEvents(filter: { start: Date; end: Date; calendarId?: ObjectId; categories?: string[] }) {
+export async function getEvents(filter: { from: Date; to: Date; calendarId?: string; categories?: string[] }) {
   return await EventsDao.getEvents(filter)
 }
 
@@ -30,47 +28,89 @@ export async function getEventById(eventId: ObjectId) {
   return await EventsDao.getEventById(eventId)
 }
 
-async function syncEventsFromGoogle(userId: ObjectId, from: Date, to: Date, googleCalendarId: string = "primary") {
+async function syncEventsFromGoogle(userId: ObjectId, from: Date, to: Date, calendarId: string = "primary") {
   const insertOps = []
   const updateOps = []
   const deleteOps = []
 
-  const googleEventsInApp = await getEventsBySource(CalendarSourceGoogle, from, to)
-  const googleEventIdToGoogleEventInApp = new Map<string, Event>()
-  googleEventsInApp.forEach(appEvent => {
+  const eventsInApp = await getEvents({
+    from, to
+  })
+  const appEventIdToAppEvent = new Map<string, Event>()
+  const googleEventIdToAppEvent = new Map<string, Event>()
+  eventsInApp.forEach(appEvent => {
+    appEventIdToAppEvent.set(appEvent._id.toString(), appEvent)
     const meta = appEvent.meta as GoogleCalendarMeta
     if (meta?.id) {
-      googleEventIdToGoogleEventInApp.set(meta.id, appEvent)
+      googleEventIdToAppEvent.set(meta.id, appEvent)
     }
   })
 
-  const googleEvents = await getEventsFromGoogleCalendar({ calendarId: googleCalendarId, showDeleted: true })
+  const googleEvents = await getEventsFromGoogleCalendar({
+    calendarId,
+    fromDate: from,
+    toDate: to,
+    showDeleted: true
+  })
 
   googleEvents.forEach((googleEvent) => {
-    const isEventOriginallyFromApp = googleEvent.extendedProperties.private.hasOwnProperty("appEventId")
-    if (isEventOriginallyFromApp) return false
+    const isEventConfirmed = googleEvent.status === "confirmed"
+    const isEventCanceled = googleEvent.status === "cancelled"
+    const appEventId = googleEvent.extendedProperties?.private?.appEventId
+    const appEvent = appEventIdToAppEvent.get(appEventId)
+    const googleEventInApp = googleEventIdToAppEvent.get(googleEvent.id)
+    const isAllDayEvent = !!googleEvent.start.date
+    if (isAllDayEvent) return false // Not processing all day events.
 
-    const eventInApp = googleEventIdToGoogleEventInApp.get(googleEvent.id)
+    if (!appEvent && !googleEventInApp) {
+      if (isEventConfirmed) {
+        insertOps.push({
+          insertOne: {
+            document: mapGoogleEventToAppEvent(userId, googleEvent),
+          },
+        })
+      }
+    }
 
-    if (!eventInApp) {
-      insertOps.push({
-        insertOne: {
-          document: mapGoogleEventToAppEvent(userId, googleEvent),
-        },
-      })
-    } else if (googleEvent.etag && (eventInApp.meta as GoogleCalendarMeta)?.etag != googleEvent?.etag) {
+    if (googleEventInApp && (googleEventInApp.meta as GoogleCalendarMeta)?.etag != googleEvent?.etag) {
       updateOps.push({
         updateOne: {
-          filter: { _id: new ObjectId(eventInApp._id) },
-          update: { $set: mapGoogleEventToAppEvent(userId, googleEvent) },
+          filter: { _id: googleEventInApp._id },
+          update: {
+            $set: {
+              ...mapGoogleEventToAppEvent(userId, googleEvent),
+              updatedAt: new Date(),
+            }
+          },
         },
       })
     }
 
-    if (googleEvent.status === "cancelled" && eventInApp) {
-      deleteOps.push({
+    if (appEvent && appEvent.updatedAt < new Date(googleEvent.updated)) {
+      updateOps.push({
+        updateOne: {
+          filter: { _id: appEvent._id },
+          update: {
+            $set: {
+              ...mapGoogleEventToAppEvent(userId, googleEvent),
+              source: CalendarSourceApp,
+              updatedAt: new Date(),
+            }
+          },
+        },
+      })
+    }
+
+    if (isEventCanceled) {
+      googleEventInApp && deleteOps.push({
         deleteOne: {
-          filter: { _id: new ObjectId(eventInApp._id) },
+          filter: { _id: new ObjectId(googleEventInApp._id) },
+        },
+      })
+
+      appEvent && deleteOps.push({
+        deleteOne: {
+          filter: { _id: appEvent._id },
         },
       })
     }
@@ -87,11 +127,8 @@ async function syncEventsFromGoogle(userId: ObjectId, from: Date, to: Date, goog
   if (deleteOps.length > 0) {
     await EventsDao.bulkWrite(deleteOps)
   }
-}
 
-export async function getEventsBySource(eventSource: string, from: Date, to: Date) {
-  const events = await EventsDao.findBySourceAndMeta(eventSource, from, to)
-  return events
+  return insertOps.length + updateOps.length + deleteOps.length
 }
 
 export default {
@@ -100,6 +137,5 @@ export default {
   updateEvent,
   deleteEvent,
   getEventById,
-  getEventsBySource,
   syncEventsFromGoogle,
 }
