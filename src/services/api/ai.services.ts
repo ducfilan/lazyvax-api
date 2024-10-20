@@ -27,7 +27,6 @@ export async function queryGenerateWeekPlan(user: User, conversationId: ObjectId
   const lastWeekEvents = await getEvents({ from: getLastWeekStart(), to: getLastWeekEnd() })
 
   const prompt = `${eventsToWeeklySchedule(lastWeekEvents)}`
-  console.log(prompt)
 
   const response = `
   [

@@ -2,7 +2,7 @@ import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { CalendarSourceGoogle, EventsCollectionName } from '@common/consts';
 import logger from '@/common/logger';
-import { Event, EventMeta, GoogleCalendarMeta } from '@/entities/Event';
+import { Event, EventMeta, EventStatuses, GoogleCalendarMeta } from '@/entities/Event';
 
 let _events: Collection<Event>;
 let _db: Db;
@@ -35,6 +35,7 @@ export default class EventsDao {
               description: { bsonType: 'string' },
               startDate: { bsonType: 'date' },
               endDate: { bsonType: 'date' },
+              status: { enum: EventStatuses },
               allDayEvent: { bsonType: 'bool' },
               location: { bsonType: 'string', maxLength: 500 },
               reminders: {

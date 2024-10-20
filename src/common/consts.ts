@@ -56,12 +56,6 @@ export const DoPreSignExpirationInSecond = 600 // 10 minutes
 export const StaticBaseUrl = 'https://static.lazyvax.com'
 export const SupportingContentTypes = ['image/jpeg', 'image/png']
 
-export const HttpStatusOk = 200
-export const HttpStatusBadRequest = 400
-export const HttpStatusUnauthorized = 401
-export const HttpStatusForbidden = 403
-export const HttpStatusInternalServer = 500
-
 export const MaxPaginationLimit = 100
 export const DefaultMostItemsInteractionsLimit = 5
 export const MaxRegistrationsStep = 8

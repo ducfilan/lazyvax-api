@@ -4,6 +4,12 @@ import { ObjectId } from "mongodb";
 
 export type EventMeta = GoogleCalendarMeta | AppleCalendarMeta | MicrosoftCalendarMeta
 
+export const EventStatusDefault = 0
+export const EventStatusDone = 1
+export const EventStatusUnDone = 3
+
+export const EventStatuses = [EventStatusDefault, EventStatusDone, EventStatusUnDone] as const
+
 export type Event = {
   _id?: ObjectId,
   userId: ObjectId, // Reference to the user who created the event
@@ -12,6 +18,7 @@ export type Event = {
   description?: string,
   startDate: Date,
   endDate: Date,
+  status?: typeof EventStatuses[number],
   allDayEvent?: boolean,
   location?: string,
   reminders?: Reminder[],
@@ -26,7 +33,7 @@ export type Event = {
   createdAt?: Date,
   updatedAt?: Date,
   meta?: EventMeta,
-};
+}
 
 export type GoogleCalendarMeta = {
   id?: string
@@ -36,25 +43,25 @@ export type GoogleCalendarMeta = {
 // TODO: Not defined yet.
 export type AppleCalendarMeta = {
   id: string
-};
+}
 
 // TODO: Not defined yet.
 export type MicrosoftCalendarMeta = {
   id: string
-};
+}
 
 export type Reminder = {
   type: string, // email, push, notification
   time: number, // time in milliseconds before event
-};
+}
 
 export type Attendee = {
   email: string,
   name?: string,
   response?: AttendeeResponse,
-};
+}
 
-export type AttendeeResponse = "accepted" | "declined" | "tentative";
+export type AttendeeResponse = "accepted" | "declined" | "tentative"
 
 export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Schema$Event) => {
   const output = {
