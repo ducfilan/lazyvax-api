@@ -10,9 +10,9 @@ USER node
 
 RUN yarn
 
-RUN yarn build
-
 COPY --chown=node:node . .
+
+RUN yarn build
 
 EXPOSE 80 9292
 
