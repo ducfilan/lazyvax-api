@@ -35,12 +35,12 @@ export type GoogleCalendarMeta = {
 
 // TODO: Not defined yet.
 export type AppleCalendarMeta = {
-  eventId: string
+  id: string
 };
 
 // TODO: Not defined yet.
 export type MicrosoftCalendarMeta = {
-  eventId: string
+  id: string
 };
 
 export type Reminder = {
@@ -116,3 +116,41 @@ export const mapAppEventToGoogleEvent = (event: Event): calendar_v3.Schema$Event
     },
   },
 })
+
+export function eventsToWeeklySchedule(events: Event[]): string {
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const eventsByDay: { [key: string]: Event[] } = {};
+
+  daysOfWeek.forEach(day => eventsByDay[day] = []);
+
+  events.forEach(event => {
+    const dayOfWeek = daysOfWeek[event.startDate.getDay() - 1];
+    eventsByDay[dayOfWeek].push(event);
+  });
+
+  let output = '';
+
+  daysOfWeek.forEach(day => {
+    output += `${day}:\n`;
+
+    if (eventsByDay[day].length === 0) {
+      output += '- No data available.\n';
+    } else {
+      eventsByDay[day].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+      eventsByDay[day].forEach(event => {
+        const startTime = formatTime(event.startDate);
+        const endTime = formatTime(event.endDate);
+        output += `- From ${startTime} to ${endTime}: ${event.title}\n`;
+      });
+    }
+
+    output += '\n';
+  });
+
+  return output.trim();
+}
+
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}

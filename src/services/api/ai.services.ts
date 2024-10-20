@@ -3,6 +3,9 @@ import { ObjectId } from "mongodb";
 import { getConversationById } from "./conversations.services";
 import { CompletionAiService } from "../support/ai_querier";
 import logger from "@/common/logger";
+import { getEvents } from "./events.services";
+import { getLastWeekEnd, getLastWeekStart } from "@/common/utils/dateUtils";
+import { eventsToWeeklySchedule } from "@/entities/Event";
 
 export async function queryActionCompletion(user: User, conversationId: ObjectId, milestoneId: ObjectId) {
   const prompt = await buildPrompt(conversationId, milestoneId)
@@ -21,7 +24,10 @@ export async function queryGenerateWeekPlan(user: User, conversationId: ObjectId
     return null
   }
 
-  const prompt = ``
+  const lastWeekEvents = await getEvents({ from: getLastWeekStart(), to: getLastWeekEnd() })
+
+  const prompt = `${eventsToWeeklySchedule(lastWeekEvents)}`
+  console.log(prompt)
 
   const response = `
   [
