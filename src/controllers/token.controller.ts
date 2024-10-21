@@ -33,7 +33,7 @@ export default class TokenController {
         return res.status(401).json({ error: 'Refresh token not found' })
       }
 
-      const tokens = await refreshAccessToken(refreshToken)
+      const tokens = await refreshAccessToken(req.oAuth2Client, refreshToken) // TODO: req.oAuth2Client is always not available due to this is a public API.
 
       res.cookie('authToken', tokens.access_token, this.cookieOptions)
       res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)

@@ -1,7 +1,23 @@
 import logger from '@/common/logger'
-import { OAuth2Client } from 'google-auth-library'
+import { Credentials, OAuth2Client } from 'google-auth-library'
 
-export const oAuth2Client: OAuth2Client = new OAuth2Client({
+export const newGoogleOAuth2Client = (credentials?: Credentials): OAuth2Client => {
+  const client = new OAuth2Client({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri: process.env.GOOGLE_REDIRECT_URI,
+    eagerRefreshThresholdMillis: 5000,
+    forceRefreshOnFailure: true
+  })
+
+  if (credentials) {
+    client.setCredentials(credentials)
+  }
+
+  return client
+}
+
+const oAuth2Client = new OAuth2Client({
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   redirectUri: process.env.GOOGLE_REDIRECT_URI,
@@ -11,8 +27,8 @@ export const oAuth2Client: OAuth2Client = new OAuth2Client({
 
 export const isGoogleTokenValid = async (serviceAccessToken: string, requestEmail: string) => {
   try {
-    const { email: tokenInfoEmail } = await oAuth2Client.getTokenInfo(serviceAccessToken)
-    return tokenInfoEmail?.toLowerCase() === requestEmail.toLowerCase()
+    const { email: tokenInfoEmail, expiry_date: expiryDate } = await oAuth2Client.getTokenInfo(serviceAccessToken)
+    return tokenInfoEmail?.toLowerCase() === requestEmail.toLowerCase() && expiryDate > Date.now()
   } catch (error) {
     logger.error('isGoogleTokenValid', error)
     return false
@@ -35,7 +51,11 @@ export const getTokenFromCode = async (code: string) => {
   return { access_token, refresh_token }
 }
 
-export const refreshAccessToken = async (refreshToken: string) => {
+export const refreshAccessToken = async (oAuth2Client: OAuth2Client, refreshToken: string) => {
+  if (!oAuth2Client) {
+    oAuth2Client = newGoogleOAuth2Client()
+  }
+
   oAuth2Client.setCredentials({
     refresh_token: refreshToken
   })

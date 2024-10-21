@@ -1,5 +1,5 @@
 import UsersDao from '@dao/users.dao'
-import { getEmailFromGoogleToken, oAuth2Client } from '@services/support/google-auth.service'
+import { getEmailFromGoogleToken, newGoogleOAuth2Client } from '@services/support/google-auth.service'
 import { CacheKeyUser, LoginTypes } from '@common/consts'
 import { getCache, setCache } from '@common/redis'
 import { ObjectId } from 'mongodb'
@@ -14,7 +14,7 @@ export default async (req, res, next) => {
     let email: string | null
     switch (loginType) {
       case LoginTypes.google:
-        oAuth2Client.setCredentials({
+        req.oAuth2Client = newGoogleOAuth2Client({
           access_token: accessToken,
           refresh_token: refreshToken
         })

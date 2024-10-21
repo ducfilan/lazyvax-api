@@ -3,7 +3,7 @@ import { parse } from "cookie"
 import { Server as HttpServer } from 'http'
 import { Server as SocketServer, Socket } from "socket.io"
 import { getOrigins } from "@/app"
-import { isGoogleTokenValid } from "./google-auth.service"
+import { isGoogleTokenValid, newGoogleOAuth2Client } from "./google-auth.service"
 import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types"
 import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
@@ -22,10 +22,12 @@ import logger from "@/common/logger"
 import { tryParseJson } from '@/common/utils/stringUtils'
 import { createMultipleEvents } from "../api/events.services"
 import { addEventsToGoogleCalendar } from "./calendar_facade"
+import { OAuth2Client } from "google-auth-library"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
   user?: User;
+  oAuth2Client: OAuth2Client
 }
 
 export const EventNameJoinConversation = "join conversation"
@@ -76,6 +78,7 @@ export function registerSocketIo(server: HttpServer) {
 
         isGoogleTokenValid(token || socket.handshake.auth.token, socket.handshake.auth.email).then((isTokenValid) => {
           if (isTokenValid) {
+            socket.oAuth2Client = newGoogleOAuth2Client({ access_token: token })
             const email = socket.handshake.auth.email
             getUserByEmail(email)
               .then((user) => socket.user = user)
@@ -357,7 +360,7 @@ export function registerSocketIo(server: HttpServer) {
             await createMultipleEvents(events)
             ack(conversationId)
 
-            await addEventsToGoogleCalendar(events) // TODO: transaction handling, make sure it's added to Google Calendar.
+            await addEventsToGoogleCalendar(socket.oAuth2Client, events) // TODO: transaction handling, make sure it's added to Google Calendar.
           } catch (error) {
             logger.error(error)
           }

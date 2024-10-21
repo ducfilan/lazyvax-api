@@ -11,12 +11,12 @@ import logger from './common/logger'
 
 const app = express()
 
-const isProdEnv = process.env.NODE_ENV === 'prod'
+const isProdEnv = ['prod', 'live'].includes(process.env.NODE_ENV)
 
 let configuredOrigins: string[] = [];
 
 export async function getOrigins() {
-  if (configuredOrigins.length > 0) {
+  if (configuredOrigins.length > 0) { // TODO: This requires restart when adding origins.
     return configuredOrigins
   }
 

@@ -1,8 +1,9 @@
 import logger from '@/common/logger'
 import { Request, Response } from 'express'
-import eventsService from '@services/api/events.services'
+import eventsService, { syncEventsFromGoogle } from '@services/api/events.services'
 import { ObjectId } from 'mongodb'
 import { User } from '@/entities/User'
+import { OAuth2Client } from 'google-auth-library'
 
 export default class EventsController {
   static async getEvents(req: Request & { user: User }, res: Response) {
@@ -73,11 +74,12 @@ export default class EventsController {
     }
   }
 
-  static async syncEventsFromGoogle(req: Request & { user: User }, res: Response) {
+  static async syncEventsFromGoogle(req: Request & { oAuth2Client: OAuth2Client, user: User }, res: Response) {
     try {
       const { from, to } = req.query
 
-      const changedEventsCount = await eventsService.syncEventsFromGoogle(
+      const changedEventsCount = await syncEventsFromGoogle(
+        req.oAuth2Client,
         req.user._id,
         new Date(from as string), new Date(to as string)
       )

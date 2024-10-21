@@ -3,6 +3,7 @@ import EventsDao from '@dao/events.dao'
 import { Event, GoogleCalendarMeta, mapGoogleEventToAppEvent } from '@/entities/Event'
 import { getEventsFromGoogleCalendar } from '../support/calendar_facade'
 import { CalendarSourceApp } from '@/common/consts';
+import { OAuth2Client } from 'google-auth-library';
 
 export async function getEvents(filter: { from: Date; to: Date; calendarId?: string; categories?: string[] }) {
   return await EventsDao.getEvents(filter)
@@ -28,7 +29,7 @@ export async function getEventById(eventId: ObjectId) {
   return await EventsDao.getEventById(eventId)
 }
 
-async function syncEventsFromGoogle(userId: ObjectId, from: Date, to: Date, calendarId: string = "primary") {
+export async function syncEventsFromGoogle(oAuth2Client: OAuth2Client, userId: ObjectId, from: Date, to: Date, calendarId: string = "primary") {
   const insertOps = []
   const updateOps = []
   const deleteOps = []
@@ -47,6 +48,7 @@ async function syncEventsFromGoogle(userId: ObjectId, from: Date, to: Date, cale
   })
 
   const googleEvents = await getEventsFromGoogleCalendar({
+    oAuth2Client,
     calendarId,
     fromDate: from,
     toDate: to,

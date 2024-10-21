@@ -1,17 +1,18 @@
 import { calendar_v3, google } from "googleapis"
 import { endOfWeek, startOfWeek } from "date-fns"
-import { oAuth2Client } from "./google-auth.service"
 import { Event, mapAppEventToGoogleEvent } from "@/entities/Event"
 import logger from "@/common/logger"
+import { OAuth2Client } from "google-auth-library"
 
 export async function getEventsFromGoogleCalendar({
+  oAuth2Client,
   calendarId = 'primary',
   showDeleted = false,
   maxResults = 250,
   fromDate,
   toDate,
 }
-  : { calendarId?: string, showDeleted?: boolean, maxResults?: number, fromDate?: Date, toDate?: Date }
+  : { oAuth2Client: OAuth2Client, calendarId?: string, showDeleted?: boolean, maxResults?: number, fromDate?: Date, toDate?: Date }
 ): Promise<calendar_v3.Schema$Event[]> {
   if (!fromDate) {
     fromDate = startOfWeek(new Date(), { weekStartsOn: 1 })
@@ -36,7 +37,7 @@ export async function getEventsFromGoogleCalendar({
   return response.data.items
 }
 
-export async function addEventsToGoogleCalendar(events: Event[]) {
+export async function addEventsToGoogleCalendar(oAuth2Client: OAuth2Client, events: Event[]) {
   const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
 
   for (const calendarEvent of events.map(mapAppEventToGoogleEvent)) {
