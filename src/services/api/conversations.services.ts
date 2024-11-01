@@ -1,4 +1,4 @@
-import { ConversationTypeObjective, ConversationTypeWeek, I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts"
+import { ConversationTypeObjective, ConversationTypeWeek, I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts/constants"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import { Conversation, UserMilestone } from "@/entities/Conversation"
@@ -16,6 +16,13 @@ export async function createConversation(conversation: Conversation) {
 
 export async function updateById(conversationId: ObjectId, updateOperations) {
   return ConversationsDao.updateById(conversationId, updateOperations)
+}
+
+export async function updateProgress(conversationId: ObjectId, progress: number) {
+  return ConversationsDao.updateOne(
+    { _id: conversationId },
+    { $set: { "meta.meta.progress": progress } },
+  )
 }
 
 export async function addUserMilestone(conversationId: ObjectId, milestone: UserMilestone) {

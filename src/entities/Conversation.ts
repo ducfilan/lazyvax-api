@@ -1,4 +1,4 @@
-import { MilestoneSource } from "@/common/types"
+import { MilestoneSource } from "@/common/types/types"
 import { ObjectId } from "mongodb"
 
 export type Conversation = {

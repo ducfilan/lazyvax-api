@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import { CaptchaVerificationUrl } from '@common/consts'
+import { CaptchaVerificationUrl } from '@/common/consts/constants'
 import { HttpBadRequest, HttpServerError } from '@common/http-codes'
 import logger from '@/common/logger'
 

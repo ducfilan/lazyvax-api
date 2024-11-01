@@ -1,6 +1,6 @@
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
-import { ObjectiveTypes } from '@/common/consts'
+import { ObjectiveTypes } from '@/common/consts/constants'
 
 // Validator for creating an objective
 export const validateObjectiveCreation = [

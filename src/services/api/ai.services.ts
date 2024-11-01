@@ -1,7 +1,7 @@
 import { User } from "@/entities/User";
 import { ObjectId } from "mongodb";
 import { getConversationById } from "./conversations.services";
-import { CompletionAiService } from "../support/ai_querier";
+import { ChatAiService, CompletionAiService } from "../support/ai_querier";
 import logger from "@/common/logger";
 import { getEvents } from "./events.services";
 import { getLastWeekEnd, getLastWeekStart } from "@/common/utils/dateUtils";
@@ -24,7 +24,7 @@ export async function queryGenerateWeekPlan(user: User, conversationId: ObjectId
     return null
   }
 
-  const lastWeekEvents = await getEvents({ from: getLastWeekStart(), to: getLastWeekEnd() })
+  const lastWeekEvents = await getEvents({ userId: user._id, from: getLastWeekStart(), to: getLastWeekEnd() })
 
   const prompt = `${eventsToWeeklySchedule(lastWeekEvents)}`
 
@@ -466,9 +466,7 @@ export async function queryGenerateWeekPlan(user: User, conversationId: ObjectId
     }
     ]`
 
-  return Promise.resolve(response);
-
-  // return CompletionAiService.query<string>(user, prompt)
+  return ChatAiService.query<string>(user, prompt)
 }
 
 async function buildPrompt(conversationId: ObjectId, milestoneId: ObjectId): Promise<string> {

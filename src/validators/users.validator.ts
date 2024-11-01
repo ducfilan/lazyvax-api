@@ -1,4 +1,4 @@
-import { AgeGroups, CacheTypes, GoalMaxLength, MaxRegistrationsStep, SupportingLanguages } from '@common/consts'
+import { AgeGroups, CacheTypes, GoalMaxLength, MaxRegistrationsStep, SupportingLanguages } from '@/common/consts/constants'
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
 

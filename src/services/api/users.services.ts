@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import UsersDao from '@dao/users.dao'
 import { isGoogleTokenValid } from '@services/support/google-auth.service'
-import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@common/consts'
+import { LoginTypes, SupportingLanguagesMap, DefaultLangCode, CacheKeyUser } from '@/common/consts/constants'
 import { getCache, setCache } from '@common/redis'
 import { User } from '@/entities/User'
 

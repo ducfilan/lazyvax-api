@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb"
 import { I18n } from "./I18n"
-import { BotUserId, BotUserName } from "@/common/consts"
+import { BotUserId, BotUserName } from "@/common/consts/constants"
 import { formatString } from "@/common/utils/stringUtils"
 
 export type Message = {

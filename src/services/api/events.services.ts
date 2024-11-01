@@ -2,9 +2,9 @@ import { ObjectId } from 'mongodb'
 import EventsDao from '@dao/events.dao'
 import { Event, GoogleCalendarMeta, mapGoogleEventToAppEvent } from '@/entities/Event'
 import { getEventsFromGoogleCalendar } from '../support/calendar_facade'
-import { CalendarSourceApp, ConversationTypeWeek } from '@/common/consts';
+import { CalendarSourceApp, ConversationTypeWeek } from '@/common/consts/constants';
 import { OAuth2Client } from 'google-auth-library';
-import { GetEventFilters } from '@/common/types';
+import { GetEventFilters } from '@/common/types/types';
 
 export async function getEvents(filter: GetEventFilters, sort?: { [key: string]: 1 | -1 }) {
   if (!filter.type) {

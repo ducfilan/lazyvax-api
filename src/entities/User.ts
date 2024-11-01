@@ -1,4 +1,4 @@
-import { LangCode } from "@/common/types";
+import { LangCode } from "@/common/types/types";
 import { ObjectId } from "mongodb";
 import { Conversation } from "./Conversation";
 

@@ -1,4 +1,4 @@
-import { BotUserId, BotUserName, MessageTypeAskUserSmartQuestion, MessageTypeSuggestMilestoneAndActions } from "@/common/consts"
+import { BotUserId, BotUserName, MessageTypeAskUserSmartQuestion, MessageTypeSuggestMilestoneAndActions } from "@/common/consts/constants"
 import { MilestoneSuggestion, SmartQuestion } from "@/entities/Conversation"
 import { Message } from "@/entities/Message"
 import { saveMessage } from "../api/messages.services"

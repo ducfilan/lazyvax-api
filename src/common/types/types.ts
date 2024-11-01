@@ -1,4 +1,6 @@
-import { MessageTypes, MilestoneSources, SupportingLanguages } from "./consts";
+import { ObjectId } from "mongodb";
+import { ConversationTypes, MessageTypes, MilestoneSources, PlanTypeWeekFull, PlanTypeWeekInteractive, SupportingLanguages } from "../consts/constants";
+import { EventMeta } from "@/entities/Event";
 
 export type LangCode = typeof SupportingLanguages[number]
 
@@ -97,3 +99,27 @@ export type MessageContent = {
 export type GenerateWeekPlanFullMessage = {
   conversationId: string,
 }
+
+export type ConversationType = typeof ConversationTypes[number]
+
+export type GetEventFilters = {
+  userId: ObjectId,
+  from: Date,
+  to: Date,
+  source?: string,
+  type?: ConversationType,
+  calendarId?: string,
+  categories?: string[],
+  meta?: EventMeta,
+  limit?: number
+}
+
+export interface WeekInfo {
+  weekNumber: number;
+  weekStartDate: Date;
+  weekEndDate: Date;
+  weekSubject?: string;
+  weekSubjectSub?: string;
+}
+
+export type WeekPlanType = typeof PlanTypeWeekFull | typeof PlanTypeWeekInteractive

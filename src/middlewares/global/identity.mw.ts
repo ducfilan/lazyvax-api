@@ -1,6 +1,6 @@
 import UsersDao from '@dao/users.dao'
 import { getEmailFromGoogleToken } from '@services/support/google-auth.service'
-import { CacheKeyUser, LoginTypes } from '@common/consts'
+import { CacheKeyUser, LoginTypes } from '@/common/consts/constants'
 import { getCache, setCache } from '@/common/redis'
 import { ObjectId } from 'mongodb'
 import logger from '@/common/logger'

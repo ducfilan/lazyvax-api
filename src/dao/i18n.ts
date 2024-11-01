@@ -1,7 +1,7 @@
 import { Collection, Db, MongoClient } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { DefaultLangCode, I18nCollectionName, SupportingUiLanguages } from '@common/consts'
-import { LangCode } from '@/common/types'
+import { DefaultLangCode, I18nCollectionName, SupportingUiLanguages } from '@/common/consts/constants'
+import { LangCode } from '@/common/types/types'
 import { I18n } from '@/entities/I18n'
 import logger from '@/common/logger'
 

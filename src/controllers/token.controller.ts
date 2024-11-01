@@ -1,7 +1,7 @@
 import logger from '@/common/logger'
-import { GoogleUserInfo } from '@/common/types'
+import { GoogleUserInfo } from '@/common/types/types'
 import usersServices from '@/services/api/users.services'
-import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb, GetUserInfoUrl, RegisterStep, LoginTypes, DefaultLangCode } from '@common/consts'
+import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb, GetUserInfoUrl, RegisterStep, LoginTypes, DefaultLangCode } from '@/common/consts/constants'
 import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
 import fetch from 'node-fetch'
 

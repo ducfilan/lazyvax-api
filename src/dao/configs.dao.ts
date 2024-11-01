@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { ConfigsCollectionName } from '@common/consts'
+import { ConfigsCollectionName } from '@/common/consts/constants'
 import logger from '@/common/logger'
 
 let _configs: Collection

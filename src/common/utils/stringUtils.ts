@@ -1,4 +1,5 @@
-import { LangCode } from "../types";
+import { enUS, vi, ja, zhCN } from 'date-fns/locale'
+import { LangCode } from "../types/types";
 
 export function removeTimeInfo(date: Date): Date {
   date.setHours(0);
@@ -89,5 +90,24 @@ export const tryParseJson = <T>(json: string, fallback: any = {}): T => {
     return JSON.parse(json) as T
   } catch (e) {
     return fallback
+  }
+}
+
+export const langCodeToDateFnsLocale = (code: string | undefined) => {
+  switch (code) {
+    case "en":
+      return enUS
+
+    case "vi":
+      return vi
+
+    case "ja":
+      return ja
+
+    case "zh":
+      return zhCN
+
+    default:
+      return enUS
   }
 }

@@ -1,12 +1,17 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { CacheKeyConversation, ConversationsCollectionName, ConversationTypes, ConversationTypeWeek, MilestoneSources } from '@common/consts'
+import { CacheKeyConversation, ConversationsCollectionName, ConversationTypes, ConversationTypeWeek, MilestoneSources } from '@/common/consts/constants'
 import { Conversation } from '@/entities/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
 import logger from '@/common/logger'
 
 let _conversations: Collection<Conversation>
 let _db: Db
+
+export const ConversationProgressNew = 0
+export const ConversationProgressGeneratedFullDone = 1
+export const ConversationProgressGeneratedInteractiveBegin = 2
+export const ConversationProgressGeneratedInteractiveEnd = 3
 
 export default class ConversationsDao {
   static injectDB(conn: MongoClient) {
@@ -37,7 +42,8 @@ export default class ConversationsDao {
                       type: { enum: ConversationTypes },
                       meta: {
                         properties: {
-                          startDate: { "bsonType": "date" }
+                          startDate: { "bsonType": "date" },
+                          progress: { bsonType: 'int' },
                         },
                         required: ["startDate"],
                         additionalProperties: false

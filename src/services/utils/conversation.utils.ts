@@ -1,8 +1,8 @@
-import { CreateConversationMessage, CreateConversationMessageConversation } from "@/common/types"
+import { CreateConversationMessage, CreateConversationMessageConversation } from "@/common/types/types"
 import { Conversation } from "@/entities/Conversation"
 import { ObjectId } from "mongodb"
 import { getUserById } from "../api/users.services"
-import { ConversationTypeWeek } from "@/common/consts"
+import { ConversationTypeWeek } from "@/common/consts/constants"
 
 export class ConversationBuilder {
   private conversation: CreateConversationMessageConversation

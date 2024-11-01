@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
-import { ObjectivesCollectionName, ObjectiveTypes } from '@common/consts';
+import { ObjectivesCollectionName, ObjectiveTypes } from '@/common/consts/constants';
 import logger from '@/common/logger';
 import { Objective } from '@/entities/Objective';
 

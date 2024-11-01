@@ -125,16 +125,14 @@ export const MessageTypeAddMilestoneAndActions = 14
 export const MessageTypeNextMilestoneAndActions = 15
 export const MessageTypeRetryGetResponse = 16
 export const MessageTypeHardcodedMapping = 17
-export const MessageTypeAskToGenerateWeekPlanFull = 18
-export const MessageTypeConfirmToGenerateWeekPlanFull = 19
+export const MessageTypeAskToGenerateWeekPlan = 18
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
   MessageTypeAnswerSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeSummaryQuestionnaires,
   MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
   MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions,
-  MessageTypeRetryGetResponse, MessageTypeHardcodedMapping, MessageTypeAskToGenerateWeekPlanFull,
-  MessageTypeConfirmToGenerateWeekPlanFull
+  MessageTypeRetryGetResponse, MessageTypeHardcodedMapping, MessageTypeAskToGenerateWeekPlan,
 ]
 
 export const MilestoneSourceSuggestion = 1
@@ -161,3 +159,11 @@ export const ObjectiveTypes = ['life', 'long-term', 'short-term']
 
 export const CalendarSourceGoogle = "Google"
 export const CalendarSourceApp = AppName
+
+export const LiteralDurationsExtractRegex =
+  /^((?<days>\d+)d\w*?)* *((?<hours>\d+)h\w*)* *((?<minutes>\d+)m\w*)* *((?<seconds>\d+)s\w*)*$/
+
+export const i18n = (key: string) => key
+
+export const PlanTypeWeekFull = "Full"
+export const PlanTypeWeekInteractive = "Interactive"

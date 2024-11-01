@@ -1,4 +1,4 @@
-import { AiModeChat, AiModeCompletion, AiProviderOpenAi } from '@/common/consts'
+import { AiModeChat, AiModeCompletion, AiProviderOpenAi } from '@/common/consts/constants'
 import logger from '@/common/logger'
 import { User } from '@/entities/User'
 import OpenAI from "openai"

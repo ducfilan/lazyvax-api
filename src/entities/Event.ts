@@ -1,4 +1,4 @@
-import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts";
+import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts/constants";
 import { calendar_v3 } from "googleapis";
 import { ObjectId } from "mongodb";
 

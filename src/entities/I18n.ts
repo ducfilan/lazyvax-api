@@ -1,4 +1,4 @@
-import { LangCode, MessageType } from "@/common/types"
+import { LangCode, MessageType } from "@/common/types/types"
 import { ObjectId } from "mongodb"
 
 export type I18n = {

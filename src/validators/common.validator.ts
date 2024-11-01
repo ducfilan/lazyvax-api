@@ -1,4 +1,4 @@
-import { MaxPaginationLimit } from '@common/consts'
+import { MaxPaginationLimit } from '@/common/consts/constants'
 
 export const validateSkip = (skip) => (Number.isInteger(skip) && skip >= 0)
 

@@ -1,5 +1,5 @@
 import winston from 'winston'
-import { Env, Envs } from './consts'
+import { Env, Envs } from './consts/constants'
 import path from 'path'
 import fs from 'fs'
 
