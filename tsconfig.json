@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "target": "es6",
+    "target": "es2018",
     "outDir": "dist",
     "typeRoots": [
       "node_modules/@types"
