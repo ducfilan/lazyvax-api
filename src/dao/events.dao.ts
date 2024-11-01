@@ -3,6 +3,7 @@ import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { CalendarSourceGoogle, EventsCollectionName } from '@common/consts';
 import logger from '@/common/logger';
 import { Event, EventMeta, EventStatuses, GoogleCalendarMeta } from '@/entities/Event';
+import { GetEventFilters } from '@/common/types';
 
 let _events: Collection<Event>;
 let _db: Db;
@@ -95,9 +96,9 @@ export default class EventsDao {
     }
   }
 
-  static async getEvents(filter: { from: Date, to: Date, source?: string, calendarId?: string, categories?: string[], meta?: EventMeta }) {
-    const { from, to, source, calendarId, categories, meta } = filter
-    const query: any = { startDate: { $gte: from }, endDate: { $lte: to } }
+  static async getEvents(filter: GetEventFilters, sort?: { [key: string]: 1 | -1 }) {
+    const { userId, from, to, source, calendarId, categories, meta, limit } = filter
+    const query: any = { userId, startDate: { $gte: from }, endDate: { $lte: to } }
 
     if (source) query.source = source
     if (categories) query.categories = { $in: categories }
@@ -110,7 +111,11 @@ export default class EventsDao {
     if (calendarId) query["meta.calendarId"] = calendarId
 
     try {
-      return await _events.find(query).toArray();
+      const cursor = _events.find(query)
+      if (filter.limit) cursor.limit(filter.limit)
+      if (sort) cursor.sort(sort.field, sort.order)
+
+      return await cursor.toArray()
     } catch (e) {
       logger.error(`Error fetching events: ${e}`);
       return [];

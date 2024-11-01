@@ -2,11 +2,16 @@ import { ObjectId } from 'mongodb'
 import EventsDao from '@dao/events.dao'
 import { Event, GoogleCalendarMeta, mapGoogleEventToAppEvent } from '@/entities/Event'
 import { getEventsFromGoogleCalendar } from '../support/calendar_facade'
-import { CalendarSourceApp } from '@/common/consts';
+import { CalendarSourceApp, ConversationTypeWeek } from '@/common/consts';
 import { OAuth2Client } from 'google-auth-library';
+import { GetEventFilters } from '@/common/types';
 
-export async function getEvents(filter: { from: Date; to: Date; calendarId?: string; categories?: string[] }) {
-  return await EventsDao.getEvents(filter)
+export async function getEvents(filter: GetEventFilters, sort?: { [key: string]: 1 | -1 }) {
+  if (!filter.type) {
+    filter.type = ConversationTypeWeek
+  }
+
+  return await EventsDao.getEvents(filter, sort)
 }
 
 export async function createEvent(eventData: Event) {
@@ -34,9 +39,7 @@ export async function syncEventsFromGoogle(oAuth2Client: OAuth2Client, userId: O
   const updateOps = []
   const deleteOps = []
 
-  const eventsInApp = await getEvents({
-    from, to
-  })
+  const eventsInApp = await getEvents({ userId, from, to })
   const appEventIdToAppEvent = new Map<string, Event>()
   const googleEventIdToAppEvent = new Map<string, Event>()
   eventsInApp.forEach(appEvent => {
