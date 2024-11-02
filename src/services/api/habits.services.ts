@@ -11,28 +11,8 @@ export async function getHabits(filter: {
   return await HabitsDao.getHabits(filter);
 }
 
-export async function createHabit(habitData: {
-  userId: ObjectId,
-  title: string,
-  priority: string,
-  repeat: {
-    unit: string,
-    frequency: number,
-    daysOfWeek?: number[]
-  },
-  detail?: string,
-  category?: string,
-  color?: string,
-  emoji?: string,
-  idealDuration?: number
-}) {
-  const habit: Habit = {
-    ...habitData,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  return await HabitsDao.createHabit(habit);
+export async function createHabit(habitData: Habit) {
+  return await HabitsDao.createHabit(habitData);
 }
 
 export async function updateHabit(habitId: ObjectId, updateData: Partial<Habit>) {

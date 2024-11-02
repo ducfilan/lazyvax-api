@@ -99,6 +99,7 @@ export default class HabitsDao {
       habit._id = new ObjectId();
       habit.createdAt = new Date();
       habit.updatedAt = new Date();
+
       const result = await _habits.insertOne(habit);
       return result.insertedId;
     } catch (e) {
@@ -110,6 +111,9 @@ export default class HabitsDao {
   static async updateHabit(habitId: ObjectId, update: Partial<Habit>) {
     try {
       update.updatedAt = new Date();
+
+      console.log(update);
+
       const result = await _habits.updateOne({ _id: habitId }, { $set: update });
       return result.modifiedCount > 0;
     } catch (e) {

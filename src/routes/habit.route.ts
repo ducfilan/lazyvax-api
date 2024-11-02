@@ -9,7 +9,7 @@ securedHabitsRouter.route('/')
   .post(auth, HabitsController.createHabit);
 
 securedHabitsRouter.route('/:id')
-  .put(auth, HabitsController.updateHabit)
+  .patch(auth, HabitsController.updateHabit)
   .delete(auth, HabitsController.deleteHabit);
 
 export default securedHabitsRouter;

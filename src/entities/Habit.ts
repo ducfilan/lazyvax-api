@@ -9,6 +9,7 @@ export type Habit = {
     unit: string; // e.g., 'daily', 'weekly'
     frequency: number;
     daysOfWeek?: number[]; // e.g., [1, 3, 5] for Mon, Wed, Fri
+    daysOfMonth?: number[]; // e.g., [1, 15] for the 1st and 15th day of the month
   };
   detail?: string;
   category?: string; // e.g., 'health', 'productivity'
