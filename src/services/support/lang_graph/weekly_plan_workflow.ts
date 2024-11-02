@@ -1,4 +1,4 @@
-import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, StateType, UpdateType } from '@langchain/langgraph';
+import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, UpdateType } from '@langchain/langgraph';
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 import { ChatOpenAI } from '@langchain/openai';
 import { BaseMessage } from '@langchain/core/messages';
@@ -17,7 +17,7 @@ import { Message } from '@/entities/Message';
 
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
-  private graph: CompiledStateGraph<StateType<WeekPlanStateType>, UpdateType<WeekPlanStateType>, NodeType, WeekPlanStateType, WeekPlanStateType, StateDefinition>;
+  private graph: CompiledStateGraph<WeeklyPlanningState, UpdateType<WeekPlanStateType>, NodeType, WeekPlanStateType, WeekPlanStateType, StateDefinition>;
 
   constructor(model?: BaseLanguageModel) {
     this.model = model || new ChatOpenAI({
@@ -169,7 +169,7 @@ export class WeeklyPlanningWorkflow {
   }
 
   private decidePlanTypeFlow(state: WeeklyPlanningState) {
-    return state.planType === 'Full' ? 'checkRoutineAndHabits' : 'checkRoutineAndHabits';
+    return state.planType ? 'checkRoutineAndHabits' : END;
   }
 
   private decideRoutineFlow(state: WeeklyPlanningState) {

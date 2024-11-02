@@ -36,6 +36,7 @@ export const I18nCollectionName = 'i18n'
 export const ConfigsCollectionName = 'configs'
 export const ObjectivesCollectionName = 'objectives'
 export const EventsCollectionName = 'events'
+export const HabitsCollectionName = 'habits'
 
 export const LoginTypes = {
   google: 'google'
@@ -155,7 +156,7 @@ export const I18nDbCodeSummarizeQuestionnaires = 'summarize-questionnaires'
 
 export const RegisterStep = 1
 
-export const ObjectiveTypes = ['life', 'long-term', 'short-term']
+export const ObjectiveTypes = ['life', 'long', 'short']
 
 export const CalendarSourceGoogle = "Google"
 export const CalendarSourceApp = AppName
@@ -167,3 +168,7 @@ export const i18n = (key: string) => key
 
 export const PlanTypeWeekFull = "Full"
 export const PlanTypeWeekInteractive = "Interactive"
+
+export const HabitPriorities = ['low', 'medium', 'high'] as const;
+export const RepeatUnits = ['day', 'week', 'month'] as const;
+export const DaysOfWeek = [0, 1, 2, 3, 4, 5, 6] as const; // Representing Sunday to Saturday

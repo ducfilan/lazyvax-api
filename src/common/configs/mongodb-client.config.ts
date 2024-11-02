@@ -6,6 +6,7 @@ import MessagesDao from '@/dao/messages.dao';
 import I18nDao from '@/dao/i18n';
 import ObjectivesDao from '@/dao/objectives.dao';
 import EventsDao from '@/dao/events.dao';
+import HabitsDao from '@/dao/habits.dao';
 
 const {
   NODE_ENV,
@@ -42,6 +43,7 @@ export const injectTables = async () => {
   I18nDao.injectDB(client)
   ObjectivesDao.injectDB(client)
   EventsDao.injectDB(client)
+  HabitsDao.injectDB(client)
 
   return client
 }
