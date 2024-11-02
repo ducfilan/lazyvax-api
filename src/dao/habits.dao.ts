@@ -37,15 +37,20 @@ export default class HabitsDao {
               emoji: { bsonType: 'string', maxLength: 10 },
               repeat: {
                 bsonType: 'object',
-                required: ['unit', 'frequency', 'daysOfWeek'],
+                required: ['unit', 'frequency'],
                 properties: {
                   unit: { enum: RepeatUnits }, // 'day', 'week', 'month'
                   frequency: { bsonType: 'number', minimum: 1 },
                   daysOfWeek: {
                     bsonType: 'array',
                     items: { enum: DaysOfWeek } // 0 for Sunday, 1 for Monday, etc.
+                  },
+                  daysOfMonth: {
+                    bsonType: 'array',
+                    items: { bsonType: 'number', minimum: 0, maximum: 31 } // 0 for the last day of the month
                   }
-                }
+                },
+                additionalProperties: false
               },
               idealDuration: { bsonType: 'number', minimum: 0 }, // in minutes
               createdAt: { bsonType: 'date' },
