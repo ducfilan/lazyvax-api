@@ -16,8 +16,15 @@ export const validateApiGetActionCompletion = [
     .customSanitizer(id => new ObjectId(id)),
   (req, res, next) => {
     const errors = validationResult(req)
-    if (!errors.isEmpty())
-      return res.status(422).json({ errors: errors.array() })
+    if (!errors.isEmpty()) {
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
+    }
 
     next()
   },

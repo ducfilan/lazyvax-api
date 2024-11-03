@@ -39,8 +39,13 @@ export const validateApiUpdateUser = [
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      const { msg, param } = errors.array({ onlyFirstError: true })[0]
-      return res.status(422).json({ error: `${param} - ${msg}` })
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
     }
 
     const { finishedRegisterStep, locale, preferences } = req.body
@@ -70,8 +75,35 @@ export const validateApiDeleteCache = [
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      const { msg, param } = errors.array({ onlyFirstError: true })[0]
-      return res.status(422).json({ error: `${param} - ${msg}` })
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
+    }
+
+    next()
+  },
+]
+
+export const validateApiUpdateDob = [
+  check('dob')
+    .notEmpty()
+    .withMessage(`should not be empty!`)
+    .bail()
+    .customSanitizer(value => new Date(value)),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
     }
 
     next()

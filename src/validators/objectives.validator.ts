@@ -53,8 +53,13 @@ export const validateObjectiveCreation = [
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      const { msg, param } = errors.array({ onlyFirstError: true })[0]
-      return res.status(422).json({ error: `${param} - ${msg}` })
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
     }
 
     next()
@@ -106,8 +111,13 @@ export const validateObjectiveUpdate = [
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      const { msg, param } = errors.array({ onlyFirstError: true })[0]
-      return res.status(422).json({ error: `${param} - ${msg}` })
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
     }
 
     if (isEmpty(req.body)) {
@@ -149,8 +159,13 @@ export const validateObjectiveFilters = [
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-      const { msg, param } = errors.array({ onlyFirstError: true })[0]
-      return res.status(422).json({ error: `${param} - ${msg}` })
+      const error = errors.array({ onlyFirstError: true })[0]
+      switch (error.type) {
+        case 'field':
+          return res.status(422).json({ error: `${error.path} - ${error.msg}` })
+        default:
+          return res.status(422).json({ error: error.msg })
+      }
     }
 
     next()

@@ -74,12 +74,12 @@ export async function register(requestBody): Promise<ObjectId> {
   return UsersDao.registerUserIfNotFound(userInfo)
 }
 
-export async function update(_id: ObjectId, updateItems) {
-  return UsersDao.updateOne({ _id }, { $set: updateItems })
+export async function update({ _id, email }: User, updateItems) {
+  return UsersDao.updateOne({ _id, email }, { $set: updateItems })
 }
 
-export async function updateDob(_id: ObjectId, dob: Date) {
-  return UsersDao.updateOne({ _id }, { $set: { 'preferences.dob': dob } })
+export async function updateDob({ _id, email }: User, dob: Date) {
+  return UsersDao.updateOne({ _id, email }, { $set: { 'preferences.dob': dob } })
 }
 
 export async function logout({ _id, email }) {
