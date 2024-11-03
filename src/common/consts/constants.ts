@@ -127,6 +127,8 @@ export const MessageTypeNextMilestoneAndActions = 15
 export const MessageTypeRetryGetResponse = 16
 export const MessageTypeHardcodedMapping = 17
 export const MessageTypeAskToGenerateWeekPlan = 18
+export const MessageTypeAskForRoutine = 19
+export const MessageTypeAskForWeekToDoTasks = 20
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
@@ -134,6 +136,7 @@ export const MessageTypes = [
   MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
   MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions,
   MessageTypeRetryGetResponse, MessageTypeHardcodedMapping, MessageTypeAskToGenerateWeekPlan,
+  MessageTypeAskForRoutine, MessageTypeAskForWeekToDoTasks,
 ]
 
 export const MilestoneSourceSuggestion = 1
@@ -172,3 +175,12 @@ export const PlanTypeWeekInteractive = "Interactive"
 export const HabitPriorities = ['low', 'medium', 'high'] as const;
 export const RepeatUnits = ['day', 'week', 'month'] as const;
 export const DaysOfWeek = [0, 1, 2, 3, 4, 5, 6] as const; // Representing Sunday to Saturday
+export const DaysOfWeekMap = {
+  [0]: 'Sunday',
+  [1]: 'Monday',
+  [2]: 'Tuesday',
+  [3]: 'Wednesday',
+  [4]: 'Thursday',
+  [5]: 'Friday',
+  [6]: 'Saturday',
+}

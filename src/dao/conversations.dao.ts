@@ -44,6 +44,19 @@ export default class ConversationsDao {
                         properties: {
                           startDate: { "bsonType": "date" },
                           progress: { bsonType: 'int' },
+                          todoTasks: {
+                            bsonType: 'array',
+                            items: {
+                              bsonType: 'object',
+                              properties: {
+                                title: { bsonType: 'string' },
+                                completed: { bsonType: 'bool' },
+                                dueDate: { bsonType: 'date' }
+                              },
+                              required: ['title', 'completed'],
+                              additionalProperties: false
+                            }
+                          },
                         },
                         required: ["startDate"],
                         additionalProperties: false

@@ -1,7 +1,7 @@
 import { ConversationTypeObjective, ConversationTypeWeek, I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts/constants"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
-import { Conversation, UserMilestone } from "@/entities/Conversation"
+import { Conversation, TodoTask, UserMilestone } from "@/entities/Conversation"
 import { I18n } from "@/entities/I18n"
 import { ObjectId } from "mongodb"
 
@@ -127,6 +127,11 @@ export async function getConversationByType(type: string, meta: any): Promise<Co
   if (!result) return null
 
   return result
+}
+
+export async function getWeeklyPlanTodoTasks(conversationId: ObjectId): Promise<TodoTask[]> {
+  const conversation = await getConversationById(conversationId)
+  return conversation?.meta?.todoTasks || []
 }
 
 export async function generateFirstMessages(conversationType: string, locale: string): Promise<I18n[]> {

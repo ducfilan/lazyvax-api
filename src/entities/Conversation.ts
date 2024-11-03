@@ -4,9 +4,19 @@ import { ObjectId } from "mongodb"
 export type Conversation = {
   _id?: ObjectId,
   type: string,
-  meta?: object,
+  meta?: {
+    startDate: Date,
+    progress?: number,
+    todoTasks?: TodoTask[],
+  },
   unreadCount: number,
   participants: Participant[],
+}
+
+export type TodoTask = {
+  title: string,
+  completed: boolean,
+  dueDate: Date,
 }
 
 export type Participant = {
