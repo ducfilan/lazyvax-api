@@ -42,11 +42,20 @@ export default class UsersController {
         delete properties.preferences
       }
 
-      const isSuccess = await usersServices.update(req.user, properties)
+      const isSuccess = await usersServices.update(req.user._id, properties)
       if (!isSuccess) {
         res.status(400).json({ error: 'update user failed' })
       }
 
+      res.sendStatus(200)
+    } catch (e) {
+      res.status(400).send({ error: e.message })
+    }
+  }
+
+  static async updateDob(req, res) {
+    try {
+      await usersServices.updateDob(req.user._id, req.body.dob)
       res.sendStatus(200)
     } catch (e) {
       res.status(400).send({ error: e.message })

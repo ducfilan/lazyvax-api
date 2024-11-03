@@ -24,7 +24,7 @@ export async function getUserById(userId: ObjectId) {
 
 export async function getUserByEmail(email: string) {
   const cacheKeyEmail = CacheKeyUser(email)
-  let user = await getCache(cacheKeyEmail)
+  let user = await getCache(cacheKeyEmail) as User
 
   if (user) {
     user._id = new ObjectId(user._id)
@@ -74,8 +74,12 @@ export async function register(requestBody): Promise<ObjectId> {
   return UsersDao.registerUserIfNotFound(userInfo)
 }
 
-export async function update({ _id, email }: User, updateItems) {
-  return UsersDao.updateOne({ _id, email }, { $set: updateItems })
+export async function update(_id: ObjectId, updateItems) {
+  return UsersDao.updateOne({ _id }, { $set: updateItems })
+}
+
+export async function updateDob(_id: ObjectId, dob: Date) {
+  return UsersDao.updateOne({ _id }, { $set: { 'preferences.dob': dob } })
 }
 
 export async function logout({ _id, email }) {
@@ -86,5 +90,6 @@ export default {
   getUserById,
   getUserByEmail,
   update,
+  updateDob,
   logout,
 }

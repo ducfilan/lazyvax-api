@@ -57,7 +57,8 @@ export default class UsersDao {
                   occupation: { bsonType: 'string', maxLength: OccupationLength },
                   degree: { bsonType: 'string', 'enum': ['k-12', 'undergraduate', 'graduate'] },
                   studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
-                  futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } }
+                  futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } },
+                  dob: { bsonType: 'date' }
                 },
                 additionalProperties: false
               }
@@ -83,7 +84,7 @@ export default class UsersDao {
     } catch (e) {
       logger.error(arguments)
       logger.error(`Error, ${e}, ${e.stack}`)
-      return false
+      return null
     }
   }
 
