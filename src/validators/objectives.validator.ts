@@ -2,7 +2,6 @@ import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
 import { ObjectiveTypes } from '@/common/consts/constants'
 
-// Validator for creating an objective
 export const validateObjectiveCreation = [
   check('title')
     .notEmpty()
@@ -36,20 +35,25 @@ export const validateObjectiveCreation = [
       }
       return true
     }),
-  check('alignTargets')
+  check('atAge')
+    .optional()
+    .isInt()
+    .withMessage('At age must be an integer')
+    .customSanitizer(atAge => parseInt(atAge)),
+  check('alignObjectives')
     .optional()
     .isArray()
     .withMessage('Align targets must be an array'),
-  check('alignTargets.*')
+  check('alignObjectives.*')
     .isMongoId()
     .withMessage('Align targets must contain valid IDs'),
-  check('areas')
+  check('alignAreas')
     .optional()
     .isArray()
     .withMessage('Areas must be an array'),
-  check('areas.*')
+  check('alignAreas.*')
     .isLength({ max: 50 })
-    .withMessage('Areas must contain valid IDs'),
+    .withMessage('Areas must contain valid IDs'), // TODO: validate area name.
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -66,7 +70,6 @@ export const validateObjectiveCreation = [
   },
 ]
 
-// Validator for updating an objective
 export const validateObjectiveUpdate = [
   check('title')
     .optional()
@@ -94,11 +97,11 @@ export const validateObjectiveUpdate = [
       }
       return true
     }),
-  check('alignTargets')
+  check('alignObjectives')
     .optional()
     .isArray()
     .withMessage('Align targets must be an array'),
-  check('alignTargets.*')
+  check('alignObjectives.*')
     .isMongoId()
     .withMessage('Align targets must contain valid IDs'),
   check('areas')
@@ -128,7 +131,6 @@ export const validateObjectiveUpdate = [
   },
 ]
 
-// Validator for filtering objectives
 export const validateObjectiveFilters = [
   check('type')
     .optional()

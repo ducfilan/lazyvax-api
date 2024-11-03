@@ -19,13 +19,14 @@ export async function createObjective(objectiveData: {
   fromDate: Date,
   toDate: Date,
   detail: string,
-  alignTargets?: ObjectId[],
-  areas?: ObjectId[],
+  atAge?: number,
+  alignObjectives?: ObjectId[],
+  alignAreas?: ObjectId[],
 }) {
   const objective: Objective = {
     ...objectiveData,
-    alignTargets: objectiveData.alignTargets || [],
-    areas: objectiveData.areas || [],
+    alignObjectives: objectiveData.alignObjectives || [],
+    alignAreas: objectiveData.alignAreas || [],
   }
 
   return await ObjectivesDao.createObjective(objective)
@@ -47,8 +48,8 @@ export async function getObjectivesByUserId(userId: ObjectId) {
   return await ObjectivesDao.getObjectivesByUserId(userId)
 }
 
-export async function getObjectivesByAlignTargetId(userId: ObjectId, alignTargetId: ObjectId) {
-  return await ObjectivesDao.getObjectivesByAlignTargetId(userId, alignTargetId)
+export async function getObjectivesByAlignObjectiveId(userId: ObjectId, alignObjectiveId: ObjectId) {
+  return await ObjectivesDao.getObjectivesByAlignObjectiveId(userId, alignObjectiveId)
 }
 
 export async function getObjectivesByAreaId(userId: ObjectId, areaId: ObjectId) {
@@ -62,6 +63,6 @@ export default {
   deleteObjective,
   getObjectiveById,
   getObjectivesByUserId,
-  getObjectivesByAlignTargetId,
+  getObjectivesByAlignObjectiveId,
   getObjectivesByAreaId,
 }

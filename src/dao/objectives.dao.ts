@@ -18,7 +18,7 @@ export default class ObjectivesDao {
       _objectives = _db.collection(ObjectivesCollectionName);
 
       _objectives.createIndex({ userId: 1 })
-      _objectives.createIndex({ alignTargets: 1 })
+      _objectives.createIndex({ alignObjectives: 1 })
       _objectives.createIndex({ areas: 1 })
       _objectives.createIndex({ title: 'text', detail: 'text' })
 
@@ -27,7 +27,7 @@ export default class ObjectivesDao {
         validator: {
           $jsonSchema: {
             bsonType: 'object',
-            required: ['title', 'type', 'fromDate', 'toDate'],
+            required: ['userId', 'title', 'type'],
             properties: {
               _id: { bsonType: 'objectId' },
               userId: { bsonType: 'objectId' },
@@ -36,6 +36,7 @@ export default class ObjectivesDao {
               type: { enum: ObjectiveTypes },
               fromDate: { bsonType: 'date' },
               toDate: { bsonType: 'date' },
+              atAge: { bsonType: 'int' },
               alignHabits: { bsonType: 'array', items: { bsonType: 'objectId' } },
               alignObjectives: { bsonType: 'array', items: { bsonType: 'objectId' } },
               alignAreas: { bsonType: 'array', items: { bsonType: 'string', maxLength: 50 } },
@@ -139,9 +140,9 @@ export default class ObjectivesDao {
     }
   }
 
-  static async getObjectivesByAlignTargetId(userId: ObjectId, alignTargetId: ObjectId) {
+  static async getObjectivesByAlignObjectiveId(userId: ObjectId, alignObjectiveId: ObjectId) {
     try {
-      return await _objectives.find({ userId, alignTargets: alignTargetId }).toArray()
+      return await _objectives.find({ userId, alignObjectives: alignObjectiveId }).toArray()
     } catch (e) {
       logger.error(`Error fetching objectives by align target ID: ${e}`)
       return []
