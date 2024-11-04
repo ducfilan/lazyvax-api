@@ -4,7 +4,7 @@ import { Server as HttpServer } from 'http'
 import { Server as SocketServer, Socket } from "socket.io"
 import { getOrigins } from "@/app"
 import { isGoogleTokenValid, newGoogleOAuth2Client } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, ConfirmWeekToDoTasksMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
 import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
@@ -47,6 +47,8 @@ export const EventNameEditAction = "edit action"
 export const EventNameWaitResponse = "wait response"
 export const EventNameConfirmToGenerateWeekPlanFull = "confirm generate week plan full"
 export const EventNameConfirmToGenerateWeekPlanInteractive = "confirm generate week plan interactive"
+export const EventNameConfirmWeekToDoTasks = "confirm week to do tasks"
+
 const ErrorMessageInvalidToken = "invalid/expired token"
 const ErrorMessageNotParticipant = "not participant"
 
@@ -112,6 +114,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameEditAction, editAction)
         socket.on(EventNameConfirmToGenerateWeekPlanFull, generateWeekPlanFull)
         socket.on(EventNameConfirmToGenerateWeekPlanInteractive, generateWeekPlanInteractive)
+        socket.on(EventNameConfirmWeekToDoTasks, confirmWeekToDoTasks)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -158,7 +161,6 @@ export function registerSocketIo(server: HttpServer) {
               weeklyPlanningWorkflow.runWorkflow({
                 userInfo: socket.user,
                 conversationId: message.conversationId,
-                planType: PlanTypeWeekInteractive, // TODO: Restore this plan type.
                 weekToDoTasks: chatMessage.content.split("\n").map(t => t.trim()), // TODO: More sophisticated parsing.
               })
             }
@@ -408,6 +410,20 @@ export function registerSocketIo(server: HttpServer) {
               userInfo: socket.user,
               conversationId,
               planType: PlanTypeWeekInteractive,
+            })
+          } catch (error) {
+            logger.error(error)
+          }
+        }
+
+        async function confirmWeekToDoTasks(message: ConfirmWeekToDoTasksMessage, ack: any) {
+          try {
+            const conversationId = new ObjectId(message.conversationId)
+
+            weeklyPlanningWorkflow.runWorkflow({
+              userInfo: socket.user,
+              conversationId,
+              weekToDoTasksConfirmed: true,
             })
           } catch (error) {
             logger.error(error)

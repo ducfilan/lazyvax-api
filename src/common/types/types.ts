@@ -100,6 +100,10 @@ export type GenerateWeekPlanFullMessage = {
   conversationId: string,
 }
 
+export type ConfirmWeekToDoTasksMessage = {
+  conversationId: string,
+}
+
 export type ConversationType = typeof ConversationTypes[number]
 
 export type GetEventFilters = {

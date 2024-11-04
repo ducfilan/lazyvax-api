@@ -15,6 +15,8 @@ export const WeeklyPlanningAnnotation = Annotation.Root({
   habitsAsked: Annotation<boolean>(),
   weekToDoTasks: Annotation<string[]>(),
   weekToDoTasksAsked: Annotation<boolean>(),
+  weekToDoTasksConfirmAsked: Annotation<boolean>(),
+  weekToDoTasksConfirmed: Annotation<boolean>(),
   coreTasks: Annotation<string[]>(),
   isUserSatisfiedWithCoreTasks: Annotation<boolean>(),
   unimportantTasks: Annotation<string[]>(),
