@@ -9,7 +9,7 @@ import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation, updateProgress } from "../api/conversations.services"
-import { BotUserId, BotUserName, CalendarSourceApp, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion } from "@/common/consts/constants"
+import { BotUserId, BotUserName, CalendarSourceApp, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion, PlanTypeWeekInteractive } from "@/common/consts/constants"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/entities/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -23,7 +23,7 @@ import { tryParseJson } from '@/common/utils/stringUtils'
 import { createMultipleEvents } from "@services/api/events.services"
 import { addEventsToGoogleCalendar } from "./calendar_facade"
 import { OAuth2Client } from "google-auth-library"
-import { ConversationProgressGeneratedFullDone, ConversationProgressGeneratedInteractiveBegin } from "@/dao/conversations.dao"
+import { ConversationProgressGeneratedFullDone } from "@/dao/conversations.dao"
 import { weeklyPlanningWorkflow } from "./lang_graph/workflows"
 
 interface ISocket extends Socket {
@@ -47,6 +47,8 @@ export const EventNameEditAction = "edit action"
 export const EventNameWaitResponse = "wait response"
 export const EventNameConfirmToGenerateWeekPlanFull = "confirm generate week plan full"
 export const EventNameConfirmToGenerateWeekPlanInteractive = "confirm generate week plan interactive"
+const ErrorMessageInvalidToken = "invalid/expired token"
+const ErrorMessageNotParticipant = "not participant"
 
 export let io: SocketServer
 
@@ -93,7 +95,7 @@ export function registerSocketIo(server: HttpServer) {
             next()
           } else {
             logger.error('socket.io not authenticated for ' + socket.handshake.auth.email)
-            next(new Error('invalid/expired token'))
+            next(new Error(ErrorMessageInvalidToken))
           }
         })
       })
@@ -167,19 +169,32 @@ export function registerSocketIo(server: HttpServer) {
 
         async function joinConversationListener(message: JoinConversationMessage, ack: any) {
           try {
+            if (!socket.user) {
+              ack({
+                error: ErrorMessageInvalidToken
+              })
+              return
+            }
+
             const conversationId = new ObjectId(message.conversationId)
             const isParticipant = await isParticipantInConversation(socket.user._id, conversationId)
 
             if (isParticipant) {
               await socket.join(`conversation:${message.conversationId}`)
-              ack(conversationId)
+              ack({
+                data: {
+                  conversationId
+                }
+              })
 
               weeklyPlanningWorkflow.runWorkflow({
                 userInfo: socket.user,
                 conversationId
               })
             } else {
-              ack(null)
+              ack({
+                error: ErrorMessageNotParticipant
+              })
             }
           } catch (error) {
             logger.error(error)
@@ -380,48 +395,11 @@ export function registerSocketIo(server: HttpServer) {
           try {
             const conversationId = new ObjectId(message.conversationId)
 
-            const chatMessage = {
-              conversationId: new ObjectId(message.conversationId),
-              authorId: BotUserId,
-              authorName: BotUserName,
-              content: "Generating, wait...", // TODO: i18n
-              type: MessageTypePlainText,
-              timestamp: new Date(),
-            } as Message
-
-            chatMessage._id = await saveMessage(chatMessage)
-
-            emitConversationMessage(message.conversationId, chatMessage)
-
-            const response = await queryGenerateWeekPlan(socket.user, conversationId)
-            const generatedEvents = JSON.parse(response)
-
-            const events = generatedEvents.map((item) => {
-              const startDate = new Date(item.start_time)
-              const endDate = new Date(item.end_time)
-
-              const event: Event = {
-                _id: new ObjectId(),
-                userId: socket.user._id,
-                source: CalendarSourceApp,
-                title: item.activity,
-                description: item.reason,
-                startDate,
-                endDate,
-                attendees: [{
-                  email: socket.user.email,
-                  name: socket.user.name,
-                  response: 'accepted'
-                }],
-              }
-
-              return event
+            weeklyPlanningWorkflow.runWorkflow({
+              userInfo: socket.user,
+              conversationId,
+              planType: PlanTypeWeekInteractive,
             })
-            await createMultipleEvents(events)
-            ack(conversationId)
-
-            await addEventsToGoogleCalendar(socket.oAuth2Client, events) // TODO: transaction handling, make sure it's added to Google Calendar.
-            await updateProgress(conversationId, ConversationProgressGeneratedInteractiveBegin)
           } catch (error) {
             logger.error(error)
           }

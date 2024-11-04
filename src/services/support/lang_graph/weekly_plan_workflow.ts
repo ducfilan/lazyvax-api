@@ -16,6 +16,7 @@ import { ObjectId } from 'mongodb';
 import { Message } from '@/entities/Message';
 import { getHabits } from '@/services/api/habits.services';
 import { getWeeklyPlanTodoTasks } from '@/services/api/conversations.services';
+import { saveMessage } from '@/services/api/messages.services';
 
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
@@ -31,22 +32,22 @@ export class WeeklyPlanningWorkflow {
 
     const builder = new StateGraph(WeeklyPlanningAnnotation)
       // Add nodes.
-      .addNode('checkLastWeekPlan', this.checkLastWeekPlan)
-      .addNode('selectPlanType', this.selectPlanType)
-      .addNode('checkRoutineAndHabits', this.checkRoutineAndHabits)
-      .addNode('askForRoutine', this.askForRoutine)
-      .addNode('checkWeekToDoTasks', this.checkWeekToDoTasks)
-      .addNode('askForWeekToDoTasks', this.askForWeekToDoTasks)
-      .addNode('generateCoreTasks', this.generateCoreTasks)
-      .addNode('checkUserSatisfactionCore', this.checkUserSatisfactionCore)
-      .addNode('adjustCoreTasks', this.adjustCoreTasks)
-      .addNode('addCoreTasksToCalendar', this.addCoreTasksToCalendar)
-      .addNode('generateUnimportantTasks', this.generateUnimportantTasks)
-      .addNode('checkUserSatisfactionUnimportant', this.checkUserSatisfactionUnimportant)
-      .addNode('adjustUnimportantTasks', this.adjustUnimportantTasks)
-      .addNode('addUnimportantTasksToCalendar', this.addUnimportantTasksToCalendar)
-      .addNode('generateMoreDays', this.generateMoreDays)
-      .addNode('motivateUser', this.motivateUser)
+      .addNode('checkLastWeekPlan', this.checkLastWeekPlan.bind(this))
+      .addNode('selectPlanType', this.selectPlanType.bind(this))
+      .addNode('checkRoutineAndHabits', this.checkRoutineAndHabits.bind(this))
+      .addNode('askForRoutine', this.askForRoutine.bind(this))
+      .addNode('checkWeekToDoTasks', this.checkWeekToDoTasks.bind(this))
+      .addNode('askForWeekToDoTasks', this.askForWeekToDoTasks.bind(this))
+      .addNode('generateCoreTasks', this.generateCoreTasks.bind(this))
+      .addNode('checkUserSatisfactionCore', this.checkUserSatisfactionCore.bind(this))
+      .addNode('adjustCoreTasks', this.adjustCoreTasks.bind(this))
+      .addNode('addCoreTasksToCalendar', this.addCoreTasksToCalendar.bind(this))
+      .addNode('generateUnimportantTasks', this.generateUnimportantTasks.bind(this))
+      .addNode('checkUserSatisfactionUnimportant', this.checkUserSatisfactionUnimportant.bind(this))
+      .addNode('adjustUnimportantTasks', this.adjustUnimportantTasks.bind(this))
+      .addNode('addUnimportantTasksToCalendar', this.addUnimportantTasksToCalendar.bind(this))
+      .addNode('generateMoreDays', this.generateMoreDays.bind(this))
+      .addNode('motivateUser', this.motivateUser.bind(this))
       // Add edges.
       .addEdge(START, 'checkLastWeekPlan')
       .addConditionalEdges('checkLastWeekPlan', this.decideLastWeekPlanFlow)
@@ -84,7 +85,7 @@ export class WeeklyPlanningWorkflow {
       userId: state.userInfo._id,
       from: weekInfo.weekStartDate,
       to: weekInfo.weekEndDate,
-    })
+    }) // TODO: More filters.
 
     return {
       lastWeekPlan: lastWeekEvents?.map(e => `${format(e.startDate, "EEE, HH:mm")} to ${format(e.endDate, "EEE, HH:mm")}: ${e.title}${e.description ? "- " + e.description : ""}`) ?? [],
@@ -93,16 +94,23 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async selectPlanType(state: WeeklyPlanningState): Promise<NodeOutput> {
-    if (state.planType) return
+    if (state.planType || state.planTypeAsked) return
 
-    if (state.hasLastWeekPlan) {
-      const chatMessage = this.createChatMessage(state.conversationId, "Generate your weekly plan?", MessageTypeAskToGenerateWeekPlan) // TODO: i18n.
+    if (!state.hasLastWeekPlan) {
+      const chatMessage = this.createChatMessage(state.conversationId, "We will plan interactively.", MessageTypeAskToGenerateWeekPlan)
+      saveMessage(chatMessage)
       emitConversationMessage(state.conversationId.toHexString(), chatMessage)
-      return
+
+      return {
+        planType: PlanTypeWeekInteractive,
+      }
     }
 
+    const chatMessage = this.createChatMessage(state.conversationId, "Generate your weekly plan?", MessageTypeAskToGenerateWeekPlan) // TODO: i18n.
+    saveMessage(chatMessage)
+    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
     return {
-      planType: PlanTypeWeekInteractive,
+      planTypeAsked: true,
     }
   }
 
@@ -118,11 +126,15 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async askForRoutine(state: WeeklyPlanningState): Promise<NodeOutput> {
-    if (state.hasRoutineOrHabits) {
-      const chatMessage = this.createChatMessage(state.conversationId, "What is your routine? Please go to Habits page to check your habits.", MessageTypeAskForRoutine) // TODO: i18n.
+    if (state.hasRoutineOrHabits || state.habitsAsked) {
+      return {}
+    }
 
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
-      return
+    const chatMessage = this.createChatMessage(state.conversationId, "What is your routine? Please go to Habits page to check your habits.", MessageTypeAskForRoutine) // TODO: i18n.
+    saveMessage(chatMessage)
+    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    return {
+      habitsAsked: true,
     }
 
     return {}
@@ -138,12 +150,14 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async askForWeekToDoTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
-    if (state.weekToDoTasks && state.weekToDoTasks.length > 0) return {}
+    if (state.weekToDoTasksAsked || state.weekToDoTasks?.length > 0) return {}
 
     const chatMessage = this.createChatMessage(state.conversationId, "What are your must do tasks in this week?", MessageTypeAskForWeekToDoTasks) // TODO: i18n.
-
+    saveMessage(chatMessage)
     emitConversationMessage(state.conversationId.toHexString(), chatMessage)
-    return
+    return {
+      weekToDoTasksAsked: true,
+    }
   }
 
   private async generateCoreTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
@@ -242,9 +256,12 @@ type WeeklyPlanningState = {
   hasLastWeekPlan: boolean
   lastWeekPlan: string[]
   planType: WeekPlanType
+  planTypeAsked: boolean
   hasRoutineOrHabits: boolean
+  habitsAsked: boolean
   habits: string[]
   weekToDoTasks: string[]
+  weekToDoTasksAsked: boolean
   coreTasks: string[]
   isUserSatisfiedWithCoreTasks: boolean
   unimportantTasks: string[]
@@ -256,6 +273,25 @@ type WeeklyPlanningState = {
 
 type NodeType = typeof START | "checkLastWeekPlan" | "selectPlanType" | "checkRoutineAndHabits" | "askForRoutine" | "checkWeekToDoTasks" | "askForWeekToDoTasks" | "generateCoreTasks" | "checkUserSatisfactionCore" | "adjustCoreTasks" | "addCoreTasksToCalendar" | "generateUnimportantTasks" | "checkUserSatisfactionUnimportant" | "adjustUnimportantTasks" | "addUnimportantTasksToCalendar" | "generateMoreDays" | "motivateUser"
 
-type WeekPlanStateType = { messages: LastValue<Messages>; userInfo: LastValue<User>; conversationId: LastValue<ObjectId>, hasLastWeekPlan: LastValue<boolean>; lastWeekPlan: LastValue<string[]>; planType: LastValue<WeekPlanType>; hasRoutineOrHabits: LastValue<boolean>; habits: LastValue<string[]>; weekToDoTasks: LastValue<string[]>; coreTasks: LastValue<string[]>; isUserSatisfiedWithCoreTasks: LastValue<boolean>; unimportantTasks: LastValue<string[]>; isUserSatisfiedWithUnimportantTasks: LastValue<boolean>; calendarEvents: LastValue<string[]>; motivationMessage: LastValue<string>; }
+type WeekPlanStateType = {
+  messages: LastValue<Messages>
+  userInfo: LastValue<User>
+  conversationId: LastValue<ObjectId>
+  hasLastWeekPlan: LastValue<boolean>
+  lastWeekPlan: LastValue<string[]>
+  planType: LastValue<WeekPlanType>
+  planTypeAsked: LastValue<boolean>
+  hasRoutineOrHabits: LastValue<boolean>
+  habitsAsked: LastValue<boolean>
+  habits: LastValue<string[]>
+  weekToDoTasks: LastValue<string[]>
+  weekToDoTasksAsked: LastValue<boolean>
+  coreTasks: LastValue<string[]>
+  isUserSatisfiedWithCoreTasks: LastValue<boolean>
+  unimportantTasks: LastValue<string[]>
+  isUserSatisfiedWithUnimportantTasks: LastValue<boolean>
+  calendarEvents: LastValue<string[]>
+  motivationMessage: LastValue<string>
+}
 
 type NodeOutput = Partial<WeeklyPlanningState> | NodeType | typeof END
