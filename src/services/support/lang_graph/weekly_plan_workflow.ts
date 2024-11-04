@@ -17,9 +17,11 @@ import { Message } from '@/entities/Message';
 import { getHabits } from '@/services/api/habits.services';
 import { getWeeklyPlanTodoTasks } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
+import { RunnableConfig } from '@langchain/core/runnables';
 
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
+  private checkpointer: MongoDBSaver;
   private graph: CompiledStateGraph<WeeklyPlanningState, UpdateType<WeekPlanStateType>, NodeType, WeekPlanStateType, WeekPlanStateType, StateDefinition>;
 
   constructor(model?: BaseLanguageModel) {
@@ -28,7 +30,7 @@ export class WeeklyPlanningWorkflow {
       temperature: 0.6
     })
 
-    const checkpointer = new MongoDBSaver({ client: getDbClient(), dbName: DatabaseName })
+    this.checkpointer = new MongoDBSaver({ client: getDbClient(), dbName: DatabaseName })
 
     const builder = new StateGraph(WeeklyPlanningAnnotation)
       // Add nodes.
@@ -65,7 +67,7 @@ export class WeeklyPlanningWorkflow {
       .addEdge('generateMoreDays', 'motivateUser')
       .addEdge('motivateUser', END)
 
-    this.graph = builder.compile({ checkpointer })
+    this.graph = builder.compile({ checkpointer: this.checkpointer })
   }
 
   private createChatMessage(conversationId: ObjectId, content: string, type: number): Message {
@@ -161,6 +163,8 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async generateCoreTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
+    if (!state.weekToDoTasks || state.weekToDoTasks.length === 0) return {}
+
     return {}
   }
 
@@ -242,10 +246,14 @@ export class WeeklyPlanningWorkflow {
     if (!initialState.userInfo || !initialState.conversationId) {
       throw new Error('User info and conversation ID are required')
     }
-
-    const finalState = await this.graph.invoke(initialState, {
+    const config: RunnableConfig = {
       configurable: { thread_id: initialState.conversationId.toHexString() }
-    });
+    }
+
+    const lastState = await this.checkpointer.get(config)
+    console.log(lastState)
+
+    const finalState = await this.graph.invoke(initialState, config);
     return finalState
   }
 }

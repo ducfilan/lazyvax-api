@@ -129,6 +129,8 @@ export const MessageTypeHardcodedMapping = 17
 export const MessageTypeAskToGenerateWeekPlan = 18
 export const MessageTypeAskForRoutine = 19
 export const MessageTypeAskForWeekToDoTasks = 20
+export const MessageTypeAnswerWeekToDoTasks = 21
+
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
   MessageTypeRunningText, MessageTypeStateGoal, MessageTypeAskUserSmartQuestion,
@@ -136,7 +138,7 @@ export const MessageTypes = [
   MessageTypeConfirmYesQuestionnaires, MessageTypeConfirmNoQuestionnaires, MessageTypeAckSummaryQuestionnaires,
   MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions,
   MessageTypeRetryGetResponse, MessageTypeHardcodedMapping, MessageTypeAskToGenerateWeekPlan,
-  MessageTypeAskForRoutine, MessageTypeAskForWeekToDoTasks,
+  MessageTypeAskForRoutine, MessageTypeAskForWeekToDoTasks, MessageTypeAnswerWeekToDoTasks,
 ]
 
 export const MilestoneSourceSuggestion = 1

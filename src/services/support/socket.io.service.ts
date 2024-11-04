@@ -9,7 +9,7 @@ import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
 import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation, updateProgress } from "../api/conversations.services"
-import { BotUserId, BotUserName, CalendarSourceApp, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion, PlanTypeWeekInteractive } from "@/common/consts/constants"
+import { BotUserId, BotUserName, CalendarSourceApp, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MessageTypeAddMilestoneAndActions, MessageTypeAnswerWeekToDoTasks, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse, MilestoneSourceSuggestion, PlanTypeWeekInteractive } from "@/common/consts/constants"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/entities/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -152,6 +152,15 @@ export function registerSocketIo(server: HttpServer) {
               message._id = new ObjectId(retryMessageContent.parentId)
 
               return message
+            }
+
+            case MessageTypeAnswerWeekToDoTasks: {
+              weeklyPlanningWorkflow.runWorkflow({
+                userInfo: socket.user,
+                conversationId: message.conversationId,
+                planType: PlanTypeWeekInteractive, // TODO: Restore this plan type.
+                weekToDoTasks: chatMessage.content.split("\n").map(t => t.trim()), // TODO: More sophisticated parsing.
+              })
             }
 
             default:
