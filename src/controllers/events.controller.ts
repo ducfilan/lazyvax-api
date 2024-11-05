@@ -4,12 +4,15 @@ import eventsService, { syncEventsFromGoogle } from '@services/api/events.servic
 import { ObjectId } from 'mongodb'
 import { User } from '@/entities/User'
 import { OAuth2Client } from 'google-auth-library'
+import { getCalendarTimezone } from '@/services/support/calendar_facade'
+import usersServices from '@/services/api/users.services'
 
 export default class EventsController {
   static async getEvents(req: Request & { user: User }, res: Response) {
     try {
       const { start, end, calendarId, categories } = req.query
       const filter = {
+        userId: req.user._id,
         from: new Date(start as string),
         to: new Date(end as string),
         calendarId: calendarId as string,
@@ -83,6 +86,10 @@ export default class EventsController {
         req.user._id,
         new Date(from as string), new Date(to as string)
       )
+
+      const calendarTimezone = await getCalendarTimezone(req.oAuth2Client)
+      await usersServices.updateTimezone(req.user, calendarTimezone)
+
       res.status(200).json({
         changedEventsCount
       })
