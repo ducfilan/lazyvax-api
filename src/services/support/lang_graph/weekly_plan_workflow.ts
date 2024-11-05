@@ -1,7 +1,7 @@
 import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, UpdateType } from '@langchain/langgraph';
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 import { ChatOpenAI } from '@langchain/openai';
-import { BaseMessage, HumanMessage } from '@langchain/core/messages';
+import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { WeeklyPlanningAnnotation } from './annotations';
 import { User } from '@/entities/User';
@@ -20,7 +20,7 @@ import { getHabits } from '@/services/api/habits.services';
 import { getWeeklyPlanTodoTasks } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { firstDayCoreTasksInstruction, SystemMessageShort } from './prompts';
+import { firstDayCoreTasksInstruction, systemMessageShort } from './prompts';
 
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
@@ -194,7 +194,7 @@ export class WeeklyPlanningWorkflow {
     if (!state.weekToDoTasksConfirmed) return {}
 
     const prompt = await ChatPromptTemplate.fromMessages([
-      SystemMessageShort,
+      new SystemMessage(systemMessageShort),
       new HumanMessage(`### Context: ###\nToday is ${format(new Date(), "EEEE, MMMM do yyyy, HH:mm:ss")}.\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`),
     ]).invoke({
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
