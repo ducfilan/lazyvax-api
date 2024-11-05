@@ -131,6 +131,8 @@ export const MessageTypeAskForRoutine = 19
 export const MessageTypeAskForWeekToDoTasks = 20
 export const MessageTypeAnswerWeekToDoTasks = 21
 export const MessageTypeAskToConfirmWeekToDoTasks = 22
+export const MessageTypeTextWithEvents = 23
+export const MessageTypeAskForTimezone = 24
 
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
@@ -140,7 +142,7 @@ export const MessageTypes = [
   MessageTypeSuggestMilestoneAndActions, MessageTypeAddMilestoneAndActions, MessageTypeNextMilestoneAndActions,
   MessageTypeRetryGetResponse, MessageTypeHardcodedMapping, MessageTypeAskToGenerateWeekPlan,
   MessageTypeAskForRoutine, MessageTypeAskForWeekToDoTasks, MessageTypeAnswerWeekToDoTasks,
-  MessageTypeAskToConfirmWeekToDoTasks,
+  MessageTypeAskToConfirmWeekToDoTasks, MessageTypeTextWithEvents, MessageTypeAskForTimezone,
 ]
 
 export const MilestoneSourceSuggestion = 1

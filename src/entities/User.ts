@@ -25,6 +25,7 @@ export type Preference = {
   degree?: string,
   studyCourse?: string,
   futureSelf?: string[],
+  timezone?: string,
 }
 
 export type UserCategory = "professional" | "student"

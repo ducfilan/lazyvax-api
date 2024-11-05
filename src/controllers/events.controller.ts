@@ -88,7 +88,7 @@ export default class EventsController {
       )
 
       const calendarTimezone = await getCalendarTimezone(req.oAuth2Client)
-      await usersServices.updateTimezone(req.user, calendarTimezone)
+      await usersServices.updateTimezone(req.user, calendarTimezone) // TODO: Consider multiple calendars, multiple timezones.
 
       res.status(200).json({
         changedEventsCount

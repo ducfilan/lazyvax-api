@@ -58,7 +58,8 @@ export default class UsersDao {
                   degree: { bsonType: 'string', 'enum': ['k-12', 'undergraduate', 'graduate'] },
                   studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
                   futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } },
-                  dob: { bsonType: 'date' }
+                  dob: { bsonType: 'date' },
+                  timezone: { bsonType: 'string' }
                 },
                 additionalProperties: false
               }
