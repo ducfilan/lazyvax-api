@@ -1,9 +1,10 @@
-import { BotUserId, BotUserName, MessageTypeAskUserSmartQuestion, MessageTypeSuggestMilestoneAndActions } from "@/common/consts/constants"
+import { BotUserId, BotUserName } from "@/common/consts/constants"
 import { MilestoneSuggestion, SmartQuestion } from "@/entities/Conversation"
 import { Message } from "@/entities/Message"
 import { saveMessage } from "../api/messages.services"
 import { updateById as updateConversationById } from "../api/conversations.services"
 import { emitWaitResponse } from "../support/socket.io.service"
+import { MessageTypeAnswerSmartQuestion, MessageTypeSuggestMilestoneAndActions } from "@/common/consts/message-types"
 
 
 export interface IResponseObserver {
@@ -19,7 +20,7 @@ export class FirstQuestionObserver implements IResponseObserver {
       authorName: BotUserName,
       content: JSON.stringify(smartQuestion),
       conversationId: this.currentMessage.conversationId,
-      type: MessageTypeAskUserSmartQuestion,
+      type: MessageTypeAnswerSmartQuestion,
       timestamp: new Date(),
       parentId: this.currentMessage._id,
       parentContent: this.currentMessage.content,

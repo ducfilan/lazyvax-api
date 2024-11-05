@@ -1,4 +1,4 @@
-import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires, MessageTypeAnswerSmartQuestion, MessageTypeAskUserSmartQuestion, MessageTypeAskConfirmQuestionnaires, MessageTypeStateGoal, MessageTypeConfirmYesQuestionnaires, MessageTypeAckSummaryQuestionnaires, I18nDbCodeSummarizeQuestionnaires, MessageTypeAddMilestoneAndActions, MessageTypeSuggestMilestoneAndActions, MessageTypePlainText, MessageTypeNextMilestoneAndActions } from "@/common/consts/constants"
+import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires } from "@common/consts/constants"
 import { Message } from "@/entities/Message"
 import { ChatAiService } from "../support/ai_querier"
 import { User } from "@/entities/User"
@@ -14,6 +14,7 @@ import { MessageType } from "@/common/types/types"
 import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver, WaitResponseObserver } from "./responseObservers"
 import logger from "@/common/logger"
 import { markMessageResponded } from "../api/messages.services"
+import { MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeConfirmYesQuestionnaires, MessageTypeNextMilestoneAndActions, MessageTypeStateGoal } from "@/common/consts/message-types"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): void

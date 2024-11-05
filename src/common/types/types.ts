@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
-import { ConversationTypes, MessageTypes, MilestoneSources, PlanTypeWeekFull, PlanTypeWeekInteractive, SupportingLanguages } from "../consts/constants";
+import { ConversationTypes, MilestoneSources, PlanTypeWeekFull, PlanTypeWeekInteractive, SupportingLanguages } from "@/common/consts/constants";
 import { EventMeta } from "@/entities/Event";
+import { MessageTypes } from "@/common/consts/message-types";
 
 export type LangCode = typeof SupportingLanguages[number]
 
