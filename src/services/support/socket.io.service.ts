@@ -412,6 +412,8 @@ export function registerSocketIo(server: HttpServer) {
               conversationId,
               planType: PlanTypeWeekInteractive,
             })
+
+            ack(conversationId)
           } catch (error) {
             logger.error(error)
           }
