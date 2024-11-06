@@ -62,7 +62,7 @@ export class WeeklyPlanningWorkflow {
       .addConditionalEdges('checkRoutineAndHabits', this.decideRoutineFlow)
       .addEdge('askForHabits', 'checkWeekToDoTasks')
       .addConditionalEdges('checkWeekToDoTasks', this.decideWeekToDoTasksFlow)
-      .addEdge('askForWeekToDoTasks', 'confirmWeekToDoTasks')
+      .addConditionalEdges('askForWeekToDoTasks', this.decideWeekToDoTasksAskedFlow)
       .addEdge('confirmWeekToDoTasks', 'getUserTimezone')
       .addEdge('getUserTimezone', 'generateFirstDayCoreTasks')
       .addConditionalEdges('generateFirstDayCoreTasks', this.decideCoreSatisfactionFlow)
@@ -130,7 +130,7 @@ export class WeeklyPlanningWorkflow {
 
     return {
       hasRoutineOrHabits: habits?.length > 0,
-      habits: habits?.map(h => `${h.title} - ${h.priority} - ${h.repeat.unit} - ${h.repeat.frequency} times, ${h.repeat.daysOfWeek ? buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
+      habits: habits?.map(h => `${h.title} - ${h.priority} - ${h.repeat.unit} - ${h.repeat.frequency} times ${h.repeat.daysOfWeek ? "on " + buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
     }
   }
 
@@ -265,6 +265,14 @@ export class WeeklyPlanningWorkflow {
       : 'askForWeekToDoTasks';
   }
 
+  private decideWeekToDoTasksAskedFlow(state: WeeklyPlanningState) {
+    if (!state.weekToDoTasks) {
+      return END;
+    }
+
+    return 'confirmWeekToDoTasks';
+  }
+
   private decideCoreSatisfactionFlow(state: WeeklyPlanningState) {
     return 'checkUserSatisfactionCore';
   }
@@ -295,7 +303,7 @@ export class WeeklyPlanningWorkflow {
 
     const lastState = await this.checkpointer.get(config)
 
-    const finalState = await this.graph.invoke({ ...lastState.channel_values, ...initialState }, config);
+    const finalState = await this.graph.invoke({ ...(lastState?.channel_values ?? {}), ...initialState }, config);
     return finalState
   }
 }
