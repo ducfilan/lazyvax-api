@@ -252,7 +252,7 @@ export class WeeklyPlanningWorkflow {
   }
 
   private decidePlanTypeFlow(state: WeeklyPlanningState) {
-    return !state.planType || state.planType !== PlanTypeWeekInteractive ? END : 'checkRoutineAndHabits';
+    return !state.planType || state.planType !== PlanTypeWeekInteractive ? END : 'checkRoutineAndHabits'; // TODO: Not interactive then do full plan.
   }
 
   private decideRoutineFlow(state: WeeklyPlanningState) {
@@ -266,7 +266,7 @@ export class WeeklyPlanningWorkflow {
   }
 
   private decideWeekToDoTasksAskedFlow(state: WeeklyPlanningState) {
-    if (!state.weekToDoTasks) {
+    if (!state.weekToDoTasks || state.weekToDoTasks.length === 0) {
       return END;
     }
 
