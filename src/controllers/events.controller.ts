@@ -4,8 +4,10 @@ import eventsService, { syncEventsFromGoogle } from '@services/api/events.servic
 import { ObjectId } from 'mongodb'
 import { User } from '@/entities/User'
 import { OAuth2Client } from 'google-auth-library'
-import { getCalendarTimezone } from '@/services/support/calendar_facade'
+import { addEventsToGoogleCalendar, getCalendarTimezone } from '@/services/support/calendar_facade'
 import usersServices from '@/services/api/users.services'
+import { CalendarSourceApp } from '@/common/consts/constants'
+import { EventStatusDefault } from '@/entities/Event'
 
 export default class EventsController {
   static async getEvents(req: Request & { user: User }, res: Response) {
@@ -27,16 +29,23 @@ export default class EventsController {
     }
   }
 
-  static async createEvent(req: Request & { user: User }, res: Response) {
+  static async createEvent(req: Request & Request & { oAuth2Client: OAuth2Client, user: User }, res: Response) {
     try {
-      const eventData = { ...req.body }
+      const eventData = {
+        ...req.body,
+        userId: req.user._id,
+        source: CalendarSourceApp,
+        status: EventStatusDefault
+      }
       const eventId = await eventsService.createEvent(eventData)
       if (!eventId) {
         return res.status(400).json({ error: 'Failed to create event' })
       }
 
-      const createdEvent = await eventsService.getEventById(eventId)
-      res.status(201).json(createdEvent)
+      // TODO: What if user has no timezone?
+      await addEventsToGoogleCalendar(req.oAuth2Client, [eventData], req.user.preferences?.timezone)
+
+      res.status(201).json(eventId)
     } catch (e) {
       logger.error(`Error creating event: ${e}`)
       res.status(500).json({ error: e.message })

@@ -94,16 +94,16 @@ export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Sc
   return output
 }
 
-export const mapAppEventToGoogleEvent = (event: Event): calendar_v3.Schema$Event => ({
+export const mapAppEventToGoogleEvent = (event: Event, timezone: string): calendar_v3.Schema$Event => ({
   summary: event.title,
   description: event.description,
   start: {
     dateTime: event.startDate.toISOString(),
-    timeZone: 'Asia/Singapore' // TODO: Set user's city timezone dynamically.
+    timeZone: timezone
   },
   end: {
     dateTime: event.endDate.toISOString(),
-    timeZone: 'Asia/Singapore'
+    timeZone: timezone
   },
   attendees: event.attendees?.map(attendee => ({ email: attendee.email, responseStatus: 'accepted' })),
   reminders: {

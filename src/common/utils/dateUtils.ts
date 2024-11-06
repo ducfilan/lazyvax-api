@@ -1,4 +1,4 @@
-import { endOfWeek, formatDuration, intervalToDuration, startOfWeek, subWeeks } from 'date-fns'
+import { endOfWeek, format, formatDuration, intervalToDuration, startOfWeek, subWeeks } from 'date-fns'
 import { DefaultLangCode, LiteralDurationsExtractRegex, i18n } from "@/common/consts/constants"
 import { langCodeToDateFnsLocale } from './stringUtils'
 import { WeekInfo } from '@/common/types/types'
@@ -113,4 +113,8 @@ export function getWeekInfo(dateInTheWeek: Date, startOnMonday: boolean = true, 
     weekStartDate,
     weekEndDate,
   }
+}
+
+export function formatDateToWeekDayAndTime(date: Date, longDay: boolean = false): string {
+  return format(date, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
 }

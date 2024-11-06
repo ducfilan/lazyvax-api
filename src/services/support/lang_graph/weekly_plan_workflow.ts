@@ -8,7 +8,7 @@ import { User } from '@/entities/User';
 import { getEvents } from '@/services/api/events.services';
 import { getWeekInfo } from '@/common/utils/dateUtils';
 import { format } from 'date-fns';
-import { WeekPlanType } from '@/common/types/types';
+import { ActivitySuggestion, WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
 import { MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeTextWithEvents } from '@common/consts/message-types';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
@@ -21,6 +21,7 @@ import { getWeeklyPlanTodoTasks } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
 import { firstDayCoreTasksInstruction, systemMessageShort } from './prompts';
+import { tryParseJson } from '@/common/utils/stringUtils';
 
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
@@ -86,6 +87,16 @@ export class WeeklyPlanningWorkflow {
       type,
       timestamp: new Date(),
     } as Message
+  }
+
+  private extractActivities(message: string): ActivitySuggestion[] {
+    const jsonMatch = message.match(/```json\s*([\s\S]*?)\s*```/);
+
+    let jsonString: string;
+
+    jsonString = jsonMatch?.[1] ?? message;
+
+    return tryParseJson<ActivitySuggestion[]>(jsonString, [])
   }
 
   private async checkLastWeekPlan(state: WeeklyPlanningState): Promise<NodeOutput> {
@@ -193,7 +204,7 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async generateFirstDayCoreTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
-    if (!state.weekToDoTasksConfirmed) return {}
+    if (!state.weekToDoTasksConfirmed || !state.firstDayCoreTasksSuggested) return {}
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
@@ -210,7 +221,10 @@ export class WeeklyPlanningWorkflow {
     saveMessage(chatMessage)
     emitConversationMessage(state.conversationId.toHexString(), chatMessage)
 
-    return {}
+    return {
+      firstDayCoreTasks: this.extractActivities(result.content).map(a => a.toString()),
+      firstDayCoreTasksSuggested: true,
+    }
   }
 
   private async checkUserSatisfactionCore(state: WeeklyPlanningState): Promise<NodeOutput> {
@@ -280,7 +294,7 @@ export class WeeklyPlanningWorkflow {
   }
 
   private decideCoreSatisfactionAdjustmentFlow(state: WeeklyPlanningState) {
-    return state.isUserSatisfiedWithCoreTasks
+    return state.isUserSatisfiedWithFirstDayCoreTasks
       ? 'addCoreTasksToCalendar'
       : 'adjustCoreTasks';
   }
@@ -324,8 +338,9 @@ type WeeklyPlanningState = {
   weekToDoTasksAsked: boolean
   weekToDoTasksConfirmAsked: boolean
   weekToDoTasksConfirmed: boolean
-  coreTasks: string[]
-  isUserSatisfiedWithCoreTasks: boolean
+  firstDayCoreTasksSuggested: boolean
+  firstDayCoreTasks: string[]
+  isUserSatisfiedWithFirstDayCoreTasks: boolean
   unimportantTasks: string[]
   isUserSatisfiedWithUnimportantTasks: boolean
   calendarEvents: string[]
@@ -349,8 +364,9 @@ type WeekPlanStateType = {
   weekToDoTasksAsked: LastValue<boolean>
   weekToDoTasksConfirmAsked: LastValue<boolean>
   weekToDoTasksConfirmed: LastValue<boolean>
-  coreTasks: LastValue<string[]>
-  isUserSatisfiedWithCoreTasks: LastValue<boolean>
+  firstDayCoreTasksSuggested: LastValue<boolean>
+  firstDayCoreTasks: LastValue<string[]>
+  isUserSatisfiedWithFirstDayCoreTasks: LastValue<boolean>
   unimportantTasks: LastValue<string[]>
   isUserSatisfiedWithUnimportantTasks: LastValue<boolean>
   calendarEvents: LastValue<string[]>

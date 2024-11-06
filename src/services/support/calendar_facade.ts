@@ -43,10 +43,10 @@ export async function getCalendarTimezone(oAuth2Client: OAuth2Client, calendarId
   return response.data.timeZone
 }
 
-export async function addEventsToGoogleCalendar(oAuth2Client: OAuth2Client, events: Event[]) {
+export async function addEventsToGoogleCalendar(oAuth2Client: OAuth2Client, events: Event[], timezone: string) {
   const calendar = google.calendar({ version: "v3", auth: oAuth2Client })
 
-  for (const calendarEvent of events.map(mapAppEventToGoogleEvent)) {
+  for (const calendarEvent of events.map(event => mapAppEventToGoogleEvent(event, timezone))) {
     try {
       await calendar.events.insert({
         calendarId: 'primary',

@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { ConversationTypes, MilestoneSources, PlanTypeWeekFull, PlanTypeWeekInteractive, SupportingLanguages } from "@/common/consts/constants";
 import { EventMeta } from "@/entities/Event";
 import { MessageTypes } from "@/common/consts/message-types";
+import { formatDateToWeekDayAndTime } from "@common/utils/dateUtils";
 
 export type LangCode = typeof SupportingLanguages[number]
 
@@ -128,3 +129,15 @@ export interface WeekInfo {
 }
 
 export type WeekPlanType = typeof PlanTypeWeekFull | typeof PlanTypeWeekInteractive
+
+export class ActivitySuggestion {
+  activity: string;
+  start_time: string;
+  end_time: string;
+  reason: string;
+  reminder: number[];
+
+  toString(): string {
+    return `[${formatDateToWeekDayAndTime(new Date(this.start_time))} - ${formatDateToWeekDayAndTime(new Date(this.end_time))}] ${this.activity}`
+  }
+}

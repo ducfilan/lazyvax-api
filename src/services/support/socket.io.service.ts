@@ -396,7 +396,7 @@ export function registerSocketIo(server: HttpServer) {
             })
             await createMultipleEvents(events)
 
-            await addEventsToGoogleCalendar(socket.oAuth2Client, events) // TODO: transaction handling, make sure it's added to Google Calendar.
+            await addEventsToGoogleCalendar(socket.oAuth2Client, events, socket.user.preferences?.timezone) // TODO: transaction handling, make sure it's added to Google Calendar.
             await updateProgress(conversationId, ConversationProgressGeneratedFullDone)
           } catch (error) {
             logger.error(error)
