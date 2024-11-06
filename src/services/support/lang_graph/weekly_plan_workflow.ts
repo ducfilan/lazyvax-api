@@ -150,6 +150,8 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async checkWeekToDoTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
+    if (state.weekToDoTasks?.length > 0) return {}
+
     const conversationId = state.conversationId
     const todoTasks = await getWeeklyPlanTodoTasks(conversationId)
 
@@ -194,9 +196,9 @@ export class WeeklyPlanningWorkflow {
     if (!state.weekToDoTasksConfirmed) return {}
 
     const prompt = await ChatPromptTemplate.fromMessages([
-      new SystemMessage(systemMessageShort),
-      new HumanMessage(`### Context: ###\nToday is ${format(new Date(), "EEEE, MMMM do yyyy, HH:mm:ss")}.\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`),
-    ]).invoke({
+      ["system", systemMessageShort],
+      ["human", `### Context: ###\nToday is ${format(new Date(), "EEEE, MMMM do yyyy, HH:mm:ss")}.\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
+    ]).formatMessages({
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
@@ -261,7 +263,7 @@ export class WeeklyPlanningWorkflow {
 
   private decideWeekToDoTasksFlow(state: WeeklyPlanningState) {
     return state.weekToDoTasks && state.weekToDoTasks.length > 0
-      ? 'generateFirstDayCoreTasks'
+      ? 'confirmWeekToDoTasks'
       : 'askForWeekToDoTasks';
   }
 
