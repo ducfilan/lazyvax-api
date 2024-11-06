@@ -2,7 +2,7 @@ import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { CalendarSourceGoogle, EventsCollectionName } from '@/common/consts/constants';
 import logger from '@/common/logger';
-import { Event, EventMeta, EventStatuses, GoogleCalendarMeta } from '@/entities/Event';
+import { Event, EventStatuses, GoogleCalendarMeta, EventReminders } from '@/entities/Event';
 import { GetEventFilters } from '@/common/types/types';
 
 let _events: Collection<Event>;
@@ -43,10 +43,10 @@ export default class EventsDao {
                 bsonType: 'array',
                 items: {
                   bsonType: 'object',
-                  required: ['type', 'time'],
+                  required: ['type', 'minutes'],
                   properties: {
-                    type: { bsonType: 'string' },
-                    time: { bsonType: 'number' },
+                    type: { enum: EventReminders },
+                    minutes: { bsonType: 'number' },
                   },
                 },
               },

@@ -43,6 +43,7 @@ export default class EventsController {
       }
 
       // TODO: What if user has no timezone?
+      // TODO: What if user has multiple calendars?
       await addEventsToGoogleCalendar(req.oAuth2Client, [eventData], req.user.preferences?.timezone)
 
       res.status(201).json(eventId)

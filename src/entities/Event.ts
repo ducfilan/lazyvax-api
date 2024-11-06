@@ -9,6 +9,7 @@ export const EventStatusDone = 1
 export const EventStatusUnDone = 3
 
 export const EventStatuses = [EventStatusDefault, EventStatusDone, EventStatusUnDone] as const
+export const EventReminders = ['email', 'popup'] as const
 
 export type Event = {
   _id?: ObjectId,
@@ -51,8 +52,8 @@ export type MicrosoftCalendarMeta = {
 }
 
 export type Reminder = {
-  type: string, // email, push, notification
-  time: number, // time in milliseconds before event
+  type: typeof EventReminders[number],
+  minutes: number, // time in minutes before event
 }
 
 export type Attendee = {
@@ -75,7 +76,7 @@ export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Sc
     location: event.location,
     reminders: event.reminders?.overrides?.map(reminder => ({
       type: reminder.method,
-      time: reminder.minutes * 60000
+      minutes: reminder.minutes
     })) || [],
     attendees: event.attendees?.map(({ email, displayName: name }) => name ? ({ email, name }) : ({ email })) || [],
     categories: [], // TODO: Extract categories from event details
@@ -110,7 +111,7 @@ export const mapAppEventToGoogleEvent = (event: Event, timezone: string): calend
     useDefault: false,
     overrides: event.reminders?.map(reminder => ({
       method: reminder.type,
-      minutes: reminder.time / 60000
+      minutes: reminder.minutes
     })) || []
   },
   source: {
