@@ -1,7 +1,8 @@
-import { endOfWeek, format, formatDuration, intervalToDuration, startOfWeek, subWeeks } from 'date-fns'
+import { differenceInYears, endOfWeek, format, formatDuration, intervalToDuration, startOfWeek, subWeeks } from 'date-fns'
 import { DefaultLangCode, LiteralDurationsExtractRegex, i18n } from "@/common/consts/constants"
 import { langCodeToDateFnsLocale } from './stringUtils'
 import { WeekInfo } from '@/common/types/types'
+import { toZonedTime } from 'date-fns-tz'
 
 export function getYesterday() {
   return new Date(new Date().setDate(new Date().getDate() - 1))
@@ -115,6 +116,20 @@ export function getWeekInfo(dateInTheWeek: Date, startOnMonday: boolean = true, 
   }
 }
 
-export function formatDateToWeekDayAndTime(date: Date, longDay: boolean = false): string {
-  return format(date, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
+export function formatDateToWeekDayAndTime(date: Date, timeZone?: string, longDay: boolean = false): string {
+  if (!timeZone) return format(date, longDay ? "EEEE, HH:mm" : "EEE, HH:mm") + " (UTC)"
+
+  const zonedDate = toZonedTime(date, timeZone)
+  return format(zonedDate, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
+}
+
+export function formatDateToWeekDayAndDate(date: Date, timeZone?: string, longDay: boolean = false): string {
+  if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy") + " (UTC)"
+
+  const zonedDate = toZonedTime(date, timeZone)
+  return format(zonedDate, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy")
+}
+
+export function getAge(dob: Date): number {
+  return differenceInYears(new Date(), dob)
 }

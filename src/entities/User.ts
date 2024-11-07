@@ -26,8 +26,10 @@ export type Preference = {
   studyCourse?: string,
   futureSelf?: string[],
   timezone?: string,
+  dob?: Date
 }
 
+// TODO: Add more user categories, maybe not working as professional or student but something else.
 export type UserCategory = "professional" | "student"
 export type AgeGroup = "< 18" | "18-24" | "25-34" | "35-44" | "45-54" | "55-64" | "> 65"
 export type WorkerType = "individual" | "manager" | "both"

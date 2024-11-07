@@ -428,6 +428,8 @@ export function registerSocketIo(server: HttpServer) {
               conversationId,
               weekToDoTasksConfirmed: true,
             })
+
+            ack(conversationId)
           } catch (error) {
             logger.error(error)
           }

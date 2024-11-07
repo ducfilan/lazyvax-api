@@ -6,7 +6,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { WeeklyPlanningAnnotation } from './annotations';
 import { User } from '@/entities/User';
 import { getEvents } from '@/services/api/events.services';
-import { getWeekInfo } from '@/common/utils/dateUtils';
+import { formatDateToWeekDayAndDate, formatDateToWeekDayAndTime, getWeekInfo } from '@/common/utils/dateUtils';
 import { format } from 'date-fns';
 import { ActivitySuggestion, WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
@@ -20,7 +20,7 @@ import { getHabits } from '@/services/api/habits.services';
 import { getWeeklyPlanTodoTasks } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { firstDayCoreTasksInstruction, systemMessageShort } from './prompts';
+import { firstDayCoreTasksInstruction, systemMessageShort, userInformationPrompt } from './prompts';
 import { tryParseJson } from '@/common/utils/stringUtils';
 
 export class WeeklyPlanningWorkflow {
@@ -107,8 +107,10 @@ export class WeeklyPlanningWorkflow {
       to: weekInfo.weekEndDate,
     }) // TODO: More filters.
 
+    const timeZone = state.userInfo.preferences?.timezone
+
     return {
-      lastWeekPlan: lastWeekEvents?.map(e => `${format(e.startDate, "EEE, HH:mm")} to ${format(e.endDate, "EEE, HH:mm")}: ${e.title}${e.description ? "- " + e.description : ""}`) ?? [],
+      lastWeekPlan: lastWeekEvents?.map(e => `${formatDateToWeekDayAndTime(e.startDate, timeZone)} to ${formatDateToWeekDayAndTime(e.endDate, timeZone)}: ${e.title}${e.description ? " (" + e.description : ")"}`) ?? [],
       hasLastWeekPlan: lastWeekEvents?.length > 0,
     }
   }
@@ -167,7 +169,7 @@ export class WeeklyPlanningWorkflow {
     const todoTasks = await getWeeklyPlanTodoTasks(conversationId)
 
     return {
-      weekToDoTasks: todoTasks?.map(t => `${t.title} - ${t.dueDate ? format(t.dueDate, "EEE, HH:mm") : ""}: ${t.completed ? "Done" : "Not done"}`),
+      weekToDoTasks: todoTasks?.map(t => `${t.title} - ${t.dueDate ? formatDateToWeekDayAndTime(t.dueDate, state.userInfo.preferences?.timezone) : ""}: ${t.completed ? "Done" : "Not done"}`),
     }
   }
 
@@ -204,12 +206,13 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async generateFirstDayCoreTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
-    if (!state.weekToDoTasksConfirmed || !state.firstDayCoreTasksSuggested) return {}
+    if (!state.weekToDoTasksConfirmed || state.firstDayCoreTasksSuggested) return {}
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nToday is ${format(new Date(), "EEEE, MMMM do yyyy, HH:mm:ss")}.\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
+      ["human", `### Context: ###\nToday is ${formatDateToWeekDayAndDate(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
     ]).formatMessages({
+      user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
@@ -222,7 +225,7 @@ export class WeeklyPlanningWorkflow {
     emitConversationMessage(state.conversationId.toHexString(), chatMessage)
 
     return {
-      firstDayCoreTasks: this.extractActivities(result.content).map(a => a.toString()),
+      firstDayCoreTasks: this.extractActivities(result.content).map(a => a.toString(state.userInfo.preferences?.timezone)),
       firstDayCoreTasksSuggested: true,
     }
   }

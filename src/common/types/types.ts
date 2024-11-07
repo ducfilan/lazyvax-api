@@ -137,7 +137,7 @@ export class ActivitySuggestion {
   reason: string;
   reminder: number[];
 
-  toString(): string {
-    return `[${formatDateToWeekDayAndTime(new Date(this.start_time))} - ${formatDateToWeekDayAndTime(new Date(this.end_time))}] ${this.activity}`
+  toString(timeZone: string): string {
+    return `[${formatDateToWeekDayAndTime(new Date(this.start_time), timeZone)} - ${formatDateToWeekDayAndTime(new Date(this.end_time), timeZone)}] ${this.activity}`
   }
 }
