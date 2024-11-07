@@ -61,7 +61,7 @@ export class WeeklyPlanningWorkflow {
       .addConditionalEdges('checkLastWeekPlan', this.decideLastWeekPlanFlow)
       .addConditionalEdges('selectPlanType', this.decidePlanTypeFlow)
       .addConditionalEdges('checkRoutineAndHabits', this.decideRoutineFlow)
-      .addEdge('askForHabits', 'checkWeekToDoTasks')
+      .addConditionalEdges('askForHabits', this.decideHabitsFlow)
       .addConditionalEdges('checkWeekToDoTasks', this.decideWeekToDoTasksFlow)
       .addConditionalEdges('askForWeekToDoTasks', this.decideWeekToDoTasksAskedFlow)
       .addEdge('confirmWeekToDoTasks', 'getUserTimezone')
@@ -276,6 +276,15 @@ export class WeeklyPlanningWorkflow {
 
   private decideRoutineFlow(state: WeeklyPlanningState) {
     return state.hasRoutineOrHabits ? 'checkWeekToDoTasks' : 'askForHabits';
+  }
+
+  private decideHabitsFlow(state: WeeklyPlanningState) {
+    // TODO: Maybe having option to skip habits.
+    if (!state.habits || state.habits.length === 0) {
+      return END;
+    }
+
+    return 'checkWeekToDoTasks';
   }
 
   private decideWeekToDoTasksFlow(state: WeeklyPlanningState) {
