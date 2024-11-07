@@ -7,10 +7,10 @@ import { WeeklyPlanningAnnotation } from './annotations';
 import { User } from '@/entities/User';
 import { getEvents } from '@/services/api/events.services';
 import { formatDateToWeekDayAndDate, formatDateToWeekDayAndTime, getWeekInfo } from '@/common/utils/dateUtils';
-import { addDays, endOfDay, format, startOfDay } from 'date-fns';
-import { ActivitySuggestion, WeekPlanType } from '@/common/types/types';
+import { addDays, endOfDay, startOfDay } from 'date-fns';
+import { WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
-import { MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks, MessageTypeAskToAdjustFirstDayCoreTasks, MessageTypeAskToConfirmFirstDayCoreTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeTextWithEvents } from '@common/consts/message-types';
+import { MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks, MessageTypeAskToConfirmFirstDayCoreTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeTextWithEvents } from '@common/consts/message-types';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { emitConversationMessage } from '../socket.io.service';
@@ -21,7 +21,6 @@ import { getWeeklyPlanTodoTasks } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
 import { firstDayCoreTasksInstruction, systemMessageShort, userInformationPrompt } from './prompts';
-import { tryParseJson } from '@/common/utils/stringUtils';
 
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
@@ -223,7 +222,7 @@ export class WeeklyPlanningWorkflow {
     if (!state.firstDayCoreTasksSuggested || state.firstDayCoreTasksConfirmedAsked) return {}
 
     if (!state.firstDayCoreTasksConfirmedAsked) {
-      const chatMessage = this.createChatMessage(state.conversationId, "Are you satisfied with your first day core tasks?", MessageTypeAskToConfirmFirstDayCoreTasks) // TODO: i18n.
+      const chatMessage = this.createChatMessage(state.conversationId, "Are you satisfied with your first day core tasks? If not, please adjust.", MessageTypeAskToConfirmFirstDayCoreTasks) // TODO: i18n.
       saveMessage(chatMessage)
       emitConversationMessage(state.conversationId.toHexString(), chatMessage)
 
@@ -233,10 +232,6 @@ export class WeeklyPlanningWorkflow {
     }
 
     if (!state.firstDayCoreTasksConfirmed) {
-      const chatMessage = this.createChatMessage(state.conversationId, "Please adjust your first day core tasks.", MessageTypeAskToAdjustFirstDayCoreTasks) // TODO: i18n.
-      saveMessage(chatMessage)
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
-
       return {}
     }
 

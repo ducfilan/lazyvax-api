@@ -4,7 +4,7 @@ import { Server as HttpServer } from 'http'
 import { Server as SocketServer, Socket } from "socket.io"
 import { getOrigins } from "@/app"
 import { isGoogleTokenValid, newGoogleOAuth2Client } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, ConfirmWeekToDoTasksMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, ConfirmFirstDayCoreTasksMessage, ConfirmWeekToDoTasksMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
 import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
@@ -49,6 +49,7 @@ export const EventNameWaitResponse = "wait response"
 export const EventNameConfirmToGenerateWeekPlanFull = "confirm generate week plan full"
 export const EventNameConfirmToGenerateWeekPlanInteractive = "confirm generate week plan interactive"
 export const EventNameConfirmWeekToDoTasks = "confirm week to do tasks"
+export const EventNameConfirmFirstDayCoreTasks = "confirm first day core tasks"
 
 const ErrorMessageInvalidToken = "invalid/expired token"
 const ErrorMessageNotParticipant = "not participant"
@@ -116,6 +117,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameConfirmToGenerateWeekPlanFull, generateWeekPlanFull)
         socket.on(EventNameConfirmToGenerateWeekPlanInteractive, generateWeekPlanInteractive)
         socket.on(EventNameConfirmWeekToDoTasks, confirmWeekToDoTasks)
+        socket.on(EventNameConfirmFirstDayCoreTasks, confirmFirstDayCoreTasks)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -433,6 +435,18 @@ export function registerSocketIo(server: HttpServer) {
           } catch (error) {
             logger.error(error)
           }
+        }
+
+        async function confirmFirstDayCoreTasks(message: ConfirmFirstDayCoreTasksMessage, ack: any) {
+          const conversationId = new ObjectId(message.conversationId)
+
+          weeklyPlanningWorkflow.runWorkflow({
+            userInfo: socket.user,
+            conversationId,
+            firstDayCoreTasksConfirmed: true,
+          })
+
+          ack(conversationId)
         }
       })
     })
