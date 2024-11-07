@@ -122,8 +122,8 @@ export async function getConversationById(conversationId: ObjectId): Promise<Con
   return result
 }
 
-export async function getConversationByType(type: string, meta: any): Promise<Conversation | null> {
-  const result = await ConversationsDao.findByType(type, meta)
+export async function getConversationByType(userId: ObjectId, type: string, meta: any): Promise<Conversation | null> {
+  const result = await ConversationsDao.findByType(userId, type, meta)
   if (!result) return null
 
   return result

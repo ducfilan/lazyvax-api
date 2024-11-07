@@ -29,7 +29,7 @@ export default class EventsController {
     }
   }
 
-  static async createEvent(req: Request & Request & { oAuth2Client: OAuth2Client, user: User }, res: Response) {
+  static async createEvent(req: Request & { oAuth2Client: OAuth2Client, user: User }, res: Response) {
     try {
       const eventData = {
         ...req.body,

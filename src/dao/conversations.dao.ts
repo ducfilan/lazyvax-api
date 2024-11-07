@@ -118,8 +118,8 @@ export default class ConversationsDao {
     return conversation
   }
 
-  static async findByType(type: string, meta: any, projection: any = {}) {
-    const findCondition = { type }
+  static async findByType(userId: ObjectId, type: string, meta: any, projection: any = {}) {
+    const findCondition = { userId, type }
     switch (type) {
       case ConversationTypeWeek:
         findCondition["meta.meta.startDate"] = meta.startDate

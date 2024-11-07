@@ -1,6 +1,7 @@
+import { User } from '@/entities/User'
 import { getConversationById, getConversationByType, updateById } from '@/services/api/conversations.services'
 import { getMessages } from '@services/api/messages.services'
-
+import { Request } from 'express'
 export default class ConversationsController {
   static async getConversationById(req, res) {
     try {
@@ -13,10 +14,10 @@ export default class ConversationsController {
     }
   }
 
-  static async getConversationByType(req, res) {
+  static async getConversationByType(req: Request & { user: User }, res) {
     try {
       const { type, meta } = req.query
-      const conversationInfo = await getConversationByType(type, meta)
+      const conversationInfo = await getConversationByType(req.user._id, type as string, meta as any)
 
       res.status(200).send(conversationInfo)
     } catch (e) {
