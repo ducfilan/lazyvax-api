@@ -120,39 +120,14 @@ export default class UsersDao {
     await session.withTransaction(async () => {
       userInfo._id = new ObjectId()
 
-      const firstConversation = await generateFirstConversation(userInfo.locale, userInfo)
-      const conversationId = await ConversationsDao.insertOne(firstConversation)
-      firstConversation._id = conversationId
-
-      delete firstConversation.participants
-      userInfo.conversations = [firstConversation]
-
       const insertUserResult = await _users.insertOne(userInfo)
       insertedUserId = insertUserResult.insertedId
 
-      const firstMessages = await generateFirstMessages(userInfo.locale, conversationId)
-      MessagesDao.insertMany(firstMessages)
+      // TODO: Consider some welcome messages.
     }, transactionOptions)
 
     return insertedUserId
   }
-}
-
-async function generateFirstConversation(locale: LangCode, userInfo: User) {
-  const title = ((await I18nDao.getByCode(I18nDbCodeFirstConversationTitle, locale))?.at(0) as I18n | null)?.content || ''
-  const description = ((await I18nDao.getByCode(I18nDbCodeFirstConversationDescription, locale))?.at(0) as I18n | null)?.content || ''
-
-  return {
-    title,
-    description,
-    unreadCount: 1,
-    type: ConversationTypeObjective,
-    participants: [{
-      _id: userInfo._id,
-      name: userInfo.name,
-      pictureUrl: userInfo.pictureUrl,
-    }]
-  } as Conversation
 }
 
 async function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Promise<Message[]> {
