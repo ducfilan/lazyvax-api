@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb"
 
 export type Conversation = {
   _id?: ObjectId,
+  userId?: ObjectId,
   type: string,
   meta?: {
     startDate: Date,

@@ -239,6 +239,7 @@ export function registerSocketIo(server: HttpServer) {
         async function createNewConversation(message: CreateConversationMessage, ack: any) {
           try {
             const conversation = await new ConversationBuilder(message).build()
+            conversation.userId = socket.user._id
 
             const session = getDbClient().startSession()
             await session.withTransaction(async () => {

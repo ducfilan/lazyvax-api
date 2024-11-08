@@ -24,18 +24,17 @@ export const validateApiGetConversationById = [
 
 export const validateApiGetConversationByType = [
   check('meta')
-    .customSanitizer(meta => {
+    .customSanitizer((meta, { req }) => {
       const metaObj = JSON.parse(decodeURIComponent(meta))
-      switch (metaObj.type) {
+      const type = req.query.type
+      switch (type) {
         case ConversationTypeWeek:
           metaObj.meta.startDate = new Date(metaObj.meta.startDate)
-
           break;
 
         default:
           break;
       }
-
       return metaObj.meta
     }),
   check('type')

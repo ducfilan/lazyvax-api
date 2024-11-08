@@ -32,6 +32,7 @@ export default class ConversationsDao {
             bsonType: 'object',
             properties: {
               _id: { bsonType: 'objectId' },
+              userId: { bsonType: 'objectId' },
               type: { enum: ConversationTypes },
               unreadCount: { bsonType: 'int' },
               meta: {
