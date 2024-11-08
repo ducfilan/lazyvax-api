@@ -46,7 +46,7 @@ export default class EventsController {
       // TODO: What if user has multiple calendars?
       await addEventsToGoogleCalendar(req.oAuth2Client, [eventData], req.user.preferences?.timezone)
 
-      res.status(201).json(eventId)
+      res.status(201).send(eventId.toHexString())
     } catch (e) {
       logger.error(`Error creating event: ${e}`)
       res.status(500).json({ error: e.message })
