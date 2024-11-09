@@ -26,30 +26,31 @@ import { addEventsToGoogleCalendar } from "./calendar_facade"
 import { OAuth2Client } from "google-auth-library"
 import { ConversationProgressGeneratedFullDone } from "@/dao/conversations.dao"
 import { weeklyPlanningWorkflow } from "./lang_graph/workflows"
+import {
+  EventNameJoinConversation,
+  EventNameSendMessage,
+  EventNameConversationMessage,
+  EventNameTypingUser,
+  EventNameEndTypingUser,
+  EventNameFinishQuestionnaires,
+  EventNameCreateConversation,
+  EventNameAddMilestoneAndActions,
+  EventNameEditMilestoneAndActions,
+  EventNameNextMilestoneAndActions,
+  EventNameAddAction,
+  EventNameEditAction,
+  EventNameWaitResponse,
+  EventNameConfirmToGenerateWeekPlanFull,
+  EventNameConfirmToGenerateWeekPlanInteractive,
+  EventNameConfirmWeekToDoTasks,
+  EventNameConfirmFirstDayCoreTasks,
+} from "@/common/consts/event-names"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
   user?: User;
   oAuth2Client: OAuth2Client
 }
-
-export const EventNameJoinConversation = "join conversation"
-export const EventNameSendMessage = "send message"
-export const EventNameConversationMessage = "conversation message"
-export const EventNameTypingUser = "user typing"
-export const EventNameEndTypingUser = "user end typing"
-export const EventNameFinishQuestionnaires = "fin questionnaires"
-export const EventNameCreateConversation = "create conversation"
-export const EventNameAddMilestoneAndActions = "add milestone & actions"
-export const EventNameEditMilestoneAndActions = "edit milestone & actions"
-export const EventNameNextMilestoneAndActions = "next milestone & actions"
-export const EventNameAddAction = "add action"
-export const EventNameEditAction = "edit action"
-export const EventNameWaitResponse = "wait response"
-export const EventNameConfirmToGenerateWeekPlanFull = "confirm generate week plan full"
-export const EventNameConfirmToGenerateWeekPlanInteractive = "confirm generate week plan interactive"
-export const EventNameConfirmWeekToDoTasks = "confirm week to do tasks"
-export const EventNameConfirmFirstDayCoreTasks = "confirm first day core tasks"
 
 const ErrorMessageInvalidToken = "invalid/expired token"
 const ErrorMessageNotParticipant = "not participant"

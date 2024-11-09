@@ -130,6 +130,13 @@ export function formatDateToWeekDayAndDate(date: Date, timeZone?: string, longDa
   return format(zonedDate, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy")
 }
 
+export function formatDateToWeekDay(date: Date, timeZone?: string, longDay: boolean = true): string {
+  if (!timeZone) return format(date, longDay ? "EEEE" : "EEE") + " (UTC)"
+
+  const zonedDate = toZonedTime(date, timeZone)
+  return format(zonedDate, longDay ? "EEEE" : "EEE")
+}
+
 export function getAge(dob: Date): number {
   return differenceInYears(new Date(), dob)
 }
