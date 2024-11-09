@@ -21,4 +21,6 @@ export const EventNameConfirmToGenerateWeekPlanFull = "confirm generate week pla
 export const EventNameConfirmToGenerateWeekPlanInteractive = "confirm generate week plan interactive"
 export const EventNameConfirmWeekToDoTasks = "confirm week to do tasks"
 export const EventNameConfirmFirstDayCoreTasks = "confirm first day core tasks"
+export const EventNameConfirmToGenerateNextDayTasks = "confirm to generate next day tasks"
 export const EventNameConfirmNextDayTasks = "confirm next day tasks"
+export const EventNameSkipNextDayTasks = "skip next day tasks"

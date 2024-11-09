@@ -108,6 +108,12 @@ export type ConfirmWeekToDoTasksMessage = {
 
 export type ConfirmFirstDayCoreTasksMessage = {
   conversationId: string,
+  index: number,
+}
+
+export type ConfirmNextDayTasksMessage = {
+  conversationId: string,
+  index: number,
 }
 
 export type ConversationType = typeof ConversationTypes[number]

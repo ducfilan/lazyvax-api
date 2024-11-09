@@ -10,7 +10,7 @@ export const userInformationPrompt = (user: User) => [
 
 export const dayCoreTasksInstruction = (timezone: string, targetDay: string = "tomorrow") => [
   `- Suggest 10 key activities for the user’s day ${targetDay} in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
-  "- Focus only on significant tasks; avoid minor or routine activities.",
+  "- Align with the activities already on the calendar this week",
   "- Make each activity description clear and actionable.",
   "- Set reasonable reminders, e.g., 10 and 0 minutes before reading, 10 and 1 minute before meetings.",
   "- Exclude any activities already on the calendar and ensure no time conflicts.",

@@ -4,7 +4,7 @@ import { Server as HttpServer } from 'http'
 import { Server as SocketServer, Socket } from "socket.io"
 import { getOrigins } from "@/app"
 import { isGoogleTokenValid, newGoogleOAuth2Client } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, ConfirmFirstDayCoreTasksMessage, ConfirmWeekToDoTasksMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
+import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, ConfirmFirstDayCoreTasksMessage, ConfirmNextDayTasksMessage, ConfirmWeekToDoTasksMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
 import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
@@ -44,6 +44,8 @@ import {
   EventNameConfirmToGenerateWeekPlanInteractive,
   EventNameConfirmWeekToDoTasks,
   EventNameConfirmFirstDayCoreTasks,
+  EventNameConfirmNextDayTasks,
+  EventNameConfirmToGenerateNextDayTasks,
 } from "@/common/consts/event-names"
 
 interface ISocket extends Socket {
@@ -119,6 +121,8 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameConfirmToGenerateWeekPlanInteractive, generateWeekPlanInteractive)
         socket.on(EventNameConfirmWeekToDoTasks, confirmWeekToDoTasks)
         socket.on(EventNameConfirmFirstDayCoreTasks, confirmFirstDayCoreTasks)
+        socket.on(EventNameConfirmToGenerateNextDayTasks, confirmToGenerateNextDayTasks)
+        socket.on(EventNameConfirmNextDayTasks, confirmNextDayTasks)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -445,7 +449,45 @@ export function registerSocketIo(server: HttpServer) {
           weeklyPlanningWorkflow.runWorkflow({
             userInfo: socket.user,
             conversationId,
-            firstDayCoreTasksConfirmed: true,
+          }, {
+            target: 'daysInWeekTasksConfirmed',
+            targetType: 'array',
+            targetIndex: message.index,
+            value: true,
+          })
+
+          ack(conversationId)
+        }
+
+        async function confirmToGenerateNextDayTasks(message: ConfirmNextDayTasksMessage, ack: any) {
+          const conversationId = new ObjectId(message.conversationId)
+
+          weeklyPlanningWorkflow.runWorkflow({
+            userInfo: socket.user,
+            conversationId,
+            nextDayIndex: message.index,
+          }, {
+            target: 'daysInWeekTasksConfirmedToSuggest',
+            targetType: 'array',
+            targetIndex: message.index,
+            value: true,
+          })
+
+          ack(conversationId)
+        }
+
+        async function confirmNextDayTasks(message: ConfirmNextDayTasksMessage, ack: any) {
+          const conversationId = new ObjectId(message.conversationId)
+
+          weeklyPlanningWorkflow.runWorkflow({
+            userInfo: socket.user,
+            conversationId,
+            nextDayIndex: message.index,
+          }, {
+            target: 'daysInWeekTasksConfirmed',
+            targetType: 'array',
+            targetIndex: message.index,
+            value: true,
           })
 
           ack(conversationId)
