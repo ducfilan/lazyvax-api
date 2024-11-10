@@ -487,7 +487,7 @@ export function registerSocketIo(server: HttpServer) {
             target: 'daysInWeekTasksConfirmed',
             targetType: 'array',
             targetIndex: message.index,
-            value: true,
+            value: message.confirmed,
           })
 
           ack(conversationId)

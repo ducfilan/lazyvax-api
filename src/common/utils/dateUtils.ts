@@ -123,6 +123,13 @@ export function formatDateToWeekDayAndTime(date: Date, timeZone?: string, longDa
   return format(zonedDate, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
 }
 
+export function formatDateToWeekDayAndDateTime(date: Date, timeZone?: string, longDay: boolean = false): string {
+  if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy HH:mm" : "EEE, MMMM do yyyy HH:mm") + " (UTC)"
+
+  const zonedDate = toZonedTime(date, timeZone)
+  return format(zonedDate, longDay ? "EEEE, MMMM do yyyy HH:mm" : "EEE, MMMM do yyyy HH:mm")
+}
+
 export function formatDateToWeekDayAndDate(date: Date, timeZone?: string, longDay: boolean = false): string {
   if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy") + " (UTC)"
 
@@ -139,4 +146,11 @@ export function formatDateToWeekDay(date: Date, timeZone?: string, longDay: bool
 
 export function getAge(dob: Date): number {
   return differenceInYears(new Date(), dob)
+}
+
+export function isEvening(date?: Date): boolean {
+  if (!date) date = new Date()
+
+  const hour = date.getHours()
+  return hour >= 17
 }

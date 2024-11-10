@@ -114,6 +114,7 @@ export type ConfirmFirstDayCoreTasksMessage = {
 export type ConfirmNextDayTasksMessage = {
   conversationId: string,
   index: number,
+  confirmed: boolean,
 }
 
 export type ConversationType = typeof ConversationTypes[number]

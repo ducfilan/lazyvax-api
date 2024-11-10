@@ -5,11 +5,11 @@ import { BaseMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
 import { getEvents } from '@/services/api/events.services';
-import { formatDateToWeekDay, formatDateToWeekDayAndDate, formatDateToWeekDayAndTime, getWeekInfo } from '@/common/utils/dateUtils';
+import { formatDateToWeekDay, formatDateToWeekDayAndDate, formatDateToWeekDayAndDateTime, formatDateToWeekDayAndTime, getWeekInfo, isEvening } from '@/common/utils/dateUtils';
 import { addDays, endOfDay, getDay, startOfDay, startOfWeek } from 'date-fns';
 import { WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
-import { MessageTypeAskForNextDayTasks, MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks, MessageTypeAskToConfirmFirstDayCoreTasks, MessageTypeAskToConfirmNextDayTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypePlainText, MessageTypeTextWithEvents } from '@common/consts/message-types';
+import { MessageTypeAskForNextDayTasks, MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks, MessageTypeAskToConfirmFirstDayCoreTasks, MessageTypeAskToConfirmNextDayTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeAskToMoveToNextWeek, MessageTypePlainText, MessageTypeTextWithEvents } from '@common/consts/message-types';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { emitConversationMessage } from '../socket.io.service';
@@ -81,7 +81,15 @@ export class WeeklyPlanningWorkflow {
     } as Message
   }
 
+  private async sendMessage(conversationId: ObjectId, content: string, type: number) {
+    const chatMessage = this.createChatMessage(conversationId, content, type)
+    const messageId = await saveMessage(chatMessage)
+    chatMessage._id = messageId
+    emitConversationMessage(conversationId.toHexString(), chatMessage)
+  }
+
   private async checkLastWeekPlan(state: WeeklyPlanningState): Promise<NodeOutput> {
+    // TODO: Maybe this week so far if planning on Sunday.
     logger.debug(`checkLastWeekPlan`)
     const weekInfo = getWeekInfo(new Date())
     const lastWeekEvents = await getEvents({
@@ -103,20 +111,14 @@ export class WeeklyPlanningWorkflow {
     if (state.planType || state.planTypeAsked) return
 
     if (!state.hasLastWeekPlan) {
-      const chatMessage = this.createChatMessage(state.conversationId, "We will plan interactively.", MessageTypeAskToGenerateWeekPlan)
-      const messageId = await saveMessage(chatMessage)
-      chatMessage._id = messageId
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+      await this.sendMessage(state.conversationId, "We will plan interactively.", MessageTypeAskToGenerateWeekPlan)
 
       return {
         planType: PlanTypeWeekInteractive,
       }
     }
 
-    const chatMessage = this.createChatMessage(state.conversationId, "Generate your weekly plan?", MessageTypeAskToGenerateWeekPlan) // TODO: i18n.
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    await this.sendMessage(state.conversationId, "Generate your weekly plan?", MessageTypeAskToGenerateWeekPlan)
     return {
       planTypeAsked: true,
     }
@@ -140,10 +142,7 @@ export class WeeklyPlanningWorkflow {
       return {}
     }
 
-    const chatMessage = this.createChatMessage(state.conversationId, "What is your routine? Please go to Habits page to check your habits.", MessageTypeAskForRoutine) // TODO: i18n.
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    await this.sendMessage(state.conversationId, "What is your routine? Please go to Habits page to check your habits.", MessageTypeAskForRoutine) // TODO: i18n.
     return {
       habitsAsked: true,
     }
@@ -179,10 +178,7 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`askForWeekToDoTasks`)
     if (state.weekToDoTasksAsked || state.weekToDoTasks?.length > 0) return {}
 
-    const chatMessage = this.createChatMessage(state.conversationId, "What are your must do tasks in this week?", MessageTypeAskForWeekToDoTasks) // TODO: i18n.
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    await this.sendMessage(state.conversationId, "What are your must do tasks in this week?", MessageTypeAskForWeekToDoTasks) // TODO: i18n.
     return {
       weekToDoTasksAsked: true,
     }
@@ -192,10 +188,7 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`confirmWeekToDoTasks`)
     if (state.weekToDoTasksConfirmAsked || state.weekToDoTasksConfirmed) return {}
 
-    const chatMessage = this.createChatMessage(state.conversationId, "Are you satisfied with your must do tasks?", MessageTypeAskToConfirmWeekToDoTasks) // TODO: i18n.
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    await this.sendMessage(state.conversationId, "Are you satisfied with your must do tasks?", MessageTypeAskToConfirmWeekToDoTasks) // TODO: i18n.
     return {
       weekToDoTasksConfirmAsked: true,
     }
@@ -204,10 +197,7 @@ export class WeeklyPlanningWorkflow {
   private async getUserTimezone(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`getUserTimezone: ${state.userInfo.preferences?.timezone}`)
     if (!state.userInfo.preferences?.timezone) {
-      const chatMessage = this.createChatMessage(state.conversationId, "What is your timezone?", MessageTypeAskForTimezone) // TODO: i18n.
-      const messageId = await saveMessage(chatMessage)
-      chatMessage._id = messageId
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+      await this.sendMessage(state.conversationId, "What is your timezone?", MessageTypeAskForTimezone) // TODO: i18n.
     }
 
     return {}
@@ -217,21 +207,25 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`generateFirstDayTasks: ${state.firstDayIndex}`)
     // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
     // TODO: What if it's Sunday?
-    let tomorrowIndex = state.firstDayIndex ?? (getDay(new Date()) + 6) % 7 + 1 // TODO: Start on Monday, what if start on Sunday.
-    const isSunday = tomorrowIndex === 7
-    if (isSunday) { // TODO: More sophisticated scenarios.
-      tomorrowIndex = 0
+    let firstDayIndex = state.firstDayIndex ?? (getDay(new Date()) + 6) % 7 // TODO: Start on Monday, what if start on Sunday.
+    if (isEvening()) {
+      await this.sendMessage(state.conversationId, "It's getting late. We will plan for tomorrow.", MessageTypePlainText) // TODO: i18n.
+      firstDayIndex += 1
     }
-    if (!state.weekToDoTasksConfirmed || state.daysInWeekTasksSuggested[tomorrowIndex]) return {}
 
-    const chatMessageAnnounceGenerate = this.createChatMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, tomorrowIndex), state.userInfo.preferences?.timezone)}...`, MessageTypePlainText)
-    const messageIdAnnounceGenerate = await saveMessage(chatMessageAnnounceGenerate)
-    chatMessageAnnounceGenerate._id = messageIdAnnounceGenerate
-    emitConversationMessage(state.conversationId.toHexString(), chatMessageAnnounceGenerate)
+    if (firstDayIndex > 6) {
+      await this.sendMessage(state.conversationId, "This week is over. Let's move to next week.", MessageTypeAskToMoveToNextWeek) // TODO: AI + i18n.
+
+      return {}
+    }
+
+    if (!state.weekToDoTasksConfirmed || state.daysInWeekTasksSuggested[firstDayIndex]) return {}
+
+    await this.sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, firstDayIndex), state.userInfo.preferences?.timezone)}...`, MessageTypePlainText)
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nToday is ${formatDateToWeekDayAndDate(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
+      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDateTime(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
     ]).formatMessages({
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
@@ -243,19 +237,16 @@ export class WeeklyPlanningWorkflow {
     const result = await this.model.invoke(prompt)
     logger.debug(`generateFirstDayTasks: ${result.content}`)
 
-    const chatMessage = this.createChatMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
 
     const daysInWeekTasksSuggested = [...state.daysInWeekTasksSuggested]
-    daysInWeekTasksSuggested[tomorrowIndex] = true
+    daysInWeekTasksSuggested[firstDayIndex] = true
 
     const daysInWeekTasksAskedToSuggest = [...state.daysInWeekTasksAskedToSuggest]
-    daysInWeekTasksAskedToSuggest[tomorrowIndex] = true
+    daysInWeekTasksAskedToSuggest[firstDayIndex] = true
 
     return {
-      firstDayIndex: tomorrowIndex,
+      firstDayIndex,
       daysInWeekTasksSuggested,
       daysInWeekTasksAskedToSuggest
     }
@@ -265,15 +256,13 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`checkFirstDayTasksSatisfied: ${state.firstDayIndex}`)
     if (!state.daysInWeekTasksSuggested[state.firstDayIndex] || state.daysInWeekTasksConfirmedAsked[state.firstDayIndex]) return {}
 
+    const firstDayDate = addDays(state.weekStartDate, state.firstDayIndex)
     if (!state.daysInWeekTasksConfirmedAsked[state.firstDayIndex]) {
       const content = {
         index: state.firstDayIndex,
-        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, state.firstDayIndex), state.userInfo.preferences?.timezone)}?`,
+        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(firstDayDate, state.userInfo.preferences?.timezone)}?`,
       }
-      const chatMessage = this.createChatMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayCoreTasks) // TODO: i18n.
-      const messageId = await saveMessage(chatMessage)
-      chatMessage._id = messageId
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayCoreTasks) // TODO: i18n.
 
       const daysInWeekTasksConfirmedAsked = [...state.daysInWeekTasksConfirmedAsked]
       daysInWeekTasksConfirmedAsked[state.firstDayIndex] = true
@@ -287,12 +276,10 @@ export class WeeklyPlanningWorkflow {
       return {}
     }
 
-    const theDayAfterFirstDay = addDays(state.weekStartDate, state.firstDayIndex + 1)
-
     const firstDayEvents = await getEvents({
       userId: state.userInfo._id,
-      from: startOfDay(theDayAfterFirstDay),
-      to: endOfDay(theDayAfterFirstDay),
+      from: startOfDay(firstDayDate),
+      to: endOfDay(firstDayDate),
     })
 
     const daysInWeekTasks = [...state.daysInWeekTasks ?? [[], [], [], [], [], [], []]]
@@ -304,83 +291,80 @@ export class WeeklyPlanningWorkflow {
 
   private async generateMoreDays(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`generateMoreDays: ${state.firstDayIndex}`)
-    let nextDayIndex = state.daysInWeekTasksConfirmed.findIndex((confirmation, i) => confirmation === null && i > state.firstDayIndex)
-    if (nextDayIndex === -1 && !state.motivationMessage) {
+    let notConfirmedDayIndex = state.daysInWeekTasksConfirmed.findIndex((confirmation, i) => confirmation === null && i > state.firstDayIndex)
+    if (notConfirmedDayIndex === -1 && !state.motivationMessage) {
       return {
         allDaysInWeekTasksConfirmed: true,
         motivationMessage: "This is motivation message lol. You have confirmed all tasks for this week. Enjoy your week!", // TODO: AI + i18n.
       }
     }
 
-    if (!state.daysInWeekTasksAskedToSuggest[nextDayIndex]) {
+    if (!state.daysInWeekTasksAskedToSuggest[notConfirmedDayIndex]) {
       const content = {
-        content: `Do you want to have suggestions for ${formatDateToWeekDay(addDays(state.weekStartDate, nextDayIndex), state.userInfo.preferences?.timezone)}?`,
-        index: nextDayIndex,
+        content: `Do you want to have suggestions for ${formatDateToWeekDay(addDays(state.weekStartDate, notConfirmedDayIndex), state.userInfo.preferences?.timezone)}?`,
+        index: notConfirmedDayIndex,
       }
-      const chatMessage = this.createChatMessage(state.conversationId, JSON.stringify(content), MessageTypeAskForNextDayTasks) // TODO: i18n.
-      const messageId = await saveMessage(chatMessage)
-      chatMessage._id = messageId
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskForNextDayTasks) // TODO: i18n.
 
       const daysInWeekTasksAskedToSuggest = [...state.daysInWeekTasksAskedToSuggest]
-      daysInWeekTasksAskedToSuggest[nextDayIndex] = true
+      daysInWeekTasksAskedToSuggest[notConfirmedDayIndex] = true
       return {
         daysInWeekTasksAskedToSuggest
       }
     }
 
-    if (!state.daysInWeekTasksConfirmedToSuggest[nextDayIndex]) {
+    if (!state.daysInWeekTasksConfirmedToSuggest[state.nextDayIndex]) {
       return {}
     }
 
-    if (!state.daysInWeekTasksConfirmedAsked[nextDayIndex]) {
-      const content = {
-        index: nextDayIndex,
-        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, nextDayIndex), state.userInfo.preferences?.timezone)}?`,
-      }
-      const chatMessage = this.createChatMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmNextDayTasks) // TODO: i18n.
-      const messageId = await saveMessage(chatMessage)
-      chatMessage._id = messageId
-      emitConversationMessage(state.conversationId.toHexString(), chatMessage)
-
-      const daysInWeekTasksConfirmedAsked = [...state.daysInWeekTasksConfirmedAsked]
-      daysInWeekTasksConfirmedAsked[nextDayIndex] = true
-
-      return {
-        daysInWeekTasksConfirmedAsked,
-      }
-    }
-
-    if (state.daysInWeekTasksSuggested[nextDayIndex]) {
+    if (state.daysInWeekTasksSuggested[notConfirmedDayIndex]) {
       return {}
     }
 
-    const chatMessageAnnounceGenerate = this.createChatMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, nextDayIndex), state.userInfo.preferences?.timezone)}...`, MessageTypePlainText)
-    const messageIdAnnounceGenerate = await saveMessage(chatMessageAnnounceGenerate)
-    chatMessageAnnounceGenerate._id = messageIdAnnounceGenerate
-    emitConversationMessage(state.conversationId.toHexString(), chatMessageAnnounceGenerate)
+    await this.sendMessage(
+      state.conversationId,
+      `Generating tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, notConfirmedDayIndex), state.userInfo.preferences?.timezone)}...`,
+      MessageTypePlainText
+    )
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nToday is ${formatDateToWeekDayAndDate(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
+      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDateTime(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nPlanned tasks:\n{plannedTasks}\n### Instructions: ###\n{instructions}`],
     ]).formatMessages({
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
+      plannedTasks: state.daysInWeekTasks?.map((t, i) => {
+        if (t.length === 0) return ""
+        return `### ${formatDateToWeekDay(addDays(state.weekStartDate, i), state.userInfo.preferences?.timezone)} ###\n${t.map(t => `- ${t}`).join('\n')}`
+      }).join('\n\n') ?? "",
       instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone),
     })
     logger.debug(`generateMoreDays: ${prompt}`)
     const result = await this.model.invoke(prompt)
     logger.debug(`generateMoreDays: ${result.content}`)
 
-    const chatMessage = this.createChatMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
 
     const daysInWeekTasksSuggested = [...state.daysInWeekTasksSuggested]
-    daysInWeekTasksSuggested[nextDayIndex] = true
+    daysInWeekTasksSuggested[notConfirmedDayIndex] = true
+
+    if (!state.daysInWeekTasksConfirmedAsked[notConfirmedDayIndex]) {
+      const content = {
+        index: notConfirmedDayIndex,
+        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, notConfirmedDayIndex), state.userInfo.preferences?.timezone)}?`,
+      }
+      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmNextDayTasks) // TODO: i18n.
+
+      const daysInWeekTasksConfirmedAsked = [...state.daysInWeekTasksConfirmedAsked]
+      daysInWeekTasksConfirmedAsked[notConfirmedDayIndex] = true
+
+      return {
+        daysInWeekTasksConfirmedAsked,
+        daysInWeekTasksSuggested,
+      }
+    }
 
     return {
       daysInWeekTasksSuggested,
@@ -390,10 +374,9 @@ export class WeeklyPlanningWorkflow {
   private async motivateUser(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`motivateUser`)
 
-    const chatMessage = this.createChatMessage(state.conversationId, state.motivationMessage, MessageTypePlainText)
-    const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(state.conversationId.toHexString(), chatMessage)
+    if (state.motivationMessage) {
+      await this.sendMessage(state.conversationId, state.motivationMessage, MessageTypePlainText)
+    }
 
     return {}
   }
@@ -558,8 +541,8 @@ const WeeklyPlanningAnnotation = Annotation.Root({
   daysInWeekTasksConfirmedToSuggest: Annotation<boolean[]>(),
   daysInWeekTasksConfirmedAsked: Annotation<boolean[]>(),
   daysInWeekTasksConfirmed: Annotation<(boolean | null)[]>(),
-  allDaysInWeekTasksConfirmed: Annotation<boolean>(),
   nextDayIndex: Annotation<number>(),
+  allDaysInWeekTasksConfirmed: Annotation<boolean>(),
   calendarEvents: Annotation<string[]>(),
   motivationMessage: Annotation<string>(),
   ...MessagesAnnotation.spec,

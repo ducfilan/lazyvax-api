@@ -8,8 +8,9 @@ export const userInformationPrompt = (user: User) => [
   `User info: Age: ${user.preferences?.dob ? getAge(user.preferences.dob) : user.preferences.age}, Gender: ${user.preferences?.gender}, ${user.preferences?.userCategory == "professional" ? `working as ${user.preferences.workerType == "both" ? "both individual and manager" : user.preferences.workerType} in the field "${user.preferences.occupation}"` : `student studying the ${user.preferences.degree} degree of ${user.preferences.studyCourse} field`}, want to be a person: ${user.preferences?.futureSelf?.join(', ') ?? '(Not specified)'}`
 ].join('\n')
 
-export const dayCoreTasksInstruction = (timezone: string, targetDay: string = "tomorrow") => [
+export const dayCoreTasksInstruction = (timezone: string, targetDay: string = "today") => [
   `- Suggest 10 key activities for the user’s day ${targetDay} in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
+  `- Must be after now in ${timezone}`,
   "- Align with the activities already on the calendar this week",
   "- Make each activity description clear and actionable.",
   "- Set reasonable reminders, e.g., 10 and 0 minutes before reading, 10 and 1 minute before meetings.",

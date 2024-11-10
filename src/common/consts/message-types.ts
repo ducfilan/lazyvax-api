@@ -25,6 +25,7 @@ export const MessageTypeAskForTimezone = 24
 export const MessageTypeAskToConfirmFirstDayCoreTasks = 25
 export const MessageTypeAskForNextDayTasks = 26
 export const MessageTypeAskToConfirmNextDayTasks = 27
+export const MessageTypeAskToMoveToNextWeek = 28
 
 export const MessageTypes = [
   MessageTypeBeforeLogin, MessageTypePlainText, MessageTypeAskQuestionnaires,
@@ -36,4 +37,5 @@ export const MessageTypes = [
   MessageTypeAskForRoutine, MessageTypeAskForWeekToDoTasks, MessageTypeAnswerWeekToDoTasks,
   MessageTypeAskToConfirmWeekToDoTasks, MessageTypeTextWithEvents, MessageTypeAskForTimezone,
   MessageTypeAskToConfirmFirstDayCoreTasks, MessageTypeAskForNextDayTasks, MessageTypeAskToConfirmNextDayTasks,
+  MessageTypeAskToMoveToNextWeek,
 ]
