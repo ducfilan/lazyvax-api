@@ -208,7 +208,7 @@ export class WeeklyPlanningWorkflow {
     // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
     // TODO: What if it's Sunday?
     let firstDayIndex = state.firstDayIndex ?? (getDay(new Date()) + 6) % 7 // TODO: Start on Monday, what if start on Sunday.
-    if (isEvening()) {
+    if (isEvening(new Date(), state.userInfo.preferences?.timezone)) {
       await this.sendMessage(state.conversationId, "It's getting late. We will plan for tomorrow.", MessageTypePlainText) // TODO: i18n.
       firstDayIndex += 1
     }

@@ -148,9 +148,10 @@ export function getAge(dob: Date): number {
   return differenceInYears(new Date(), dob)
 }
 
-export function isEvening(date?: Date): boolean {
+export function isEvening(date?: Date, timeZone?: string): boolean {
   if (!date) date = new Date()
 
-  const hour = date.getHours()
+  const zonedDate = timeZone ? toZonedTime(date, timeZone) : date
+  const hour = zonedDate.getHours()
   return hour >= 17
 }
