@@ -136,7 +136,7 @@ export class WeeklyPlanningWorkflow {
 
     return {
       hasRoutineOrHabits: habits?.length > 0,
-      habits: habits?.map(h => `${h.title} - ${h.priority} - ${h.repeat.unit} - ${h.repeat.frequency} times ${h.repeat.daysOfWeek ? "on " + buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
+      habits: habits?.map(h => `${h.title} - ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${h.repeat.daysOfWeek ? "on " + buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
     }
   }
 
@@ -237,9 +237,9 @@ export class WeeklyPlanningWorkflow {
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
       instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone),
     })
-    logger.debug(`generateFirstDayTasks: ${prompt}`)
+    logger.debug(`generateFirstDayTasks prompt: ${JSON.stringify(prompt)}`)
     const result = await this.model.invoke(prompt)
-    logger.debug(`generateFirstDayTasks: ${result.content}`)
+    logger.debug(`generateFirstDayTasks result: ${result.content}`)
 
     await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
 
@@ -351,9 +351,9 @@ export class WeeklyPlanningWorkflow {
       }).join('\n\n') ?? "",
       instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone),
     })
-    logger.debug(`generateMoreDays: ${prompt}`)
+    logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
     const result = await this.model.invoke(prompt)
-    logger.debug(`generateMoreDays: ${result.content}`)
+    logger.debug(`generateMoreDays result: ${result.content}`)
 
     await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
 
