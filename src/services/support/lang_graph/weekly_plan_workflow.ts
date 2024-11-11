@@ -349,7 +349,7 @@ export class WeeklyPlanningWorkflow {
         if (t.length === 0) return ""
         return `### ${formatDateToWeekDay(addDays(state.weekStartDate, i), state.userInfo.preferences?.timezone)} ###\n${t.map(t => `- ${t}`).join('\n')}`
       }).join('\n\n') ?? "",
-      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone),
+      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, formatDateToWeekDayAndDate(addDays(state.weekStartDate, notConfirmedDayIndex), state.userInfo.preferences?.timezone)),
     })
     logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
     const result = await this.model.invoke(prompt)
