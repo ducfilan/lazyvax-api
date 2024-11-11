@@ -249,10 +249,14 @@ export class WeeklyPlanningWorkflow {
     const daysInWeekTasksAskedToSuggest = [...state.daysInWeekTasksAskedToSuggest]
     daysInWeekTasksAskedToSuggest[firstDayIndex] = true
 
+    const daysInWeekTasksConfirmedToSuggest = [...state.daysInWeekTasksConfirmedToSuggest]
+    daysInWeekTasksConfirmedToSuggest[firstDayIndex] = true
+
     return {
       firstDayIndex,
       daysInWeekTasksSuggested,
-      daysInWeekTasksAskedToSuggest
+      daysInWeekTasksAskedToSuggest,
+      daysInWeekTasksConfirmedToSuggest,
     }
   }
 
@@ -294,7 +298,7 @@ export class WeeklyPlanningWorkflow {
   }
 
   private async generateMoreDays(state: WeeklyPlanningState): Promise<NodeOutput> {
-    logger.debug(`generateMoreDays: ${state.firstDayIndex}`)
+    logger.debug(`generateMoreDays: ${state.daysInWeekTasksConfirmed}`)
     let notConfirmedDayIndex = state.daysInWeekTasksConfirmed.findIndex((confirmation, i) => confirmation === null && i > state.firstDayIndex)
     if (notConfirmedDayIndex === -1 && !state.motivationMessage) {
       return {
@@ -314,7 +318,8 @@ export class WeeklyPlanningWorkflow {
       const daysInWeekTasksAskedToSuggest = [...state.daysInWeekTasksAskedToSuggest]
       daysInWeekTasksAskedToSuggest[notConfirmedDayIndex] = true
       return {
-        daysInWeekTasksAskedToSuggest
+        daysInWeekTasksAskedToSuggest,
+        nextDayIndex: notConfirmedDayIndex,
       }
     }
 
@@ -368,11 +373,13 @@ export class WeeklyPlanningWorkflow {
       return {
         daysInWeekTasksConfirmedAsked,
         daysInWeekTasksSuggested,
+        nextDayIndex: notConfirmedDayIndex,
       }
     }
 
     return {
       daysInWeekTasksSuggested,
+      nextDayIndex: notConfirmedDayIndex,
     }
   }
 
@@ -428,6 +435,14 @@ export class WeeklyPlanningWorkflow {
 
   private decideMoreDaysFlow(state: WeeklyPlanningState) {
     if (state.flowIsDone) return END
+
+    if (state.daysInWeekTasksAskedToSuggest[state.nextDayIndex] && !state.daysInWeekTasksConfirmedToSuggest[state.nextDayIndex]) {
+      return END
+    }
+
+    if (state.daysInWeekTasksConfirmedAsked[state.nextDayIndex] && !state.daysInWeekTasksConfirmed[state.nextDayIndex]) {
+      return END
+    }
 
     return state.allDaysInWeekTasksConfirmed ? 'motivateUser' : 'generateMoreDays';
   }

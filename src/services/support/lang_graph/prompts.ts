@@ -10,6 +10,7 @@ export const userInformationPrompt = (user: User) => [
 
 export const dayCoreTasksInstruction = (timezone: string, targetDay: string = "today") => [
   `- Suggest 10 key activities for the user’s day ${targetDay} in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
+  "- Strictly follow my habits if it has specific day",
   `- Must be after now in ${timezone}`,
   "- Align with the activities already on the calendar this week",
   "- Make each activity description clear and actionable.",
