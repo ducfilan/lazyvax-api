@@ -120,9 +120,9 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameConfirmToGenerateWeekPlanFull, generateWeekPlanFull)
         socket.on(EventNameConfirmToGenerateWeekPlanInteractive, generateWeekPlanInteractive)
         socket.on(EventNameConfirmWeekToDoTasks, confirmWeekToDoTasks)
-        socket.on(EventNameConfirmFirstDayCoreTasks, confirmFirstDayCoreTasks)
+        socket.on(EventNameConfirmFirstDayCoreTasks, confirmDayInWeekTasks)
         socket.on(EventNameConfirmToGenerateNextDayTasks, confirmToGenerateNextDayTasks)
-        socket.on(EventNameConfirmNextDayTasks, confirmNextDayTasks)
+        socket.on(EventNameConfirmNextDayTasks, confirmDayInWeekTasks)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -443,22 +443,6 @@ export function registerSocketIo(server: HttpServer) {
           }
         }
 
-        async function confirmFirstDayCoreTasks(message: ConfirmFirstDayCoreTasksMessage, ack: any) {
-          const conversationId = new ObjectId(message.conversationId)
-
-          weeklyPlanningWorkflow.runWorkflow({
-            userInfo: socket.user,
-            conversationId,
-          }, {
-            target: 'daysInWeekTasksConfirmed',
-            targetType: 'array',
-            targetIndex: message.index,
-            value: true,
-          })
-
-          ack(conversationId)
-        }
-
         async function confirmToGenerateNextDayTasks(message: ConfirmNextDayTasksMessage, ack: any) {
           const conversationId = new ObjectId(message.conversationId)
 
@@ -476,7 +460,7 @@ export function registerSocketIo(server: HttpServer) {
           ack(conversationId)
         }
 
-        async function confirmNextDayTasks(message: ConfirmNextDayTasksMessage, ack: any) {
+        async function confirmDayInWeekTasks(message: ConfirmNextDayTasksMessage, ack: any) {
           const conversationId = new ObjectId(message.conversationId)
 
           weeklyPlanningWorkflow.runWorkflow({

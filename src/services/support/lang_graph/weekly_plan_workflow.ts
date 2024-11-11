@@ -9,7 +9,11 @@ import { formatDateToWeekDay, formatDateToWeekDayAndDate, formatDateToWeekDayAnd
 import { addDays, endOfDay, getDay, startOfDay, startOfWeek } from 'date-fns';
 import { WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
-import { MessageTypeAskForNextDayTasks, MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks, MessageTypeAskToConfirmFirstDayCoreTasks, MessageTypeAskToConfirmNextDayTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeAskToMoveToNextWeek, MessageTypePlainText, MessageTypeTextWithEvents } from '@common/consts/message-types';
+import {
+  MessageTypeAskForNextDayTasks,
+  MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks,
+  MessageTypeAskToConfirmFirstDayTasks, MessageTypeAskToConfirmNextDayTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeAskToMoveToNextWeek, MessageTypePlainText, MessageTypeTextWithEvents
+} from '@common/consts/message-types';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { emitConversationMessage } from '../socket.io.service';
@@ -262,7 +266,7 @@ export class WeeklyPlanningWorkflow {
         index: state.firstDayIndex,
         content: `Are you satisfied with your tasks for ${formatDateToWeekDay(firstDayDate, state.userInfo.preferences?.timezone)}?`,
       }
-      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayCoreTasks) // TODO: i18n.
+      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayTasks) // TODO: i18n.
 
       const daysInWeekTasksConfirmedAsked = [...state.daysInWeekTasksConfirmedAsked]
       daysInWeekTasksConfirmedAsked[state.firstDayIndex] = true
@@ -295,6 +299,7 @@ export class WeeklyPlanningWorkflow {
     if (notConfirmedDayIndex === -1 && !state.motivationMessage) {
       return {
         allDaysInWeekTasksConfirmed: true,
+        flowIsDone: true,
         motivationMessage: "This is motivation message lol. You have confirmed all tasks for this week. Enjoy your week!", // TODO: AI + i18n.
       }
     }
@@ -422,7 +427,9 @@ export class WeeklyPlanningWorkflow {
   }
 
   private decideMoreDaysFlow(state: WeeklyPlanningState) {
-    return state.daysInWeekTasksConfirmed[state.firstDayIndex] ? 'motivateUser' : 'generateMoreDays';
+    if (state.flowIsDone) return END
+
+    return state.allDaysInWeekTasksConfirmed ? 'motivateUser' : 'generateMoreDays';
   }
 
   async runWorkflow(initialState: Partial<WeeklyPlanningState> = {}, updateState?: UpdateState) {
@@ -482,6 +489,7 @@ type WeeklyPlanningState = {
   allDaysInWeekTasksConfirmed: boolean
   calendarEvents: string[]
   motivationMessage: string
+  flowIsDone: boolean
   messages: BaseMessage[]
 }
 
@@ -513,6 +521,7 @@ type WeekPlanStateType = {
   allDaysInWeekTasksConfirmed: LastValue<boolean>
   calendarEvents: LastValue<string[]>
   motivationMessage: LastValue<string>
+  flowIsDone: LastValue<boolean>
   messages: LastValue<Messages>
 }
 
@@ -545,6 +554,7 @@ const WeeklyPlanningAnnotation = Annotation.Root({
   allDaysInWeekTasksConfirmed: Annotation<boolean>(),
   calendarEvents: Annotation<string[]>(),
   motivationMessage: Annotation<string>(),
+  flowIsDone: Annotation<boolean>(),
   ...MessagesAnnotation.spec,
 })
 
