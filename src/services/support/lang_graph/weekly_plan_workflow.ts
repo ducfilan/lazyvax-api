@@ -408,7 +408,9 @@ export class WeeklyPlanningWorkflow {
       await this.sendMessage(state.conversationId, state.motivationMessage, MessageTypePlainText)
     }
 
-    return {}
+    return {
+      motivationMessage: null
+    }
   }
 
   private decideLastWeekPlanFlow(state: WeeklyPlanningState) {
@@ -525,7 +527,7 @@ type WeeklyPlanningState = {
   nextDayIndex: number
   allDaysInWeekTasksConfirmed: boolean
   calendarEvents: string[]
-  motivationMessage: string
+  motivationMessage: string | null
   flowIsDone: boolean
   messages: BaseMessage[]
 }
@@ -559,7 +561,7 @@ type WeeklyPlanStateType = {
   nextDayIndex: LastValue<number>
   allDaysInWeekTasksConfirmed: LastValue<boolean>
   calendarEvents: LastValue<string[]>
-  motivationMessage: LastValue<string>
+  motivationMessage: LastValue<string | null>
   flowIsDone: LastValue<boolean>
   messages: LastValue<Messages>
 }
@@ -594,7 +596,7 @@ const WeeklyPlanningAnnotation = Annotation.Root({
   nextDayIndex: Annotation<number>(),
   allDaysInWeekTasksConfirmed: Annotation<boolean>(),
   calendarEvents: Annotation<string[]>(),
-  motivationMessage: Annotation<string>(),
+  motivationMessage: Annotation<string | null>(),
   flowIsDone: Annotation<boolean>(),
   ...MessagesAnnotation.spec,
 })
