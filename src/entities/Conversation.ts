@@ -1,4 +1,4 @@
-import { MilestoneSource } from "@/common/types/types"
+import { ConversationType, MilestoneSource } from "@/common/types/types"
 import { ObjectId } from "mongodb"
 
 export type Conversation = {
@@ -6,9 +6,11 @@ export type Conversation = {
   userId?: ObjectId,
   type: string,
   meta?: {
-    startDate: Date,
-    progress?: number,
-    todoTasks?: TodoTask[],
+    type: ConversationType
+    meta: {
+      startDate: Date,
+      todoTasks?: TodoTask[],
+    }
   },
   unreadCount: number,
   participants: Participant[],
@@ -16,6 +18,8 @@ export type Conversation = {
 
 export type TodoTask = {
   title: string,
+  description?: string,
+  progress?: number,
   completed: boolean,
   dueDate: Date,
 }

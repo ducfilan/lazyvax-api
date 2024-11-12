@@ -44,13 +44,14 @@ export default class ConversationsDao {
                       meta: {
                         properties: {
                           startDate: { "bsonType": "date" },
-                          progress: { bsonType: 'int' },
                           todoTasks: {
                             bsonType: 'array',
                             items: {
                               bsonType: 'object',
                               properties: {
                                 title: { bsonType: 'string' },
+                                description: { bsonType: 'string' },
+                                progress: { bsonType: 'int' },
                                 completed: { bsonType: 'bool' },
                                 dueDate: { bsonType: 'date' }
                               },
