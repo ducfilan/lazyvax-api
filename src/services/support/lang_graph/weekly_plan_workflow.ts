@@ -11,8 +11,16 @@ import { WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
 import {
   MessageTypeAskForNextDayTasks,
-  MessageTypeAskForRoutine, MessageTypeAskForTimezone, MessageTypeAskForWeekToDoTasks,
-  MessageTypeAskToConfirmFirstDayTasks, MessageTypeAskToConfirmNextDayTasks, MessageTypeAskToConfirmWeekToDoTasks, MessageTypeAskToGenerateWeekPlan, MessageTypeAskToMoveToNextWeek, MessageTypePlainText, MessageTypeTextWithEvents
+  MessageTypeAskForRoutine,
+  MessageTypeAskForTimezone,
+  MessageTypeAskForWeekToDoTasks,
+  MessageTypeAskToConfirmFirstDayTasks,
+  MessageTypeAskToConfirmNextDayTasks,
+  MessageTypeAskToConfirmWeekToDoTasks,
+  MessageTypeAskToGenerateWeekPlan,
+  MessageTypeAskToMoveToNextWeek,
+  MessageTypePlainText,
+  MessageTypeTextWithEvents
 } from '@common/consts/message-types';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
@@ -29,7 +37,7 @@ import logger from '@/common/logger';
 export class WeeklyPlanningWorkflow {
   private model: BaseLanguageModel;
   private checkpointer: MongoDBSaver;
-  private graph: CompiledStateGraph<WeeklyPlanningState, UpdateType<WeekPlanStateType>, NodeType, WeekPlanStateType, WeekPlanStateType, StateDefinition>;
+  private graph: CompiledStateGraph<WeeklyPlanningState, UpdateType<WeeklyPlanStateType>, NodeType, WeeklyPlanStateType, WeeklyPlanStateType, StateDefinition>;
 
   constructor(model?: BaseLanguageModel) {
     this.model = model || new ChatOpenAI({
@@ -211,19 +219,23 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`generateFirstDayTasks: ${state.firstDayIndex}`)
     // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
     // TODO: What if it's Sunday?
+    const newState: Partial<WeeklyPlanningState> = {}
     let firstDayIndex = state.firstDayIndex ?? (getDay(new Date()) + 6) % 7 // TODO: Start on Monday, what if start on Sunday.
-    if (isEvening(new Date(), state.userInfo.preferences?.timezone)) {
+    const isLateOnToday = isEvening(new Date(), state.userInfo.preferences?.timezone)
+    if (isLateOnToday && !state.isLateTodayNoticeInformed) {
       await this.sendMessage(state.conversationId, "It's getting late. We will plan for tomorrow.", MessageTypePlainText) // TODO: i18n.
+      newState.isLateTodayNoticeInformed = true
       firstDayIndex += 1
     }
 
-    if (firstDayIndex > 6) {
+    if (firstDayIndex > 6 && !state.isWeekOverNoticeInformed) {
       await this.sendMessage(state.conversationId, "This week is over. Let's move to next week.", MessageTypeAskToMoveToNextWeek) // TODO: AI + i18n.
-
-      return {}
+      newState.isWeekOverNoticeInformed = true
+      newState.flowIsDone = true
+      return newState
     }
 
-    if (!state.weekToDoTasksConfirmed || state.daysInWeekTasksSuggested[firstDayIndex]) return {}
+    if (!state.weekToDoTasksConfirmed || state.daysInWeekTasksSuggested[firstDayIndex]) return newState
 
     await this.sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(state.weekStartDate, firstDayIndex), state.userInfo.preferences?.timezone)}...`, MessageTypePlainText)
 
@@ -235,7 +247,7 @@ export class WeeklyPlanningWorkflow {
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
-      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone),
+      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, isLateOnToday ? "tomorrow" : "today"),
     })
     logger.debug(`generateFirstDayTasks prompt: ${JSON.stringify(prompt)}`)
     const result = await this.model.invoke(prompt)
@@ -253,6 +265,7 @@ export class WeeklyPlanningWorkflow {
     daysInWeekTasksConfirmedToSuggest[firstDayIndex] = true
 
     return {
+      ...newState,
       firstDayIndex,
       daysInWeekTasksSuggested,
       daysInWeekTasksAskedToSuggest,
@@ -262,7 +275,11 @@ export class WeeklyPlanningWorkflow {
 
   private async checkFirstDayTasksSatisfied(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`checkFirstDayTasksSatisfied: ${state.firstDayIndex}`)
-    if (!state.daysInWeekTasksSuggested[state.firstDayIndex] || state.daysInWeekTasksConfirmedAsked[state.firstDayIndex]) return {}
+    if (
+      !state.daysInWeekTasksSuggested[state.firstDayIndex] ||
+      state.daysInWeekTasksConfirmedAsked[state.firstDayIndex] ||
+      state.flowIsDone
+    ) return {}
 
     const firstDayDate = addDays(state.weekStartDate, state.firstDayIndex)
     if (!state.daysInWeekTasksConfirmedAsked[state.firstDayIndex]) {
@@ -299,11 +316,12 @@ export class WeeklyPlanningWorkflow {
 
   private async generateMoreDays(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`generateMoreDays: ${state.daysInWeekTasksConfirmed}`)
+    if (state.flowIsDone) return {}
+
     let notConfirmedDayIndex = state.daysInWeekTasksConfirmed.findIndex((confirmation, i) => confirmation === null && i > state.firstDayIndex)
     if (notConfirmedDayIndex === -1 && !state.motivationMessage) {
       return {
         allDaysInWeekTasksConfirmed: true,
-        flowIsDone: true,
         motivationMessage: "This is motivation message lol. You have confirmed all tasks for this week. Enjoy your week!", // TODO: AI + i18n.
       }
     }
@@ -339,7 +357,7 @@ export class WeeklyPlanningWorkflow {
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDateTime(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nPlanned tasks:\n{plannedTasks}\n### Instructions: ###\n{instructions}`],
+      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDate(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nPlanned tasks:\n{plannedTasks}\n### Instructions: ###\n{instructions}`],
     ]).formatMessages({
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
@@ -434,6 +452,8 @@ export class WeeklyPlanningWorkflow {
   }
 
   private decideMoreDaysFlow(state: WeeklyPlanningState) {
+    if (state.motivationMessage) return 'motivateUser'
+
     if (state.flowIsDone) return END
 
     if (state.daysInWeekTasksAskedToSuggest[state.nextDayIndex] && !state.daysInWeekTasksConfirmedToSuggest[state.nextDayIndex]) {
@@ -494,6 +514,8 @@ type WeeklyPlanningState = {
   weekToDoTasksConfirmAsked: boolean
   weekToDoTasksConfirmed: boolean
   firstDayIndex: number
+  isLateTodayNoticeInformed: boolean
+  isWeekOverNoticeInformed: boolean
   daysInWeekTasks: string[][]
   daysInWeekTasksSuggested: boolean[]
   daysInWeekTasksAskedToSuggest: boolean[]
@@ -510,7 +532,7 @@ type WeeklyPlanningState = {
 
 type NodeType = typeof START | "checkLastWeekPlan" | "selectPlanType" | "checkRoutineAndHabits" | "askForHabits" | "checkWeekToDoTasks" | "askForWeekToDoTasks" | "confirmWeekToDoTasks" | "getUserTimezone" | "checkCalendarEvents" | "generateFirstDayTasks" | "checkFirstDayTasksSatisfied" | "generateMoreDays" | "motivateUser"
 
-type WeekPlanStateType = {
+type WeeklyPlanStateType = {
   weekStartDate: LastValue<Date>
   userInfo: LastValue<User>
   conversationId: LastValue<ObjectId>
@@ -526,6 +548,8 @@ type WeekPlanStateType = {
   weekToDoTasksConfirmAsked: LastValue<boolean>
   weekToDoTasksConfirmed: LastValue<boolean>
   firstDayIndex: LastValue<number>
+  isLateTodayNoticeInformed: LastValue<boolean>
+  isWeekOverNoticeInformed: LastValue<boolean>
   daysInWeekTasks: LastValue<string[][]>
   daysInWeekTasksSuggested: LastValue<boolean[]>
   daysInWeekTasksAskedToSuggest: LastValue<boolean[]>
@@ -540,7 +564,7 @@ type WeekPlanStateType = {
   messages: LastValue<Messages>
 }
 
-type NodeOutput = Partial<WeeklyPlanningState> | NodeType | typeof END
+type NodeOutput = Partial<WeeklyPlanningState>
 
 const WeeklyPlanningAnnotation = Annotation.Root({
   weekStartDate: Annotation<Date>(),
@@ -559,6 +583,8 @@ const WeeklyPlanningAnnotation = Annotation.Root({
   weekToDoTasksConfirmed: Annotation<boolean>(),
   firstDayCoreTasks: Annotation<string[]>(),
   firstDayIndex: Annotation<number>(),
+  isLateTodayNoticeInformed: Annotation<boolean>(),
+  isWeekOverNoticeInformed: Annotation<boolean>(),
   daysInWeekTasks: Annotation<string[][]>(),
   daysInWeekTasksSuggested: Annotation<boolean[]>(),
   daysInWeekTasksAskedToSuggest: Annotation<boolean[]>(),
