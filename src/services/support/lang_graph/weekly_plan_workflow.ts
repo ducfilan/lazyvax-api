@@ -6,12 +6,14 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
 import { getEvents } from '@/services/api/events.services';
 import {
+  dateInTimeZone,
   formatDateToWeekDay,
   formatDateToWeekDayAndDate,
   formatDateToWeekDayAndDateTime,
   formatDateToWeekDayAndTime,
   getWeekInfo,
   isEvening,
+  startOfDayInTimeZone,
 } from '@/common/utils/dateUtils';
 import { addDays, addWeeks, endOfDay, getDay, isSameWeek, startOfDay } from 'date-fns';
 import { WeekPlanType } from '@/common/types/types';
@@ -245,16 +247,35 @@ export class WeeklyPlanningWorkflow {
     // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
     // TODO: What if it's Sunday?
     const newState: Partial<WeeklyPlanningState> = {}
-    const isPlanThisWeek = isSameWeek(new Date(), new Date(state.weekStartDate))
-    let firstDayIndex = state.firstDayIndex ?? isPlanThisWeek ? ((getDay(new Date()) + 6) % 7) : 0 // TODO: Start on Monday, what if start on Sunday.
-    let dateTimeToStartPlanning: Date = isPlanThisWeek ? new Date() : startOfDay(new Date(state.weekStartDate))
-    const isLateOnToday = isEvening(new Date(), state.userInfo.preferences?.timezone)
+    const timezone = state.userInfo.preferences?.timezone
+    const today = new Date()
+    const weekStartDate = new Date(state.weekStartDate)
+    const isPlanThisWeek = isSameWeek(today, weekStartDate)
+
+    // Calculate initial first day index (0 = Monday, 6 = Sunday)
+    let firstDayIndex = state.firstDayIndex ?? (isPlanThisWeek ? (getDay(today) + 6) % 7 : 0)
+
+    // Set initial planning date/time
+    let dateTimeToStartPlanning = isPlanThisWeek
+      ? dateInTimeZone(today, timezone)
+      : startOfDayInTimeZone(weekStartDate, timezone)
+
+    // Check if it's late and adjust planning time if needed
+    const isLateOnToday = isEvening(today, timezone)
     if (isLateOnToday && !state.isLateTodayNoticeInformed) {
-      await this.sendMessage(state.conversationId, "It's getting late. We will plan for tomorrow.", MessageTypePlainText) // TODO: i18n.
+      await this.sendMessage(
+        state.conversationId,
+        "It's getting late. We will plan for tomorrow.",
+        MessageTypePlainText
+      )
       newState.isLateTodayNoticeInformed = true
       firstDayIndex += 1
+
       if (isPlanThisWeek) {
-        dateTimeToStartPlanning = startOfDay(addDays(dateTimeToStartPlanning, 1))
+        dateTimeToStartPlanning = startOfDayInTimeZone(
+          addDays(dateTimeToStartPlanning, 1),
+          timezone
+        )
       }
     }
 
@@ -271,7 +292,7 @@ export class WeeklyPlanningWorkflow {
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDateTime(dateTimeToStartPlanning, state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
+      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDateTime(dateTimeToStartPlanning)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
     ]).formatMessages({
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),

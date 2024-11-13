@@ -1,4 +1,4 @@
-import { differenceInYears, endOfWeek, format, formatDuration, intervalToDuration, startOfWeek, subWeeks } from 'date-fns'
+import { differenceInYears, endOfWeek, format, formatDuration, intervalToDuration, startOfDay, startOfWeek, subWeeks } from 'date-fns'
 import { DefaultLangCode, LiteralDurationsExtractRegex, i18n } from "@/common/consts/constants"
 import { langCodeToDateFnsLocale } from './stringUtils'
 import { WeekInfo } from '@/common/types/types'
@@ -116,29 +116,35 @@ export function getWeekInfo(dateInTheWeek: Date, startOnMonday: boolean = true, 
   }
 }
 
+export function startOfDayInTimeZone(date: Date, timeZone?: string): Date {
+  if (!timeZone) return startOfDay(date)
+
+  return startOfDay(toZonedTime(date, timeZone))
+}
+
 export function formatDateToWeekDayAndTime(date: Date, timeZone?: string, longDay: boolean = false): string {
-  if (!timeZone) return format(date, longDay ? "EEEE, HH:mm" : "EEE, HH:mm") + " (UTC)"
+  if (!timeZone) return format(date, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
 
   const zonedDate = toZonedTime(date, timeZone)
   return format(zonedDate, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
 }
 
 export function formatDateToWeekDayAndDateTime(date: Date, timeZone?: string, longDay: boolean = false): string {
-  if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy HH:mm" : "EEE, MMMM do yyyy HH:mm") + " (UTC)"
+  if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy HH:mm" : "EEE, MMMM do yyyy HH:mm")
 
   const zonedDate = toZonedTime(date, timeZone)
   return format(zonedDate, longDay ? "EEEE, MMMM do yyyy HH:mm" : "EEE, MMMM do yyyy HH:mm")
 }
 
 export function formatDateToWeekDayAndDate(date: Date, timeZone?: string, longDay: boolean = false): string {
-  if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy") + " (UTC)"
+  if (!timeZone) return format(date, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy")
 
   const zonedDate = toZonedTime(date, timeZone)
   return format(zonedDate, longDay ? "EEEE, MMMM do yyyy" : "EEE, MMMM do yyyy")
 }
 
 export function formatDateToWeekDay(date: Date, timeZone?: string, longDay: boolean = true): string {
-  if (!timeZone) return format(date, longDay ? "EEEE" : "EEE") + " (UTC)"
+  if (!timeZone) return format(date, longDay ? "EEEE" : "EEE")
 
   const zonedDate = toZonedTime(date, timeZone)
   return format(zonedDate, longDay ? "EEEE" : "EEE")
@@ -154,4 +160,10 @@ export function isEvening(date?: Date, timeZone?: string): boolean {
   const zonedDate = timeZone ? toZonedTime(date, timeZone) : date
   const hour = zonedDate.getHours()
   return hour >= 17
+}
+
+export function dateInTimeZone(date: Date, timeZone?: string): Date {
+  if (!timeZone) return date
+
+  return toZonedTime(date, timeZone)
 }
