@@ -36,6 +36,14 @@ export const validateApiUpdateUser = [
       return true
     })
     .bail(),
+  check('preferences.timezone')
+    .optional()
+    .isString()
+    .bail(),
+  check('preferences.dob')
+    .optional()
+    .isDate()
+    .customSanitizer(value => new Date(value)),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
