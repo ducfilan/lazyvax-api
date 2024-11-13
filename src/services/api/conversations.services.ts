@@ -131,7 +131,7 @@ export async function getConversationByType(userId: ObjectId, type: string, meta
 
 export async function getWeeklyPlanTodoTasks(conversationId: ObjectId): Promise<TodoTask[]> {
   const conversation = await getConversationById(conversationId)
-  return conversation?.meta?.todoTasks || []
+  return conversation?.meta?.meta?.todoTasks || []
 }
 
 export async function generateFirstMessages(conversationType: string, locale: string): Promise<I18n[]> {

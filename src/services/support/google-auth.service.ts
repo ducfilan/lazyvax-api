@@ -27,6 +27,8 @@ const oAuth2Client = new OAuth2Client({
 
 export const isGoogleTokenValid = async (serviceAccessToken: string, requestEmail: string) => {
   try {
+    if (!serviceAccessToken || !requestEmail) return false
+
     const { email: tokenInfoEmail, expiry_date: expiryDate } = await oAuth2Client.getTokenInfo(serviceAccessToken)
     return tokenInfoEmail?.toLowerCase() === requestEmail.toLowerCase() && expiryDate > Date.now()
   } catch (error) {
