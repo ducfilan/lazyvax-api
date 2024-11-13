@@ -240,7 +240,7 @@ export class WeeklyPlanningWorkflow {
 
   private async generateFirstDayTasks(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`generateFirstDayTasks: ${state.firstDayIndex}`)
-    if (state.planningIsDone) return {}
+    if (state.planningIsDone || !state.weekToDoTasksConfirmed) return {}
 
     // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
     // TODO: What if it's Sunday?
@@ -265,7 +265,7 @@ export class WeeklyPlanningWorkflow {
       return newState
     }
 
-    if (!state.weekToDoTasksConfirmed || state.daysInWeekTasksSuggested[firstDayIndex]) return newState
+    if (state.daysInWeekTasksSuggested[firstDayIndex]) return newState
 
     await this.sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), firstDayIndex), state.userInfo.preferences?.timezone)}...`, MessageTypePlainText)
 
