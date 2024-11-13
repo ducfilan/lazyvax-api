@@ -42,8 +42,7 @@ export const validateApiUpdateUser = [
     .bail(),
   check('preferences.dob')
     .optional()
-    .isDate()
-    .customSanitizer(value => new Date(value)),
+    .customSanitizer(value => value ? new Date(value) : undefined),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
