@@ -277,7 +277,7 @@ export class WeeklyPlanningWorkflow {
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
-      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, isLateOnToday ? "tomorrow" : "today"),
+      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, "today"),
     })
     logger.debug(`generateFirstDayTasks prompt: ${JSON.stringify(prompt)}`)
     const result = await this.model.invoke(prompt)
