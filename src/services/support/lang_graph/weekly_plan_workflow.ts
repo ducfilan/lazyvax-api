@@ -272,10 +272,7 @@ export class WeeklyPlanningWorkflow {
       firstDayIndex += 1
 
       if (isPlanThisWeek) {
-        dateTimeToStartPlanning = startOfDayInTimeZone(
-          addDays(dateTimeToStartPlanning, 1),
-          timezone
-        )
+        dateTimeToStartPlanning = startOfDay(addDays(dateTimeToStartPlanning, 1))
       }
     }
 
@@ -288,7 +285,7 @@ export class WeeklyPlanningWorkflow {
 
     if (state.daysInWeekTasksSuggested[firstDayIndex]) return newState
 
-    await this.sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), firstDayIndex), state.userInfo.preferences?.timezone)}...`, MessageTypePlainText)
+    await this.sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), firstDayIndex), timezone)}...`, MessageTypePlainText)
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
@@ -298,7 +295,7 @@ export class WeeklyPlanningWorkflow {
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
-      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, "today"),
+      instructions: dayCoreTasksInstruction(timezone, "today"),
     })
     logger.debug(`generateFirstDayTasks prompt: ${JSON.stringify(prompt)}`)
     const result = await this.model.invoke(prompt)
