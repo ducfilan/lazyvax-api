@@ -61,6 +61,7 @@ export const MaxPaginationLimit = 100
 export const DefaultMostItemsInteractionsLimit = 5
 export const MaxRegistrationsStep = 8
 export const GoalMaxLength = 255
+export const AspectMaxLength = 255
 export const StudyCourseLength = 255
 export const OccupationLength = 255
 export const AgeGroupMaxLength = 10

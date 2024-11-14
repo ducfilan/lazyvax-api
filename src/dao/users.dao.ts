@@ -1,14 +1,22 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/mongodb-client.config'
-import { AgeGroupMaxLength, BotUserId, BotUserName, CacheKeyUser, ConversationTypeObjective, GoalMaxLength, I18nDbCodeFirstConversationDescription, I18nDbCodeFirstConversationTitle, I18nDbCodeFirstMessages, OccupationLength, StudyCourseLength, SupportingLanguages, UsersCollectionName } from '@/common/consts/constants'
+import {
+  AgeGroupMaxLength,
+  AspectMaxLength,
+  BotUserId,
+  BotUserName,
+  CacheKeyUser,
+  GoalMaxLength,
+  I18nDbCodeFirstMessages,
+  OccupationLength,
+  StudyCourseLength,
+  SupportingLanguages,
+  UsersCollectionName
+} from '@/common/consts/constants'
 import { User } from '@/entities/User'
-import ConversationsDao from './conversations.dao'
-import { Conversation } from '@/entities/Conversation'
 import { LangCode } from '@/common/types/types'
-import MessagesDao from './messages.dao'
 import { Message, MessageGroupBuilder } from '@/entities/Message'
 import I18nDao from './i18n'
-import { I18n } from '@/entities/I18n'
 import { getGreetingTime } from '@/common/utils/stringUtils'
 import { delCache } from '@/common/redis'
 import logger from '@/common/logger'
@@ -58,6 +66,7 @@ export default class UsersDao {
                   degree: { bsonType: 'string', 'enum': ['k-12', 'undergraduate', 'graduate'] },
                   studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
                   futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } },
+                  aspects: { bsonType: 'array', items: { bsonType: 'string', maxLength: AspectMaxLength } },
                   dob: { bsonType: 'date' },
                   timezone: { bsonType: 'string' }
                 },
