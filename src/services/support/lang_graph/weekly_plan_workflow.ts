@@ -283,8 +283,9 @@ export class WeeklyPlanningWorkflow {
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDateTime(dateTimeToStartPlanning)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}`],
+      ["human", "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}"],
     ]).formatMessages({
+      now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning, timezone),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
@@ -323,11 +324,12 @@ export class WeeklyPlanningWorkflow {
       state.planningIsDone
     ) return {}
 
+    const timezone = state.userInfo.preferences?.timezone
     const firstDayDate = addDays(new Date(state.weekStartDate), state.firstDayIndex)
     if (!state.daysInWeekTasksConfirmedAsked[state.firstDayIndex]) {
       const content = {
         index: state.firstDayIndex,
-        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(firstDayDate, state.userInfo.preferences?.timezone)}?`,
+        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(firstDayDate, timezone)}?`,
       }
       await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayTasks) // TODO: i18n.
 
@@ -351,8 +353,8 @@ export class WeeklyPlanningWorkflow {
 
     const daysInWeekTasks = [...state.daysInWeekTasks ?? [[], [], [], [], [], [], []]]
     daysInWeekTasks[state.firstDayIndex] = firstDayEvents?.map(e => {
-      const startTime = formatDateToWeekDayAndTime(e.startDate, state.userInfo.preferences?.timezone)
-      const endTime = formatDateToWeekDayAndTime(e.endDate, state.userInfo.preferences?.timezone)
+      const startTime = formatDateToWeekDayAndTime(e.startDate, timezone)
+      const endTime = formatDateToWeekDayAndTime(e.endDate, timezone)
       const description = e.description ? ` (${e.description})` : ''
       return `${startTime} to ${endTime}: ${e.title}${description}`
     }) ?? []
@@ -373,9 +375,10 @@ export class WeeklyPlanningWorkflow {
       }
     }
 
+    const timezone = state.userInfo.preferences?.timezone
     if (!state.daysInWeekTasksAskedToSuggest[notConfirmedDayIndex]) {
       const content = {
-        content: `Do you want to have suggestions for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), state.userInfo.preferences?.timezone)}?`,
+        content: `Do you want to have suggestions for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)}?`,
         index: notConfirmedDayIndex,
       }
       await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskForNextDayTasks) // TODO: i18n.
@@ -398,23 +401,24 @@ export class WeeklyPlanningWorkflow {
 
     await this.sendMessage(
       state.conversationId,
-      `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), state.userInfo.preferences?.timezone)}...`,
+      `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)}...`,
       MessageTypePlainText
     )
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", `### Context: ###\nNow is ${formatDateToWeekDayAndDate(new Date(), state.userInfo.preferences?.timezone)}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nPlanned tasks:\n{plannedTasks}\n### Instructions: ###\n{instructions}`],
+      ["human", "### Context: ###Now is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nPlanned tasks:\n{plannedTasks}\n### Instructions: ###\n{instructions}"],
     ]).formatMessages({
+      now: formatDateToWeekDayAndDate(new Date(), timezone),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
       plannedTasks: state.daysInWeekTasks?.map((t, i) => {
         if (t.length === 0) return ""
-        return `### ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), i), state.userInfo.preferences?.timezone)} ###\n${t.map(t => `- ${t}`).join('\n')}`
+        return `### ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), i), timezone)} ###\n${t.map(t => `- ${t}`).join('\n')}`
       }).join('\n\n') ?? "",
-      instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), state.userInfo.preferences?.timezone)),
+      instructions: dayCoreTasksInstruction(timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)),
     })
     logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
@@ -428,7 +432,7 @@ export class WeeklyPlanningWorkflow {
     if (!state.daysInWeekTasksConfirmedAsked[notConfirmedDayIndex]) {
       const content = {
         index: notConfirmedDayIndex,
-        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), state.userInfo.preferences?.timezone)}?`,
+        content: `Are you satisfied with your tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)}?`,
       }
       await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmNextDayTasks) // TODO: i18n.
 

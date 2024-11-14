@@ -1,3 +1,4 @@
+import { Env, Envs } from "@/common/consts/constants";
 import logger from "@/common/logger";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "@langchain/openai";
@@ -12,11 +13,13 @@ const models = {
     modelName: 'gpt-4o-mini',
     temperature: 0.6,
     cache: true,
+    verbose: Env === Envs.dev,
   }),
   [ModelNameChatGPT4o]: new ChatOpenAI({
-    modelName: 'gpt-4o-mini',
+    modelName: 'gpt-4o',
     temperature: 0.6,
     cache: true,
+    verbose: Env === Envs.dev,
   })
 }
 

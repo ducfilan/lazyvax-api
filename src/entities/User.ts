@@ -25,6 +25,8 @@ export type Preference = {
   degree?: string,
   studyCourse?: string,
   futureSelf?: string[],
+  aspects?: string[],
+  workLifeBalance?: number,
   timezone?: string,
   dob?: Date
 }
