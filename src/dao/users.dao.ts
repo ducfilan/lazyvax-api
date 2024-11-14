@@ -20,6 +20,7 @@ import I18nDao from './i18n'
 import { getGreetingTime } from '@/common/utils/stringUtils'
 import { delCache } from '@/common/redis'
 import logger from '@/common/logger'
+import { workLifeBalanceTypes } from '@/common/consts/shared'
 
 let _users: Collection<User>
 let _db: Db
@@ -67,6 +68,7 @@ export default class UsersDao {
                   studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
                   futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } },
                   aspects: { bsonType: 'array', items: { bsonType: 'string', maxLength: AspectMaxLength } },
+                  workLifeBalance: { bsonType: 'int', 'enum': workLifeBalanceTypes },
                   dob: { bsonType: 'date' },
                   timezone: { bsonType: 'string' }
                 },
