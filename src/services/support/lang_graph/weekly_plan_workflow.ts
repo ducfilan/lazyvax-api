@@ -43,19 +43,13 @@ import { RunnableConfig } from '@langchain/core/runnables';
 import { dayCoreTasksInstruction, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
+import { getModel, ModelNameChatGPT4o } from './model_repo';
 
 export class WeeklyPlanningWorkflow {
-  private model: BaseLanguageModel;
   private checkpointer: MongoDBSaver;
   private graph: CompiledStateGraph<WeeklyPlanningState, UpdateType<WeeklyPlanStateType>, NodeType, WeeklyPlanStateType, WeeklyPlanStateType, StateDefinition>;
 
-  constructor(model?: BaseLanguageModel) {
-    this.model = model || new ChatOpenAI({
-      modelName: 'gpt-4o-mini',
-      temperature: 0.6,
-      cache: true,
-    })
-
+  constructor() {
     this.checkpointer = new MongoDBSaver({ client: getDbClient(), dbName: DatabaseName })
 
     const builder = new StateGraph(WeeklyPlanningAnnotation)
@@ -298,7 +292,7 @@ export class WeeklyPlanningWorkflow {
       instructions: dayCoreTasksInstruction(timezone, "today"),
     })
     logger.debug(`generateFirstDayTasks prompt: ${JSON.stringify(prompt)}`)
-    const result = await this.model.invoke(prompt)
+    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
     logger.debug(`generateFirstDayTasks result: ${result.content}`)
 
     await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
@@ -423,7 +417,7 @@ export class WeeklyPlanningWorkflow {
       instructions: dayCoreTasksInstruction(state.userInfo.preferences?.timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), state.userInfo.preferences?.timezone)),
     })
     logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
-    const result = await this.model.invoke(prompt)
+    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
     logger.debug(`generateMoreDays result: ${result.content}`)
 
     await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
