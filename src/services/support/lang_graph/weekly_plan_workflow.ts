@@ -40,7 +40,7 @@ import { getHabits } from '@/services/api/habits.services';
 import { getConversationById } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { dayCoreTasksInstruction, systemMessageShort, userInformationPrompt } from './prompts';
+import { dayTasksSuggestInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
@@ -242,20 +242,20 @@ export class WeeklyPlanningWorkflow {
     // TODO: What if it's Sunday?
     const newState: Partial<WeeklyPlanningState> = {}
     const timezone = state.userInfo.preferences?.timezone
-    const today = new Date()
+    const now = new Date()
     const weekStartDate = new Date(state.weekStartDate)
-    const isPlanThisWeek = isSameWeek(today, weekStartDate)
+    const isPlanThisWeek = isSameWeek(now, weekStartDate)
 
     // Calculate initial first day index (0 = Monday, 6 = Sunday)
-    let firstDayIndex = state.firstDayIndex ?? (isPlanThisWeek ? (getDay(today) + 6) % 7 : 0)
+    let firstDayIndex = state.firstDayIndex ?? (isPlanThisWeek ? ((getDay(now) + 6) % 7) : 0)
 
     // Set initial planning date/time
     let dateTimeToStartPlanning = isPlanThisWeek
-      ? dateInTimeZone(today, timezone)
+      ? dateInTimeZone(now, timezone)
       : startOfDayInTimeZone(weekStartDate, timezone)
 
     // Check if it's late and adjust planning time if needed
-    const isLateOnToday = isEvening(today, timezone)
+    const isLateOnToday = isEvening(now, timezone)
     if (isLateOnToday && !state.isLateTodayNoticeInformed) {
       await this.sendMessage(
         state.conversationId,
@@ -285,12 +285,12 @@ export class WeeklyPlanningWorkflow {
       ["system", systemMessageShort],
       ["human", "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}"],
     ]).formatMessages({
-      now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning, timezone),
+      now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
-      instructions: dayCoreTasksInstruction(timezone, "today"),
+      instructions: dayTasksSuggestInstruction(timezone, "today"),
     })
     logger.debug(`generateFirstDayTasks prompt: ${JSON.stringify(prompt)}`)
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
@@ -344,23 +344,6 @@ export class WeeklyPlanningWorkflow {
     if (!state.daysInWeekTasksConfirmed[state.firstDayIndex]) {
       return {}
     }
-
-    const firstDayEvents = await getEvents({
-      userId: state.userInfo._id,
-      from: startOfDay(firstDayDate),
-      to: endOfDay(firstDayDate),
-    })
-
-    const daysInWeekTasks = [...state.daysInWeekTasks ?? [[], [], [], [], [], [], []]]
-    daysInWeekTasks[state.firstDayIndex] = firstDayEvents?.map(e => {
-      const startTime = formatDateToWeekDayAndTime(e.startDate, timezone)
-      const endTime = formatDateToWeekDayAndTime(e.endDate, timezone)
-      const description = e.description ? ` (${e.description})` : ''
-      return `${startTime} to ${endTime}: ${e.title}${description}`
-    }) ?? []
-    return {
-      daysInWeekTasks,
-    }
   }
 
   private async generateMoreDays(state: WeeklyPlanningState): Promise<NodeOutput> {
@@ -407,18 +390,15 @@ export class WeeklyPlanningWorkflow {
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", "### Context: ###Now is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nPlanned tasks:\n{plannedTasks}\n### Instructions: ###\n{instructions}"],
+      ["human", dayTasksSuggestTemplate],
     ]).formatMessages({
       now: formatDateToWeekDayAndDate(new Date(), timezone),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
-      plannedTasks: state.daysInWeekTasks?.map((t, i) => {
-        if (t.length === 0) return ""
-        return `### ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), i), timezone)} ###\n${t.map(t => `- ${t}`).join('\n')}`
-      }).join('\n\n') ?? "",
-      instructions: dayCoreTasksInstruction(timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)),
+      dislikeActivities: state.dislikeActivities?.map(a => `- ${a}`).join('\n') ?? "Not specified",
+      instructions: dayTasksSuggestInstruction(timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)),
     })
     logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
@@ -533,12 +513,12 @@ export class WeeklyPlanningWorkflow {
     }
 
     const lastState = (await this.checkpointer.get(config))?.channel_values ?? {
-      daysInWeekTasks: [[], [], [], [], [], [], []],
       daysInWeekTasksConfirmedAsked: [false, false, false, false, false, false, false],
       daysInWeekTasksAskedToSuggest: [false, false, false, false, false, false, false],
       daysInWeekTasksSuggested: [false, false, false, false, false, false, false],
       daysInWeekTasksConfirmedToSuggest: [false, false, false, false, false, false, false],
       daysInWeekTasksConfirmed: [null, null, null, null, null, null, null],
+      dislikeActivities: [],
     }
 
     try {
@@ -558,7 +538,11 @@ export class WeeklyPlanningWorkflow {
 
       if (updateState) {
         if (updateState.targetType === 'array') {
-          lastState[updateState.target][updateState.targetIndex] = updateState.value
+          if (updateState.targetIndex !== undefined) {
+            lastState[updateState.target][updateState.targetIndex] = updateState.value
+          } else {
+            (lastState[updateState.target] as string[]).push(updateState.value)
+          }
         } else {
           lastState[updateState.target] = updateState.value
         }
@@ -591,7 +575,7 @@ type WeeklyPlanningState = {
   firstDayIndex: number
   isLateTodayNoticeInformed: boolean
   isWeekOverNoticeInformed: boolean
-  daysInWeekTasks: string[][]
+  dislikeActivities: string[]
   daysInWeekTasksSuggested: boolean[]
   daysInWeekTasksAskedToSuggest: boolean[]
   daysInWeekTasksConfirmedToSuggest: boolean[]
@@ -627,7 +611,7 @@ type WeeklyPlanStateType = {
   firstDayIndex: LastValue<number>
   isLateTodayNoticeInformed: LastValue<boolean>
   isWeekOverNoticeInformed: LastValue<boolean>
-  daysInWeekTasks: LastValue<string[][]>
+  dislikeActivities: LastValue<string[]>
   daysInWeekTasksSuggested: LastValue<boolean[]>
   daysInWeekTasksAskedToSuggest: LastValue<boolean[]>
   daysInWeekTasksConfirmedToSuggest: LastValue<boolean[]>
@@ -664,7 +648,7 @@ const WeeklyPlanningAnnotation = Annotation.Root({
   firstDayIndex: Annotation<number>(),
   isLateTodayNoticeInformed: Annotation<boolean>(),
   isWeekOverNoticeInformed: Annotation<boolean>(),
-  daysInWeekTasks: Annotation<string[][]>(),
+  dislikeActivities: Annotation<string[]>(),
   daysInWeekTasksSuggested: Annotation<boolean[]>(),
   daysInWeekTasksAskedToSuggest: Annotation<boolean[]>(),
   daysInWeekTasksConfirmedToSuggest: Annotation<boolean[]>(),

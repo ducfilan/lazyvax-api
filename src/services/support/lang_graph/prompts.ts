@@ -29,20 +29,22 @@ export const userInformationPrompt = (user: User) => {
   const aspects = user.preferences?.aspects?.join(', ') ?? '(Not specified)'
   const workLifeBalance = user.preferences?.workLifeBalance ? WorkLifeBalanceOptions[user.preferences.workLifeBalance] : '(Not specified)'
 
-  return `User info: Age: ${age}, Gender: ${gender}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}, work-life balance: ${workLifeBalance}`
+  return `User info: Age: ${age}, Gender: ${gender}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}. For work-life balance, prefer: ${workLifeBalance}`
 }
 
-export const dayCoreTasksInstruction = (timezone: string, targetDay: string = "today") => [
-  `- Suggest 10 key activities for the user’s day ${targetDay} in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
-  "- Align with the properties of the user and tailor suggestions based on that",
+export const dayTasksSuggestTemplate = "### Context: ###Now is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nDisliked activities:\n{dislikeActivities}\n### Instructions: ###\n{instructions}"
+
+export const dayTasksSuggestInstruction = (timezone: string, targetDay: string = "today") => [
+  `- Suggest at least 10 activities through the day ${targetDay} in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
+  "- Align with user properties and tailor suggestions based on that",
   "- For some time ranges outside of fulltime job working time, suggest multiple activities to choose from, not necessary 1 time slot 1 activity.",
-  "- Don't suggest mediocre activities that is too obvious",
+  "- Don't suggest mediocre activities that is too small like brushing teeth, prepare for bed, etc.",
   "- Strictly follow my habits if it has specific day",
   `- Must be after now in ${timezone}`,
-  "- Align with the activities already on the calendar this week",
+  "- Avoid suggesting activities that user disliked",
+  "- Align with the activities already on the calendar this week, don't repeat them and avoid time conflicts",
   "- Make each activity description clear and actionable.",
   "- Set reasonable reminders, e.g., 10 and 0 minutes before reading, 10 and 1 minute before meetings.",
-  "- Exclude any activities already on the calendar and ensure no time conflicts.",
   `Respond with a valid JSON object. Format: [{
   "activity": "...",
   "start_time": ..., // Date and time, offset to ${timezone}

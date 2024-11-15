@@ -6,7 +6,7 @@ import app from '../../../src/app'
 import { injectTables } from '../../../src/common/configs/mongodb-client.config'
 import { resetDb } from '../../config/helpers'
 import { addUser, getById, mockUserFinishedSetup } from '../../repo/users'
-import { MaxRegistrationsStep } from '../../../src/common/consts'
+import { MaxRegistrationsStep } from '../../../src/common/consts/constants'
 
 let mongodbClient: MongoClient
 let request: supertest.SuperTest<supertest.Test>

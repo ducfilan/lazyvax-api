@@ -117,6 +117,11 @@ export type ConfirmNextDayTasksMessage = {
   confirmed: boolean,
 }
 
+export type DislikeActivityMessage = {
+  conversationId: string,
+  activity: string,
+}
+
 export type ConversationType = typeof ConversationTypes[number]
 
 export type GetEventFilters = {

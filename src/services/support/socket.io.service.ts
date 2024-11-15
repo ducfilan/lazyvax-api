@@ -4,13 +4,51 @@ import { Server as HttpServer } from 'http'
 import { Server as SocketServer, Socket } from "socket.io"
 import { getOrigins } from "@/app"
 import { isGoogleTokenValid, newGoogleOAuth2Client } from "./google-auth.service"
-import { AddActionMessage, AddMilestoneAndActionsMessage, ChatMessage, ConfirmFirstDayCoreTasksMessage, ConfirmNextDayTasksMessage, ConfirmWeekToDoTasksMessage, CreateConversationMessage, EditActionMessage, EditMilestoneMessage, FinishQuestionnairesMessage, GenerateWeekPlanFullMessage, JoinConversationMessage, MessageContent, NextMilestoneAndActionsMessage } from "@/common/types/types"
+import {
+  AddActionMessage,
+  AddMilestoneAndActionsMessage,
+  ChatMessage,
+  ConfirmNextDayTasksMessage,
+  ConfirmWeekToDoTasksMessage,
+  CreateConversationMessage,
+  DislikeActivityMessage,
+  EditActionMessage,
+  EditMilestoneMessage,
+  FinishQuestionnairesMessage,
+  GenerateWeekPlanFullMessage,
+  JoinConversationMessage,
+  MessageContent,
+  NextMilestoneAndActionsMessage
+} from "@/common/types/types"
 import { getUserByEmail } from "@services/api/users.services"
 import { queryGenerateWeekPlan } from '@services/api/ai.services'
 import { markMessageResponded, saveMessage } from "../api/messages.services"
-import { addMilestoneAction, addUserMilestone, createConversation, editMilestone, editMilestoneAction, generateFirstMessages, isParticipantInConversation, updateProgress } from "../api/conversations.services"
-import { BotUserId, BotUserName, CalendarSourceApp, DefaultLangCode, I18nDbCodeIntroduceHowItWorks, MilestoneSourceSuggestion, PlanTypeWeekInteractive } from "@common/consts/constants"
-import { MessageTypeAddMilestoneAndActions, MessageTypeAnswerWeekToDoTasks, MessageTypeNextMilestoneAndActions, MessageTypePlainText, MessageTypeRetryGetResponse } from "@common/consts/message-types"
+import {
+  addMilestoneAction,
+  addUserMilestone,
+  createConversation,
+  editMilestone,
+  editMilestoneAction,
+  generateFirstMessages,
+  isParticipantInConversation,
+  updateProgress
+} from "../api/conversations.services"
+import {
+  BotUserId,
+  BotUserName,
+  CalendarSourceApp,
+  DefaultLangCode,
+  I18nDbCodeIntroduceHowItWorks,
+  MilestoneSourceSuggestion,
+  PlanTypeWeekInteractive
+} from "@common/consts/constants"
+import {
+  MessageTypeAddMilestoneAndActions,
+  MessageTypeAnswerWeekToDoTasks,
+  MessageTypeNextMilestoneAndActions,
+  MessageTypePlainText,
+  MessageTypeRetryGetResponse
+} from "@common/consts/message-types"
 import I18nDao from "@/dao/i18n"
 import { Message, MessageGroupBuilder } from "@/entities/Message"
 import { ConversationBuilder } from "../utils/conversation.utils"
@@ -46,6 +84,7 @@ import {
   EventNameConfirmFirstDayCoreTasks,
   EventNameConfirmNextDayTasks,
   EventNameConfirmToGenerateNextDayTasks,
+  EventNameDislikeActivity
 } from "@/common/consts/event-names"
 
 interface ISocket extends Socket {
@@ -123,6 +162,7 @@ export function registerSocketIo(server: HttpServer) {
         socket.on(EventNameConfirmFirstDayCoreTasks, confirmDayInWeekTasks)
         socket.on(EventNameConfirmToGenerateNextDayTasks, confirmToGenerateNextDayTasks)
         socket.on(EventNameConfirmNextDayTasks, confirmDayInWeekTasks)
+        socket.on(EventNameDislikeActivity, dislikeActivity)
 
         socket.on('disconnect', () => {
           logger.info('User disconnected')
@@ -475,6 +515,19 @@ export function registerSocketIo(server: HttpServer) {
           })
 
           ack(conversationId)
+        }
+
+        async function dislikeActivity(message: DislikeActivityMessage, ack: any) {
+          const conversationId = new ObjectId(message.conversationId)
+
+          weeklyPlanningWorkflow.runWorkflow({
+            userInfo: socket.user,
+            conversationId,
+          }, {
+            target: 'dislikeActivities',
+            targetType: 'array',
+            value: message.activity,
+          })
         }
       })
     })
