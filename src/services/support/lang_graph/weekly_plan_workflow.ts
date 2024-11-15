@@ -108,14 +108,13 @@ export class WeeklyPlanningWorkflow {
     // TODO: Maybe this week so far if planning on Sunday.
     logger.debug(`checkLastWeekPlan`)
 
-    const lastWeekInfo = getWeekInfo(addWeeks(new Date(state.weekStartDate), -1))
+    const timeZone = state.userInfo.preferences?.timezone
+    const lastWeekInfo = getWeekInfo(addWeeks(new Date(state.weekStartDate), -1), timeZone)
     const lastWeekEvents = await getEvents({
       userId: state.userInfo._id,
       from: lastWeekInfo.weekStartDate,
       to: lastWeekInfo.weekEndDate,
     }) // TODO: More filters.
-
-    const timeZone = state.userInfo.preferences?.timezone
 
     return {
       lastWeekPlan: lastWeekEvents?.map(e => {
@@ -154,7 +153,7 @@ export class WeeklyPlanningWorkflow {
 
     return {
       hasRoutineOrHabits: habits?.length > 0,
-      habits: habits?.map(h => `${h.title} - ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${h.repeat.daysOfWeek ? "on " + buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
+      habits: habits?.map(h => `${h.title} - priority: ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${h.repeat.daysOfWeek ? "on " + buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
     }
   }
 
@@ -172,12 +171,12 @@ export class WeeklyPlanningWorkflow {
 
   private async checkCalendarEvents(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`checkCalendarEvents`)
-    const weekInfo = getWeekInfo(new Date(state.weekStartDate))
+    const weekInfo = getWeekInfo(new Date(state.weekStartDate), state.userInfo.preferences?.timezone)
     const calendarEvents = await getEvents({
       userId: state.userInfo._id,
       from: weekInfo.weekStartDate,
       to: weekInfo.weekEndDate,
-    })
+    }, { "startDate": 1 })
 
     return {
       calendarEvents: calendarEvents?.map(e => {

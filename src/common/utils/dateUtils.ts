@@ -1,8 +1,9 @@
-import { differenceInYears, endOfWeek, format, formatDuration, intervalToDuration, startOfDay, startOfWeek, subWeeks } from 'date-fns'
+import { differenceInYears, endOfWeek, format, formatDuration, getISOWeek, intervalToDuration, startOfDay, startOfWeek, subWeeks } from 'date-fns'
 import { DefaultLangCode, LiteralDurationsExtractRegex, i18n } from "@/common/consts/constants"
 import { langCodeToDateFnsLocale } from './stringUtils'
 import { WeekInfo } from '@/common/types/types'
-import { toZonedTime } from 'date-fns-tz'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
+import { daysInWeek } from 'date-fns/constants'
 
 export function getYesterday() {
   return new Date(new Date().setDate(new Date().getDate() - 1))
@@ -96,18 +97,20 @@ export function formatDurationFromMs(milliseconds: number, options?: {
   return formattedTime || i18n("common_few_seconds")
 }
 
-export function getWeekInfo(dateInTheWeek: Date, startOnMonday: boolean = true, endDateEndOfDay: boolean = true): WeekInfo {
-  const dayOffset = startOnMonday ? (dateInTheWeek.getDay() + 6) % 7 : dateInTheWeek.getDay();
-  const weekStartDate = new Date(dateInTheWeek.getFullYear(), dateInTheWeek.getMonth(), dateInTheWeek.getDate() - dayOffset);
-  const weekEndDate = new Date(weekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
-  if (endDateEndOfDay) {
-    weekEndDate.setHours(23, 59, 59, 999);
+export function getWeekInfo(dateInTheWeek: Date, timeZone?: string, startOnMonday: boolean = true, endDateEndOfDay: boolean = true): WeekInfo {
+  if (timeZone) {
+    dateInTheWeek = toZonedTime(dateInTheWeek, timeZone)
   }
 
-  const weekNumber = Math.ceil(
-    (weekStartDate.getTime() - new Date(weekStartDate.getFullYear(), 0, 1).getTime() + 1) /
-    (24 * 60 * 60 * 1000 * 7)
-  );
+  let weekStartDate = startOfWeek(dateInTheWeek, { weekStartsOn: startOnMonday ? 1 : 0 })
+  let weekEndDate = endOfWeek(dateInTheWeek, { weekStartsOn: startOnMonday ? 1 : 0 })
+
+  const weekNumber = getISOWeek(weekStartDate)
+
+  if (timeZone) {
+    weekStartDate = fromZonedTime(weekStartDate, timeZone)
+    weekEndDate = fromZonedTime(weekEndDate, timeZone)
+  }
 
   return {
     weekNumber,
