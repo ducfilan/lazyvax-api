@@ -242,15 +242,17 @@ export class WeeklyPlanningWorkflow {
     const newState: Partial<WeeklyPlanningState> = {}
     const timezone = state.userInfo.preferences?.timezone
     const now = new Date()
+    const nowInTimeZone = dateInTimeZone(now, timezone)
     const weekStartDate = new Date(state.weekStartDate)
-    const isPlanThisWeek = isSameWeek(now, weekStartDate)
+    const weekStartDateInTimeZone = dateInTimeZone(weekStartDate, timezone)
+    const isPlanThisWeek = isSameWeek(nowInTimeZone, weekStartDateInTimeZone, { weekStartsOn: 1 }) // TODO: Week starts on Monday.
 
     // Calculate initial first day index (0 = Monday, 6 = Sunday)
-    let firstDayIndex = state.firstDayIndex ?? (isPlanThisWeek ? ((getDay(now) + 6) % 7) : 0)
+    let firstDayIndex = state.firstDayIndex ?? (isPlanThisWeek ? ((getDay(nowInTimeZone) + 6) % 7) : 0)
 
     // Set initial planning date/time
     let dateTimeToStartPlanning = isPlanThisWeek
-      ? dateInTimeZone(now, timezone)
+      ? nowInTimeZone
       : startOfDayInTimeZone(weekStartDate, timezone)
 
     // Check if it's late and adjust planning time if needed
