@@ -27,6 +27,9 @@ export type Preference = {
   futureSelf?: string[],
   aspects?: string[],
   workLifeBalance?: number,
+  jobStatus?: number,
+  yearsOfExperience?: number,
+  maritalStatus?: number,
   timezone?: string,
   dob?: Date
 }
