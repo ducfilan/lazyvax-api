@@ -97,7 +97,7 @@ export function formatDurationFromMs(milliseconds: number, options?: {
   return formattedTime || i18n("common_few_seconds")
 }
 
-export function getWeekInfo(dateInTheWeek: Date, timeZone?: string, startOnMonday: boolean = true, endDateEndOfDay: boolean = true): WeekInfo {
+export function getWeekInfo(dateInTheWeek: Date, timeZone?: string, startOnMonday: boolean = true): WeekInfo {
   if (timeZone) {
     dateInTheWeek = toZonedTime(dateInTheWeek, timeZone)
   }

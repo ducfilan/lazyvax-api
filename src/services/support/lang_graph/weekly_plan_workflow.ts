@@ -40,7 +40,7 @@ import { getHabits } from '@/services/api/habits.services';
 import { getConversationById } from '@/services/api/conversations.services';
 import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { dayTasksSuggestInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
+import { dayTasksSuggestInstruction, dayTasksSuggestionFirstDayTemplate, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
@@ -257,7 +257,7 @@ export class WeeklyPlanningWorkflow {
 
     // Check if it's late and adjust planning time if needed
     const isLateOnToday = isEvening(now, timezone)
-    if (isLateOnToday && !state.isLateTodayNoticeInformed) {
+    if (isLateOnToday && isPlanThisWeek && !state.isLateTodayNoticeInformed) {
       await this.sendMessage(
         state.conversationId,
         "It's getting late. We will plan for tomorrow.",
@@ -284,12 +284,13 @@ export class WeeklyPlanningWorkflow {
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
-      ["human", "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}"],
+      ["human", dayTasksSuggestionFirstDayTemplate],
     ]).formatMessages({
       now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
+      calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
       instructions: dayTasksSuggestInstruction(timezone, "today"),
     })
@@ -396,6 +397,7 @@ export class WeeklyPlanningWorkflow {
       now: formatDateToWeekDayAndDate(new Date(), timezone),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
+      calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
       dislikeActivities: state.dislikeActivities?.map(a => `- ${a}`).join('\n') ?? "Not specified",

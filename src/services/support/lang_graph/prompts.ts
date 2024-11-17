@@ -84,7 +84,10 @@ export const userInformationPrompt = (user: User) => {
 };
 
 export const dayTasksSuggestTemplate =
-  "### Context: ###Now is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar this week:\n{calendarEvents}\nDisliked activities:\n{dislikeActivities}\n### Instructions: ###\n{instructions}";
+  "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\nDisliked activities:\n{dislikeActivities}\n### Instructions: ###\n{instructions}";
+
+export const dayTasksSuggestionFirstDayTemplate =
+  "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}";
 
 export const dayTasksSuggestInstruction = (
   timezone: string,
