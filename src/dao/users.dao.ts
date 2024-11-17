@@ -20,7 +20,7 @@ import I18nDao from './i18n'
 import { getGreetingTime } from '@/common/utils/stringUtils'
 import { delCache } from '@/common/redis'
 import logger from '@/common/logger'
-import { workLifeBalanceTypes } from '@/common/consts/shared'
+import { JobStatusMax, MaritalStatusMax, workLifeBalanceTypes } from '@/common/consts/shared'
 
 let _users: Collection<User>
 let _db: Db
@@ -64,6 +64,9 @@ export default class UsersDao {
                   gender: { bsonType: 'string', 'enum': ['male', 'female', 'other'] },
                   workerType: { bsonType: 'string', 'enum': ['individual', 'manager', 'both'] },
                   occupation: { bsonType: 'string', maxLength: OccupationLength },
+                  jobStatus: { bsonType: 'int', minimum: 0, maximum: JobStatusMax },
+                  yearsOfExperience: { bsonType: 'int', minimum: 0, maximum: 100 },
+                  maritalStatus: { bsonType: 'int', minimum: 0, maximum: MaritalStatusMax },
                   degree: { bsonType: 'string', 'enum': ['k-12', 'undergraduate', 'graduate'] },
                   studyCourse: { bsonType: 'string', maxLength: StudyCourseLength },
                   futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } },
