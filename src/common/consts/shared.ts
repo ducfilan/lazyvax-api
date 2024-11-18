@@ -14,9 +14,10 @@ export const MaritalStatusWidowed = 3;
 export const MaritalStatusSeparated = 4;
 export const MaritalStatusMarriedNoChildren = 5;
 export const MaritalStatusMarriedOneChild = 6;
-export const MaritalStatusMarriedThreeOrMoreChildren = 7;
+export const MaritalStatusMarriedTwoChildren = 7;
+export const MaritalStatusMarriedThreeOrMoreChildren = 8;
 
-export const MaritalStatusMax = 7;
+export const MaritalStatusMax = 8;
 
 export const JobStatusFullTime = 1;
 export const JobStatusPartTime = 2;

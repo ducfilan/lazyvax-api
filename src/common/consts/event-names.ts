@@ -25,3 +25,4 @@ export const EventNameConfirmToGenerateNextDayTasks = "confirm to generate next 
 export const EventNameConfirmNextDayTasks = "confirm next day tasks"
 export const EventNameSkipNextDayTasks = "skip next day tasks"
 export const EventNameDislikeActivity = "dislike activity"
+export const EventNameEditMessage = "edit message"

@@ -31,7 +31,8 @@ export default class MessagesDao {
               'authorId',
               'authorName',
               'content',
-              'timestamp'
+              'timestamp',
+              'updateAt'
             ],
             properties: {
               _id: {
@@ -62,6 +63,9 @@ export default class MessagesDao {
                 bsonType: 'bool'
               },
               timestamp: {
+                bsonType: 'date'
+              },
+              updateAt: {
                 bsonType: 'date'
               }
             }

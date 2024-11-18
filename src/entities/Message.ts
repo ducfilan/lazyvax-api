@@ -14,6 +14,7 @@ export type Message = {
   parentId?: ObjectId,
   isResponded?: boolean,
   timestamp: Date,
+  updateAt: Date,
 }
 
 /**
@@ -44,6 +45,7 @@ export class MessageGroupBuilder {
       content: i18n.needFormat ? formatString(i18n.content, this.orderToFormatArgs[i18n.order]) : i18n.content,
       conversationId,
       timestamp: new Date(),
+      updateAt: new Date(),
       type: i18n.messageType,
     }))
   }
