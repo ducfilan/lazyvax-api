@@ -98,8 +98,10 @@ export class WeeklyPlanningWorkflow {
   private async sendMessage(conversationId: ObjectId, content: string, type: number) {
     const chatMessage = this.createChatMessage(conversationId, content, type)
     const messageId = await saveMessage(chatMessage)
-    chatMessage._id = messageId
-    emitConversationMessage(conversationId.toHexString(), chatMessage)
+    if (messageId) {
+      chatMessage._id = messageId
+      emitConversationMessage(conversationId.toHexString(), chatMessage)
+    }
   }
 
   private async checkLastWeekPlan(state: WeeklyPlanningState): Promise<NodeOutput> {

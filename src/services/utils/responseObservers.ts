@@ -31,9 +31,10 @@ export class FirstQuestionObserver implements IResponseObserver {
       saveMessage(responseMessage)
     ])
 
-    responseMessage._id = messageId
-
-    this.callback(responseMessage)
+    if (messageId) {
+      responseMessage._id = messageId
+      this.callback(responseMessage)
+    }
   }
 }
 
@@ -62,10 +63,13 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
 
       !responseMessage.parentId && (delete responseMessage.parentId)
 
-      responseMessage._id = await saveMessage(responseMessage)
+      const messageId = await saveMessage(responseMessage)
+      if (messageId) {
+        responseMessage._id = messageId
 
-      this.isRespondedToClient = true
-      this.callback(responseMessage)
+        this.isRespondedToClient = true
+        this.callback(responseMessage)
+      }
     } else {
       await updateConversationById(this.currentMessage.conversationId, {
         $push: {

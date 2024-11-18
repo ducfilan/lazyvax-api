@@ -9,6 +9,7 @@ export async function saveMessage(message: Message) {
     return await MessagesDao.insertOne(message);
   } catch (error) {
     logger.error("failed to save message, ", message, error);
+    return null;
   }
 }
 

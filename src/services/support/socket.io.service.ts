@@ -216,11 +216,13 @@ export function registerSocketIo(server: HttpServer) {
             default:
               const messageId = await saveMessage(message)
 
-              emitConversationMessage(message.conversationId.toHexString(), {
-                ...chatMessage,
-                id: messageId,
-                authorId: socket.user._id,
-              })
+              if (messageId) {
+                emitConversationMessage(message.conversationId.toHexString(), {
+                  ...chatMessage,
+                  id: messageId,
+                  authorId: socket.user._id,
+                })
+              }
           }
 
           return message
@@ -273,9 +275,12 @@ export function registerSocketIo(server: HttpServer) {
               timestamp: new Date(),
             } as Message
 
-            chatMessage._id = await saveMessage(chatMessage)
+            const messageId = await saveMessage(chatMessage)
 
-            emitConversationMessage(message.conversationId, chatMessage)
+            if (messageId) {
+              chatMessage._id = messageId
+              emitConversationMessage(message.conversationId, chatMessage)
+            }
           } catch (error) {
             logger.error(error)
           }
@@ -365,8 +370,11 @@ export function registerSocketIo(server: HttpServer) {
           const responseMessages = await builder.getResponses()
           if (responseMessages?.length) {
             for (const responseMessage of responseMessages) {
-              await saveMessage(responseMessage)
-              emitConversationMessage(conversationIdHex, responseMessage)
+              const messageId = await saveMessage(responseMessage)
+              if (messageId) {
+                responseMessage._id = messageId
+                emitConversationMessage(conversationIdHex, responseMessage)
+              }
             }
           }
 
@@ -413,39 +421,41 @@ export function registerSocketIo(server: HttpServer) {
               timestamp: new Date(),
             } as Message
 
-            chatMessage._id = await saveMessage(chatMessage)
+            const messageId = await saveMessage(chatMessage)
+            if (messageId) {
+              chatMessage._id = messageId
+              emitConversationMessage(message.conversationId, chatMessage)
+              ack(conversationId)
 
-            emitConversationMessage(message.conversationId, chatMessage)
-            ack(conversationId)
+              const response = await queryGenerateWeekPlan(socket.user, conversationId)
+              const generatedEvents = JSON.parse(response)
 
-            const response = await queryGenerateWeekPlan(socket.user, conversationId)
-            const generatedEvents = JSON.parse(response)
+              const events = generatedEvents.map((item) => {
+                const startDate = new Date(item.start_time)
+                const endDate = new Date(item.end_time)
 
-            const events = generatedEvents.map((item) => {
-              const startDate = new Date(item.start_time)
-              const endDate = new Date(item.end_time)
+                const event: Event = {
+                  _id: new ObjectId(),
+                  userId: socket.user._id,
+                  source: CalendarSourceApp,
+                  title: item.activity,
+                  description: item.reason,
+                  startDate,
+                  endDate,
+                  attendees: [{
+                    email: socket.user.email,
+                    name: socket.user.name,
+                    response: 'accepted'
+                  }],
+                }
 
-              const event: Event = {
-                _id: new ObjectId(),
-                userId: socket.user._id,
-                source: CalendarSourceApp,
-                title: item.activity,
-                description: item.reason,
-                startDate,
-                endDate,
-                attendees: [{
-                  email: socket.user.email,
-                  name: socket.user.name,
-                  response: 'accepted'
-                }],
-              }
+                return event
+              })
+              await createMultipleEvents(events)
 
-              return event
-            })
-            await createMultipleEvents(events)
-
-            await addEventsToGoogleCalendar(socket.oAuth2Client, events, socket.user.preferences?.timezone) // TODO: transaction handling, make sure it's added to Google Calendar.
-            await updateProgress(conversationId, ConversationProgressGeneratedFullDone)
+              await addEventsToGoogleCalendar(socket.oAuth2Client, events, socket.user.preferences?.timezone) // TODO: transaction handling, make sure it's added to Google Calendar.
+              await updateProgress(conversationId, ConversationProgressGeneratedFullDone)
+            }
           } catch (error) {
             logger.error(error)
           }
