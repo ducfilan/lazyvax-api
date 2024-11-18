@@ -31,8 +31,7 @@ export default class MessagesDao {
               'authorId',
               'authorName',
               'content',
-              'timestamp',
-              'updateAt'
+              'timestamp'
             ],
             properties: {
               _id: {
@@ -65,7 +64,7 @@ export default class MessagesDao {
               timestamp: {
                 bsonType: 'date'
               },
-              updateAt: {
+              updatedAt: {
                 bsonType: 'date'
               }
             }
@@ -80,16 +79,30 @@ export default class MessagesDao {
   }
 
   static async insertOne(message: Message) {
+    if (!message.timestamp) {
+      message.timestamp = new Date()
+    }
+
     return (await _messages.insertOne(message)).insertedId
   }
 
   static async insertMany(messages: Message[]) {
+    messages.forEach(m => {
+      if (!m.timestamp) {
+        m.timestamp = new Date()
+      }
+    })
+
     return _messages.insertMany(messages, {})
   }
 
   static async updateOne(findCondition, updateOperations, filterOption = {}) {
     try {
       if (!findCondition._id) throw new Error('No _id in findCondition')
+
+      if (!updateOperations.updatedAt) {
+        updateOperations.updatedAt = new Date()
+      }
 
       await _messages.updateOne(findCondition, updateOperations, filterOption)
       return true
@@ -100,7 +113,7 @@ export default class MessagesDao {
     }
   }
 
-  static async getMessages(conversationId: ObjectId, skip: number = 0, limit: number = MaxInt) {
+  static async getMessagesInConversation(conversationId: ObjectId, skip: number = 0, limit: number = MaxInt) {
     return _messages.find({
       conversationId
     }, {

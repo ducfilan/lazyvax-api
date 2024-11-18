@@ -25,7 +25,7 @@ export async function getMessages(
   skip: number = 0,
   limit: number = MaxInt
 ) {
-  return MessagesDao.getMessages(conversationId, skip, limit);
+  return MessagesDao.getMessagesInConversation(conversationId, skip, limit);
 }
 
 export default {
