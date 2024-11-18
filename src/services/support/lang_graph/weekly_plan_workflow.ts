@@ -1,6 +1,4 @@
 import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, UpdateType, Annotation, MessagesAnnotation } from '@langchain/langgraph';
-import { BaseLanguageModel } from '@langchain/core/language_models/base';
-import { ChatOpenAI } from '@langchain/openai';
 import { BaseMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
@@ -15,7 +13,7 @@ import {
   isEvening,
   startOfDayInTimeZone,
 } from '@/common/utils/dateUtils';
-import { addDays, addWeeks, endOfDay, getDay, isSameWeek, startOfDay } from 'date-fns';
+import { addDays, addWeeks, getDay, isSameWeek, startOfDay } from 'date-fns';
 import { WeekPlanType } from '@/common/types/types';
 import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
 import {
