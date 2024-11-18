@@ -83,33 +83,45 @@ export const userInformationPrompt = (user: User) => {
   return `User info: Age: ${age}, Gender: ${gender}, marital status: ${maritalStatus}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}. For work-life balance, prefer: ${workLifeBalance}`;
 };
 
-export const dayTasksSuggestTemplate =
-  "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\nDisliked activities:\n{dislikeActivities}\n### Instructions: ###\n{instructions}";
-
 export const dayTasksSuggestionFirstDayTemplate =
   "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}";
+
+export const dayTasksSuggestTemplate =
+  "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\nDisliked activities:\n{dislikeActivities}\n### Instructions: ###\n{instructions}";
 
 export const dayTasksSuggestInstruction = (
   timezone: string,
   targetDay: string = "today"
 ) =>
   [
-    `- Suggest at least 10 activities through the day ${targetDay} in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
-    "- Align with user properties and tailor suggestions based on that",
-    "- For some time ranges outside of fulltime job working time, suggest multiple activities to choose from, not necessary 1 time slot 1 activity.",
-    "- Don't suggest mediocre activities that is too small like brushing teeth, prepare for bed, etc.",
-    "- Strictly follow my habits if it has specific day",
-    `- Must be after now in ${timezone}`,
-    "- Avoid suggesting activities that user disliked",
-    "- Align with the activities already on the calendar this week, don't repeat them and avoid time conflicts",
-    "- Make each activity description clear and actionable.",
-    "- Set reasonable reminders, e.g., 10 and 0 minutes before reading, 10 and 1 minute before meetings.",
-    `Respond with a valid JSON object. Format: [{
+    `Suggest activities for the day **${targetDay}** in JSON format, with each \"activity\" short and to-the-point for a to-do list.`,
+    "- The number of activities should **reasonably fill the day**, ensuring:",
+    "1. No unnecessary gaps between activities unless breaks are required (e.g., after exercise or long work periods).",
+    "2. Each activity has sufficient time to be completed comfortably.",
+    "3. Break times are included where necessary, especially after high-intensity or mentally demanding tasks.",
+    "Activities should:",
+    "- Avoid conflicts with events already scheduled for the day.",
+    "- Respect habits scheduled for specific days and align with their priority levels.",
+    "- Be varied and aligned with the user's life priorities (e.g., work, health, family, learning).",
+    "- Avoid duplicating or repeating activities already on the calendar or already completed earlier in the day.",
+    "Timing:",
+    "- Ensure suggested times are **reasonable**:",
+    "1. Allow recovery time after physically or mentally intensive activities.",
+    "2. Avoid overly packed schedules or back-to-back tasks without breaks.",
+    "3. Take into account typical energy levels at different times of the day.",
+    `- Activities must occur **after the current time** in the ${timezone} timezone.`,
+    "Output Format:",
+    "- Respond with a valid JSON array of activities, including:",
+    "1. **Activity description**: Clear and actionable.",
+    `2. **Start and end times**: Date and time in ISO 8601 format, offset to ${timezone}.`,
+    "3. **Reason**: Why the activity was suggested, aligned with user context, habits, or goals.",
+    "4. **Reminders**: Suggested 1 or multiple times (in minutes) before the activity starts. e.g. 30 minutes before running, 10 and 0 minutes before reading, 10 and 1 minute before meetings",
+    `Example format:: [{
   "activity": "...",
   "start_time": ..., // Date and time, offset to ${timezone}
   "end_time": ..., // Date and time, offset to ${timezone}
   "reason": "...",
-  "reminder": [], // array of number minutes
+  "reminder": [] // array of number minutes
   },
   ...
   ]`,
