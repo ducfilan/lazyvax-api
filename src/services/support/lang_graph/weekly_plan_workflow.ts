@@ -153,7 +153,14 @@ export class WeeklyPlanningWorkflow {
 
     return {
       hasRoutineOrHabits: habits?.length > 0,
-      habits: habits?.map(h => `${h.title} - priority: ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${h.repeat.daysOfWeek ? "on " + buildDaysOfWeekString(h.repeat.daysOfWeek) : ""}`),
+      habits: habits?.map(h => {
+        const daysOfWeek = h.repeat.daysOfWeek ? `on ${buildDaysOfWeekString(h.repeat.daysOfWeek)}` : '';
+        if (h.startTime && h.endTime) {
+          return `${h.title} - priority: ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${daysOfWeek} from ${h.startTime} to ${h.endTime}`;
+        }
+
+        return `${h.title} - priority: ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${daysOfWeek}`;
+      }),
     }
   }
 
