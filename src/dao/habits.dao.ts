@@ -53,8 +53,8 @@ export default class HabitsDao {
                 additionalProperties: false
               },
               idealDuration: { bsonType: 'number', minimum: 0 }, // in minutes
-              rangeStart: { bsonType: 'date' },
-              rangeEnd: { bsonType: 'date' },
+              startTime: { bsonType: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$' },
+              endTime: { bsonType: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$' },
               createdAt: { bsonType: 'date' },
               updatedAt: { bsonType: 'date' },
             },
