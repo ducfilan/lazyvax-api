@@ -120,6 +120,7 @@ export type ConfirmNextDayTasksMessage = {
 export type DislikeActivityMessage = {
   conversationId: string,
   activity: string,
+  reason: string,
 }
 
 export type ConversationType = typeof ConversationTypes[number]

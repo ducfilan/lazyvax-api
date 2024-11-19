@@ -155,3 +155,10 @@ export const DaysOfWeekMap = {
   [5]: 'Saturday',
   [6]: 'Sunday',
 }
+
+export const DislikeReasonToExplanation = {
+  interest: "not interested",
+  energy: "not enough energy",
+  priority: "not align with my current goals or priorities",
+  wrong_timing: "scheduled at an inconvenient time",
+}

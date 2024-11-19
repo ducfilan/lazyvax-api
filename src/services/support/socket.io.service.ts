@@ -38,6 +38,7 @@ import {
   BotUserName,
   CalendarSourceApp,
   DefaultLangCode,
+  DislikeReasonToExplanation,
   I18nDbCodeIntroduceHowItWorks,
   MilestoneSourceSuggestion,
   PlanTypeWeekInteractive
@@ -529,6 +530,7 @@ export function registerSocketIo(server: HttpServer) {
 
         async function dislikeActivity(message: DislikeActivityMessage, ack: any) {
           const conversationId = new ObjectId(message.conversationId)
+          const reason = DislikeReasonToExplanation[message.reason]
 
           weeklyPlanningWorkflow.runWorkflow({
             userInfo: socket.user,
@@ -536,7 +538,7 @@ export function registerSocketIo(server: HttpServer) {
           }, {
             target: 'dislikeActivities',
             targetType: 'array',
-            value: message.activity,
+            value: `${message.activity}${reason ? ` - reason: ${reason}` : ''}`,
           })
         }
       })
