@@ -42,6 +42,7 @@ import { dayTasksSuggestInstruction, dayTasksSuggestionFirstDayTemplate, dayTask
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
+import { EventStatusToText } from '@/entities/Event';
 
 export class WeeklyPlanningWorkflow {
   private checkpointer: MongoDBSaver;
@@ -190,8 +191,9 @@ export class WeeklyPlanningWorkflow {
         const startTime = formatDateToWeekDayAndTime(e.startDate, state.userInfo.preferences?.timezone);
         const endTime = formatDateToWeekDayAndTime(e.endDate, state.userInfo.preferences?.timezone);
         const description = e.description ? ` (${e.description})` : '';
+        const status = e.status ? ` - status: ${EventStatusToText[e.status]}` : '';
 
-        return `${startTime} to ${endTime}: ${e.title}${description}`;
+        return `${startTime} to ${endTime}: ${e.title}${description}${status}`;
       }) ?? [],
     }
   }

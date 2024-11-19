@@ -10,6 +10,11 @@ export const EventStatusUnDone = 3
 
 export const EventStatuses = [EventStatusDefault, EventStatusDone, EventStatusUnDone] as const
 export const EventReminders = ['email', 'popup'] as const
+export const EventStatusToText = {
+  [EventStatusDefault]: '',
+  [EventStatusDone]: 'Done',
+  [EventStatusUnDone]: 'Not done',
+}
 
 export type Event = {
   _id?: ObjectId,

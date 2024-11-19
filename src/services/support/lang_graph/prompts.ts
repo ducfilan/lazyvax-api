@@ -66,10 +66,10 @@ export const userInformationPrompt = (user: User) => {
     }"`;
     const yearsOfExperience = user.preferences?.yearsOfExperience;
     if (yearsOfExperience) {
-      roleInfo += `, having ${yearsOfExperience} years of experience.`;
+      roleInfo += `, having ${yearsOfExperience} years of experience`;
     }
   } else {
-    roleInfo = `student studying the ${user.preferences.degree} degree of ${user.preferences.studyCourse} field.`;
+    roleInfo = `student studying the ${user.preferences.degree} degree of ${user.preferences.studyCourse} field`;
   }
 
   const maritalStatus = MaritalStatusOptions[user.preferences?.maritalStatus];
