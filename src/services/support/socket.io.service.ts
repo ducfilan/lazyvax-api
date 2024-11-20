@@ -537,7 +537,7 @@ export function registerSocketIo(server: HttpServer) {
             conversationId,
           }, {
             target: 'dislikeActivities',
-            targetType: 'array',
+            targetType: 'set',
             value: `${message.activity}${reason ? ` - reason: ${reason}` : ''}`,
           })
         }

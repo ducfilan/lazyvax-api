@@ -43,6 +43,7 @@ import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { EventStatusToText } from '@/entities/Event';
+import { update } from '@/services/api/users.services';
 
 export class WeeklyPlanningWorkflow {
   private checkpointer: MongoDBSaver;
@@ -530,7 +531,7 @@ export class WeeklyPlanningWorkflow {
       daysInWeekTasksSuggested: [false, false, false, false, false, false, false],
       daysInWeekTasksConfirmedToSuggest: [false, false, false, false, false, false, false],
       daysInWeekTasksConfirmed: [null, null, null, null, null, null, null],
-      dislikeActivities: [],
+      dislikeActivities: new Set(),
     }
 
     try {
@@ -555,6 +556,8 @@ export class WeeklyPlanningWorkflow {
           } else {
             (lastState[updateState.target] as string[]).push(updateState.value)
           }
+        } else if (updateState.targetType === 'set') {
+          (lastState[updateState.target] as Set<string>).add(updateState.value)
         } else {
           lastState[updateState.target] = updateState.value
         }
