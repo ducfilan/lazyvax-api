@@ -1,6 +1,6 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
-import { CacheKeyConversation, ConversationsCollectionName, ConversationTypes, ConversationTypeWeek, MilestoneSources } from '@/common/consts/constants'
+import { CacheKeyConversation, ConversationsCollectionName, ConversationTypes, ConversationTypeWeek, MilestoneSources, WeekPlanStages } from '@/common/consts/constants'
 import { Conversation } from '@/entities/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
 import logger from '@/common/logger'
@@ -40,10 +40,11 @@ export default class ConversationsDao {
                 oneOf: [
                   {
                     properties: {
-                      type: { enum: ConversationTypes },
+                      type: { const: ConversationTypeWeek },
                       meta: {
                         properties: {
                           startDate: { "bsonType": "date" },
+                          currentStage: { enum: WeekPlanStages },
                           todoTasks: {
                             bsonType: 'array',
                             items: {
