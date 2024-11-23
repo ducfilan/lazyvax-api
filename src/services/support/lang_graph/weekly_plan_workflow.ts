@@ -44,6 +44,7 @@ import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { EventStatusToText } from '@/entities/Event';
 import { update } from '@/services/api/users.services';
+import { sendMessage } from '@/services/utils/conversation.utils';
 
 export class WeeklyPlanningWorkflow {
   private checkpointer: MongoDBSaver;
@@ -86,26 +87,6 @@ export class WeeklyPlanningWorkflow {
     this.graph = builder.compile({ checkpointer: this.checkpointer })
   }
 
-  private createChatMessage(conversationId: ObjectId, content: string, type: number): Message {
-    return {
-      conversationId,
-      authorId: BotUserId,
-      authorName: BotUserName,
-      content,
-      type,
-      timestamp: new Date(),
-    } as Message
-  }
-
-  private async sendMessage(conversationId: ObjectId, content: string, type: number) {
-    const chatMessage = this.createChatMessage(conversationId, content, type)
-    const messageId = await saveMessage(chatMessage)
-    if (messageId) {
-      chatMessage._id = messageId
-      emitConversationMessage(conversationId.toHexString(), chatMessage)
-    }
-  }
-
   private async checkLastWeekPlan(state: WeeklyPlanningState): Promise<NodeOutput> {
     // TODO: Maybe this week so far if planning on Sunday.
     logger.debug(`checkLastWeekPlan`)
@@ -134,14 +115,14 @@ export class WeeklyPlanningWorkflow {
     if (state.planType || state.planTypeAsked) return
 
     if (!state.hasLastWeekPlan) {
-      await this.sendMessage(state.conversationId, "We will plan interactively.", MessageTypeAskToGenerateWeekPlan)
+      await sendMessage(state.conversationId, "We will plan interactively.", MessageTypeAskToGenerateWeekPlan)
 
       return {
         planType: PlanTypeWeekInteractive,
       }
     }
 
-    await this.sendMessage(state.conversationId, "Generate your weekly plan?", MessageTypeAskToGenerateWeekPlan)
+    await sendMessage(state.conversationId, "Generate your weekly plan?", MessageTypeAskToGenerateWeekPlan)
     return {
       planTypeAsked: true,
     }
@@ -172,7 +153,7 @@ export class WeeklyPlanningWorkflow {
       return {}
     }
 
-    await this.sendMessage(state.conversationId, "What is your routine? Please go to Habits page to check your habits.", MessageTypeAskForRoutine) // TODO: i18n.
+    await sendMessage(state.conversationId, "What is your routine? Please go to Habits page to check your habits.", MessageTypeAskForRoutine) // TODO: i18n.
     return {
       habitsAsked: true,
     }
@@ -218,7 +199,7 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`askForWeekToDoTasks`)
     if (state.weekToDoTasksAsked || state.weekToDoTasks?.length > 0) return {}
 
-    await this.sendMessage(state.conversationId, "What are your must do tasks in this week?", MessageTypeAskForWeekToDoTasks) // TODO: i18n.
+    await sendMessage(state.conversationId, "What are your must do tasks in this week?", MessageTypeAskForWeekToDoTasks) // TODO: i18n.
     return {
       weekToDoTasksAsked: true,
     }
@@ -228,7 +209,7 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`confirmWeekToDoTasks`)
     if (state.weekToDoTasksConfirmAsked || state.weekToDoTasksConfirmed) return {}
 
-    await this.sendMessage(state.conversationId, "Are you satisfied with your must do tasks?", MessageTypeAskToConfirmWeekToDoTasks) // TODO: i18n.
+    await sendMessage(state.conversationId, "Are you satisfied with your must do tasks?", MessageTypeAskToConfirmWeekToDoTasks) // TODO: i18n.
     return {
       weekToDoTasksConfirmAsked: true,
     }
@@ -237,7 +218,7 @@ export class WeeklyPlanningWorkflow {
   private async getUserTimezone(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`getUserTimezone: ${state.userInfo.preferences?.timezone}`)
     if (!state.userInfo.preferences?.timezone) {
-      await this.sendMessage(state.conversationId, "What is your timezone?", MessageTypeAskForTimezone) // TODO: i18n.
+      await sendMessage(state.conversationId, "What is your timezone?", MessageTypeAskForTimezone) // TODO: i18n.
     }
 
     return {}
@@ -268,7 +249,7 @@ export class WeeklyPlanningWorkflow {
     // Check if it's late and adjust planning time if needed
     const isLateOnToday = isEvening(now, timezone)
     if (isLateOnToday && isPlanThisWeek && !state.isLateTodayNoticeInformed) {
-      await this.sendMessage(
+      await sendMessage(
         state.conversationId,
         "It's getting late. We will plan for tomorrow.",
         MessageTypePlainText
@@ -282,7 +263,7 @@ export class WeeklyPlanningWorkflow {
     }
 
     if (firstDayIndex > 6 && !state.isWeekOverNoticeInformed) {
-      await this.sendMessage(state.conversationId, "This week is over. Let's move to next week.", MessageTypeAskToMoveToNextWeek) // TODO: AI + i18n.
+      await sendMessage(state.conversationId, "This week is over. Let's move to next week.", MessageTypeAskToMoveToNextWeek) // TODO: AI + i18n.
       newState.isWeekOverNoticeInformed = true
       newState.planningIsDone = true
       return newState
@@ -290,7 +271,7 @@ export class WeeklyPlanningWorkflow {
 
     if (state.daysInWeekTasksSuggested[firstDayIndex]) return newState
 
-    await this.sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), firstDayIndex), timezone)}...`, MessageTypePlainText)
+    await sendMessage(state.conversationId, `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), firstDayIndex), timezone)}...`, MessageTypePlainText)
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
@@ -308,7 +289,7 @@ export class WeeklyPlanningWorkflow {
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
     logger.debug(`generateFirstDayTasks result: ${result.content}`)
 
-    await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
+    await sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
 
     const daysInWeekTasksSuggested = [...state.daysInWeekTasksSuggested]
     daysInWeekTasksSuggested[firstDayIndex] = true
@@ -343,7 +324,7 @@ export class WeeklyPlanningWorkflow {
         index: state.firstDayIndex,
         content: `Are you satisfied with your tasks for ${formatDateToWeekDay(firstDayDate, timezone)}?`,
       }
-      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayTasks) // TODO: i18n.
+      await sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmFirstDayTasks) // TODO: i18n.
 
       const daysInWeekTasksConfirmedAsked = [...state.daysInWeekTasksConfirmedAsked]
       daysInWeekTasksConfirmedAsked[state.firstDayIndex] = true
@@ -376,7 +357,7 @@ export class WeeklyPlanningWorkflow {
         content: `Do you want to have suggestions for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)}?`,
         index: notConfirmedDayIndex,
       }
-      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskForNextDayTasks) // TODO: i18n.
+      await sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskForNextDayTasks) // TODO: i18n.
 
       const daysInWeekTasksAskedToSuggest = [...state.daysInWeekTasksAskedToSuggest]
       daysInWeekTasksAskedToSuggest[notConfirmedDayIndex] = true
@@ -394,7 +375,7 @@ export class WeeklyPlanningWorkflow {
       return {}
     }
 
-    await this.sendMessage(
+    await sendMessage(
       state.conversationId,
       `Generating tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)}...`,
       MessageTypePlainText
@@ -410,14 +391,14 @@ export class WeeklyPlanningWorkflow {
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
-      dislikeActivities: state.dislikeActivities?.map(a => `- ${a}`).join('\n') ?? "Not specified",
+      dislikeActivities: state.dislikeActivities.size > 0 ? [...state.dislikeActivities].map(a => `- ${a}`).join('\n') : "Not specified",
       instructions: dayTasksSuggestInstruction(timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)),
     })
     logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
     logger.debug(`generateMoreDays result: ${result.content}`)
 
-    await this.sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
+    await sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
 
     const daysInWeekTasksSuggested = [...state.daysInWeekTasksSuggested]
     daysInWeekTasksSuggested[notConfirmedDayIndex] = true
@@ -427,7 +408,7 @@ export class WeeklyPlanningWorkflow {
         index: notConfirmedDayIndex,
         content: `Are you satisfied with your tasks for ${formatDateToWeekDay(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)}?`,
       }
-      await this.sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmNextDayTasks) // TODO: i18n.
+      await sendMessage(state.conversationId, JSON.stringify(content), MessageTypeAskToConfirmNextDayTasks) // TODO: i18n.
 
       const daysInWeekTasksConfirmedAsked = [...state.daysInWeekTasksConfirmedAsked]
       daysInWeekTasksConfirmedAsked[notConfirmedDayIndex] = true
@@ -449,7 +430,7 @@ export class WeeklyPlanningWorkflow {
     logger.debug(`motivateUser`)
 
     if (state.motivationMessage && !state.flowIsDone) {
-      await this.sendMessage(state.conversationId, state.motivationMessage, MessageTypePlainText)
+      await sendMessage(state.conversationId, state.motivationMessage, MessageTypePlainText)
 
       return {
         flowIsDone: true,
@@ -590,7 +571,7 @@ type WeeklyPlanningState = {
   firstDayIndex: number
   isLateTodayNoticeInformed: boolean
   isWeekOverNoticeInformed: boolean
-  dislikeActivities: string[]
+  dislikeActivities: Set<string>
   daysInWeekTasksSuggested: boolean[]
   daysInWeekTasksAskedToSuggest: boolean[]
   daysInWeekTasksConfirmedToSuggest: boolean[]
@@ -626,7 +607,7 @@ type WeeklyPlanStateType = {
   firstDayIndex: LastValue<number>
   isLateTodayNoticeInformed: LastValue<boolean>
   isWeekOverNoticeInformed: LastValue<boolean>
-  dislikeActivities: LastValue<string[]>
+  dislikeActivities: LastValue<Set<string>>
   daysInWeekTasksSuggested: LastValue<boolean[]>
   daysInWeekTasksAskedToSuggest: LastValue<boolean[]>
   daysInWeekTasksConfirmedToSuggest: LastValue<boolean[]>
@@ -663,7 +644,7 @@ const WeeklyPlanningAnnotation = Annotation.Root({
   firstDayIndex: Annotation<number>(),
   isLateTodayNoticeInformed: Annotation<boolean>(),
   isWeekOverNoticeInformed: Annotation<boolean>(),
-  dislikeActivities: Annotation<string[]>(),
+  dislikeActivities: Annotation<Set<string>>(),
   daysInWeekTasksSuggested: Annotation<boolean[]>(),
   daysInWeekTasksAskedToSuggest: Annotation<boolean[]>(),
   daysInWeekTasksConfirmedToSuggest: Annotation<boolean[]>(),

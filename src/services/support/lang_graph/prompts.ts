@@ -61,9 +61,7 @@ export const userInformationPrompt = (user: User) => {
         : user.preferences?.workerType;
     const jobStatus = JobStatusOptions[user.preferences?.jobStatus];
 
-    roleInfo = `working ${jobStatus ?? ""} as ${workerType} in the field "${
-      user.preferences.occupation
-    }"`;
+    roleInfo = `working ${jobStatus ?? ""} as ${workerType} in the field "${user.preferences.occupation}"`;
     const yearsOfExperience = user.preferences?.yearsOfExperience;
     if (yearsOfExperience) {
       roleInfo += `, having ${yearsOfExperience} years of experience`;
@@ -80,7 +78,7 @@ export const userInformationPrompt = (user: User) => {
     ? WorkLifeBalanceOptions[user.preferences.workLifeBalance]
     : "(Not specified)";
 
-  return `User info: Age: ${age}, Gender: ${gender}, marital status: ${maritalStatus}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}. For work-life balance, prefer: ${workLifeBalance}`;
+  return `User info: Name: ${user.name}, Age: ${age}, Gender: ${gender}, marital status: ${maritalStatus}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}. For work-life balance, prefer: ${workLifeBalance}`;
 };
 
 export const dayTasksSuggestionFirstDayTemplate =

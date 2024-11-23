@@ -40,7 +40,7 @@ export default class ConversationsDao {
                 oneOf: [
                   {
                     properties: {
-                      type: { const: ConversationTypeWeek },
+                      type: { enum: [ConversationTypeWeek] },
                       meta: {
                         properties: {
                           startDate: { "bsonType": "date" },

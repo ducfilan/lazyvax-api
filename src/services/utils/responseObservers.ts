@@ -81,9 +81,17 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
 }
 
 export class WaitResponseObserver implements IResponseObserver {
-  constructor(private currentMessage: Message) { }
+  constructor(private currentMessage: Message, private callback: Function) { }
 
   work(messageType: any): void {
     emitWaitResponse(this.currentMessage.authorId.toHexString(), messageType)
+  }
+}
+
+export class DoNothingObserver implements IResponseObserver {
+  constructor(private callback: Function) { }
+
+  work(data: any): void {
+    this.callback(data)
   }
 }

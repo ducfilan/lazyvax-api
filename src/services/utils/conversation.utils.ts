@@ -2,7 +2,10 @@ import { CreateConversationMessage, CreateConversationMessageConversation } from
 import { Conversation } from "@/entities/Conversation"
 import { ObjectId } from "mongodb"
 import { getUserById } from "../api/users.services"
-import { ConversationTypeWeek } from "@/common/consts/constants"
+import { BotUserId, BotUserName, ConversationTypeWeek } from "@/common/consts/constants"
+import { emitConversationMessage } from "../support/socket.io.service"
+import { saveMessage } from "../api/messages.services"
+import { Message } from "@/entities/Message"
 
 export class ConversationBuilder {
   private conversation: CreateConversationMessageConversation
@@ -38,8 +41,28 @@ export class ConversationBuilder {
         break;
     }
 
-    conversation.meta = this.conversation.meta || {}
+    conversation.meta = this.conversation.meta as any || {}
 
     return conversation
+  }
+}
+
+export const createChatMessage = (conversationId: ObjectId, content: string, type: number): Message => {
+  return {
+    conversationId,
+    authorId: BotUserId,
+    authorName: BotUserName,
+    content,
+    type,
+    timestamp: new Date(),
+  } as Message
+}
+
+export const sendMessage = async (conversationId: ObjectId, content: string, type: number) => {
+  const chatMessage = createChatMessage(conversationId, content, type)
+  const messageId = await saveMessage(chatMessage)
+  if (messageId) {
+    chatMessage._id = messageId
+    emitConversationMessage(conversationId.toHexString(), chatMessage)
   }
 }

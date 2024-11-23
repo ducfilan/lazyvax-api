@@ -5,14 +5,14 @@ import { User } from '@/entities/User';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { ObjectId } from 'mongodb';
-import { Message } from '@/entities/Message';
 import { RunnableConfig } from '@langchain/core/runnables';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4oMini } from './model_repo';
 import { systemMessageShort } from './prompts';
-import { dayTasksSuggestTemplate } from './prompts';
 import { userInformationPrompt } from './prompts';
+import { MessageTypePlainText } from '@/common/consts/message-types';
+import { sendMessage } from '@/services/utils/conversation.utils';
 
 export class NormalMessageWorkflow {
   private checkpointer: MongoDBSaver;
@@ -58,27 +58,25 @@ export class NormalMessageWorkflow {
   private async handleGeneralMessage(state: NormalMessageState): Promise<NodeOutput> {
     logger.debug('handleGeneralMessage')
 
-    const { summary } = state;
-    let { messages } = state;
-    if (summary) {
-      const systemMessage = new SystemMessage({
-        content: `Summary of conversation earlier: ${summary}`
-      });
-      messages = [systemMessage, ...messages];
-    }
+    const { conversationId, summary, messages: stateMessages } = state;
+    const messages = summary
+      ? [new SystemMessage({ content: `Summary of conversation earlier: ${summary}` }), ...stateMessages]
+      : stateMessages;
 
     const prompt = await ChatPromptTemplate.fromMessages([
-      ["system", systemMessageShort],
+      ["system", `${systemMessageShort}\n${userInformationPrompt(state.userInfo)}`],
       new MessagesPlaceholder("messages"),
     ]).formatMessages({
       user_info: userInformationPrompt(state.userInfo),
-      summary: state.summary || "No previous context",
+      messages
     })
 
-    const result = await getModel(ModelNameChatGPT4oMini).invoke(prompt)
+    const response = await getModel(ModelNameChatGPT4oMini).invoke(prompt)
+    await sendMessage(conversationId, response.content, MessageTypePlainText)
 
     return {
-      responseGenerated: true
+      responseGenerated: true,
+      messages: [...messages, response]
     }
   }
 
@@ -99,15 +97,15 @@ export class NormalMessageWorkflow {
       content: summaryMessage,
     })];
 
-    const result = await getModel(ModelNameChatGPT4oMini).invoke(allMessages)
+    const response = await getModel(ModelNameChatGPT4oMini).invoke(allMessages)
 
-    if (typeof result.content !== "string") {
+    if (typeof response.content !== "string") {
       throw new Error("Expected a string response from the model");
     }
 
     return {
-      summary: result.content,
-      // Keep only last 5 messages in state
+      summary: response.content,
+      // Keep only last 4 messages in state
       messages: messages.slice(-4)
     }
   }
@@ -134,7 +132,7 @@ export class NormalMessageWorkflow {
     }
 
     const config: RunnableConfig = {
-      configurable: { thread_id: initialState.conversationId.toHexString() }
+      configurable: { thread_id: `normal_message_${initialState.conversationId.toHexString()}` }
     }
 
     const lastState = (await this.checkpointer.get(config))?.channel_values ?? {}

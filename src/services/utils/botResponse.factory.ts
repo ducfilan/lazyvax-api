@@ -11,10 +11,12 @@ import I18nDao from "@/dao/i18n"
 import UsersDao from "@/dao/users.dao"
 import { ObjectId } from "mongodb"
 import { MessageType } from "@/common/types/types"
-import { FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver, WaitResponseObserver } from "./responseObservers"
+import { DoNothingObserver, FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver, WaitResponseObserver } from "./responseObservers"
 import logger from "@/common/logger"
 import { markMessageResponded } from "../api/messages.services"
 import { MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeConfirmYesQuestionnaires, MessageTypeNextMilestoneAndActions, MessageTypeStateGoal } from "@/common/consts/message-types"
+import { normalMessageWorkflow } from "../support/lang_graph/workflows"
+import { HumanMessage } from "@langchain/core/messages"
 
 export interface IResponse {
   addObserver(observer: IResponseObserver): IResponse
@@ -44,6 +46,13 @@ export class BotResponseFactory {
 
       default:
         builder = new AIResponse(currentMessage, user)
+        builder.addObserver(new DoNothingObserver(() => {
+          const conversationId = currentMessage.conversationId.toHexString()
+          emitEndTypingUser(conversationId, BotUserName)
+          markMessageResponded(currentMessage._id)
+            .catch(err => logger.error("failed to mark message state goal responded", err))
+        }))
+        return builder
     }
   }
 }
@@ -216,15 +225,18 @@ export class AIResponse implements IResponse {
     }
   }
 
-  preprocess(): Promise<void> {
-    throw new Error("Method not implemented.")
+  async preprocess(): Promise<void> {
   }
 
-  getResponses(): Promise<Message[]> {
-    throw new Error("Method not implemented.")
+  async getResponses(): Promise<Message[]> {
+    normalMessageWorkflow.runWorkflow({
+      userInfo: this.user,
+      conversationId: this.currentMessage.conversationId,
+      messages: [new HumanMessage(this.currentMessage.content)]
+    })
+    return []
   }
 
-  postprocess(): Promise<void> {
-    throw new Error("Method not implemented.")
+  async postprocess(): Promise<void> {
   }
 }
