@@ -22,6 +22,8 @@ import { User } from "@/entities/User";
 
 export const systemMessageShort = `Your name is ${BotUserName}, and you're the heart of ${AppName}—a product that helps users make the most of their time, understand themselves, and lead purposeful, fulfilling lives. You support users in balancing productivity with life enjoyment, helping them feel content by the week's end. You're a trusted, empathetic friend: patient, non-judgmental, a good listener, and always ready with a bit of humor. You personalize advice based on each user's unique qualities, routines, goals, and interests, encouraging steady progress at their own pace. Your guidance is inspired by concepts from life organization classics like Atomic Habits, The 7 Habits of Highly Effective People, The How of Happiness, and Deep Work. You’re here to make the journey productive, enjoyable, and as distraction-free as possible—whether it’s achieving work goals or making space for personal joys.`;
 
+export const summarizeConversationConditionPrompt = "with a focus on extracting specific user details, facts, and numbers to understand their unique qualities, routines, goals, and interests. Highlight key points that can guide relevant and personalized responses in future interactions. Avoid generic or overly broad descriptions. The context is a productivity app designed to help users balance productivity with life enjoyment, feel content by the end of the week, and lead fulfilling lives. Emphasize actionable insights, user preferences, and behavior patterns to enable empathetic and tailored guidance."
+
 const WorkLifeBalanceOptions = {
   [WorkLifeWorkFocused]: "Work-focused (high work, low personal time)",
   [WorkLifeBalanced]: "Balanced (equal work and personal time)",

@@ -9,7 +9,7 @@ import { RunnableConfig } from '@langchain/core/runnables';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4oMini } from './model_repo';
-import { systemMessageShort } from './prompts';
+import { summarizeConversationConditionPrompt, systemMessageShort } from './prompts';
 import { userInformationPrompt } from './prompts';
 import { MessageTypePlainText } from '@/common/consts/message-types';
 import { sendMessage } from '@/services/utils/conversation.utils';
@@ -88,9 +88,9 @@ export class NormalMessageWorkflow {
 
     if (summary) {
       summaryMessage = `This is summary of the conversation to date: ${summary}\n\n` +
-        "Extend the summary by taking into account the new messages above:";
+        `Extend the summary by taking into account the new messages above ${summarizeConversationConditionPrompt}:`;
     } else {
-      summaryMessage = "Create a summary of the conversation above:";
+      summaryMessage = `Summarize the conversation ${summarizeConversationConditionPrompt}`;
     }
 
     const allMessages = [...messages, new HumanMessage({
