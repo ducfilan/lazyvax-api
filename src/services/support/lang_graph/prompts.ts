@@ -84,10 +84,10 @@ export const userInformationPrompt = (user: User) => {
 };
 
 export const dayTasksSuggestionFirstDayTemplate =
-  "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\n### Instructions: ###\n{instructions}";
+  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week:\n{calendarEvents}\n\n### Instructions: ###\n{instructions}";
 
 export const dayTasksSuggestTemplate =
-  "### Context: ###\nNow is {now}.\n{user_info}\nHabits:\n{habit}\nTo do tasks this week:\n{weekToDoTask}\nWhat's on calendar last week:\n{calendarLastWeekEvents}\nWhat's on calendar this week:\n{calendarEvents}\nDisliked activities:\n{dislikeActivities}\n### Instructions: ###\n{instructions}";
+  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week:\n{calendarEvents}\n\nDisliked activities:\n{dislikeActivities}\n\n### Instructions: ###\n{instructions}";
 
 export const dayTasksSuggestInstruction = (
   timezone: string,
@@ -100,12 +100,12 @@ export const dayTasksSuggestInstruction = (
     "2. Each activity has sufficient time to be completed comfortably.",
     "3. Break times are included where necessary, especially after high-intensity or mentally demanding tasks.",
     "",
-    "Activities should:",
-    "- Avoid conflicts with events already scheduled for the day.",
+    "Guidelines for suggestions, activities **MUST**:",
     "- Respect habits scheduled for specific days and align with their priority levels.",
     "- Be **varied** and aligned with the user's life priorities (e.g., work, health, family, learning).",
-    "- **Avoid** duplicating or repeating **activities already on the calendar*** or already completed earlier in the day.",
-    "- Provide multiple options for time slots where flexibility is reasonable (e.g., reading or brainstorming).",
+    "- **Avoid** suggesting or repeating **activities already on the calendar on the same day*** at the same or overlapping time range.",
+    "- Habits and routines scheduled for specific days must be respected",
+    "- Provide multiple options for each time slots where flexibility is reasonable (e.g., reading or brainstorming).",
     "",
     "Timing:",
     "- Ensure suggested times are **reasonable**:",
@@ -113,10 +113,6 @@ export const dayTasksSuggestInstruction = (
     "2. Avoid overly packed schedules or back-to-back tasks without breaks.",
     "3. Account for typical energy levels at different times of the day.",
     `- Activities must occur **after the current time** in the ${timezone} timezone.`,
-    "",
-    "Before suggesting an activity, **strictly check against the calendar** to ensure:",
-    "- Habits are followed on their scheduled days",
-    "- **No duplication** and **no overlap** of activities **already present** on the calendar",
     "",
     "Output Format:",
     "- Respond with a valid JSON array of activities, including:",
