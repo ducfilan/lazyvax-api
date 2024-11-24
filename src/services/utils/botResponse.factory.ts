@@ -14,7 +14,7 @@ import { MessageType } from "@/common/types/types"
 import { DoNothingObserver, FirstQuestionObserver, IResponseObserver, MilestoneSuggestionObserver, WaitResponseObserver } from "./responseObservers"
 import logger from "@/common/logger"
 import { markMessageResponded } from "../api/messages.services"
-import { MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeConfirmYesQuestionnaires, MessageTypeNextMilestoneAndActions, MessageTypeStateGoal } from "@/common/consts/message-types"
+import { MessageTypeAddMilestoneAndActions, MessageTypeAnswerSmartQuestion, MessageTypeAnswerWeekToDoTasks, MessageTypeConfirmYesQuestionnaires, MessageTypeNextMilestoneAndActions, MessageTypeStateGoal } from "@/common/consts/message-types"
 import { normalMessageWorkflow } from "../support/lang_graph/workflows"
 import { HumanMessage } from "@langchain/core/messages"
 
@@ -44,14 +44,12 @@ export class BotResponseFactory {
 
         return builder
 
+      case MessageTypeAnswerWeekToDoTasks:
+        builder = new EmptyResponse()
+        return builder
+
       default:
         builder = new AIResponse(currentMessage, user)
-        builder.addObserver(new DoNothingObserver(() => {
-          const conversationId = currentMessage.conversationId.toHexString()
-          emitEndTypingUser(conversationId, BotUserName)
-          markMessageResponded(currentMessage._id)
-            .catch(err => logger.error("failed to mark message state goal responded", err))
-        }))
         return builder
     }
   }
@@ -208,19 +206,19 @@ export class EmptyResponse implements IResponse {
 }
 
 export class AIResponse implements IResponse {
-  private AIResponseObservers: IResponseObserver[]
+  private observers: IResponseObserver[]
 
   constructor(private currentMessage: Message, private user: User) {
-    this.AIResponseObservers = []
+    this.observers = []
   }
 
   addObserver(observer: IResponseObserver): IResponse {
-    this.AIResponseObservers.push(observer);
+    this.observers.push(observer);
     return this
   }
 
   notifyObservers(data: any): void {
-    for (const observer of this.AIResponseObservers) {
+    for (const observer of this.observers) {
       observer.work(data)
     }
   }
