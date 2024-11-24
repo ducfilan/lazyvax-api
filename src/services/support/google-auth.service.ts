@@ -62,7 +62,14 @@ export const refreshAccessToken = async (oAuth2Client: OAuth2Client, refreshToke
     refresh_token: refreshToken
   })
 
-  let { token } = await oAuth2Client.getAccessToken()
-
-  return { access_token: token, refresh_token: refreshToken }
+  try {
+    const { credentials } = await oAuth2Client.refreshAccessToken()
+    return {
+      access_token: credentials.access_token,
+      refresh_token: refreshToken
+    }
+  } catch (error) {
+    logger.error('Failed to refresh access token:', error)
+    throw error
+  }
 }

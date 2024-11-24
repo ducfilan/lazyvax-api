@@ -2,7 +2,7 @@ import logger from '@/common/logger'
 import { GoogleUserInfo } from '@/common/types/types'
 import usersServices from '@/services/api/users.services'
 import { TargetPlatformToHost, OAuth2TokenReceiver, Env, Envs, TargetPlatformWeb, GetUserInfoUrl, RegisterStep, LoginTypes, DefaultLangCode } from '@/common/consts/constants'
-import { getTokenFromCode, refreshAccessToken } from '@services/support/google-auth.service'
+import { getTokenFromCode, newGoogleOAuth2Client, refreshAccessToken } from '@services/support/google-auth.service'
 import fetch from 'node-fetch'
 
 export default class TokenController {
@@ -33,14 +33,17 @@ export default class TokenController {
         return res.status(401).json({ error: 'Refresh token not found' })
       }
 
-      const tokens = await refreshAccessToken(req.oAuth2Client, refreshToken) // TODO: req.oAuth2Client is always not available due to this is a public API.
+      const oAuth2Client = newGoogleOAuth2Client({
+        refresh_token: refreshToken
+      })
+      const tokens = await refreshAccessToken(oAuth2Client, refreshToken)
 
-      res.cookie('authToken', tokens.access_token, this.cookieOptions)
-      res.cookie('refreshToken', tokens.refresh_token, this.cookieOptions)
+      res.cookie('authToken', tokens?.access_token, this.cookieOptions)
+      res.cookie('refreshToken', tokens?.refresh_token, this.cookieOptions)
 
       return res.json(tokens)
     } catch (e) {
-      res.status(500).json(e)
+      res.status(401).json(e)
     }
   }
 
