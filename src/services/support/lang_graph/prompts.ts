@@ -144,3 +144,25 @@ export const dayTasksSuggestInstruction = (
   ...
   ]`,
   ].join("\n");
+
+export const dayActivitiesSuggestionInstruction = (timezone: string, targetDay: string = "today") => [
+  `Suggest a list of 20 activities for the day **${targetDay}** in JSON format, with each "activity" short and to-the-point for a to-do list, order by the most important activities first. Target of this is provide a list of activities to user to choose from, should be diverse enough to cover all important activities for the day. Focus more on the important activities.`,
+  "",
+  "Guidelines for suggestions, activities **MUST**:",
+  "- Align with user's properties like occupation, habits, life priorities, etc.",
+  "- Respect habits scheduled for specific days and align with their priority levels.",
+  "- Be varied and aligned with the user's life priorities (e.g., work, health, family, learning).",
+  "- Avoid suggesting or repeating activities already on the calendar on the same day.",
+  "- Habits and routines scheduled for specific days must be respected.",
+  "",
+  "Output Format:",
+  "Respond with a valid JSON array of activities, nothing else:",
+  "1. **Activity**: Clear and actionable.",
+  "2. **Description**: More detailed explanation of the activity.",
+  `Example format: [{
+    "activity": "...",
+    "description": "...",
+    },
+    ...
+  ]`,
+].join("\n");

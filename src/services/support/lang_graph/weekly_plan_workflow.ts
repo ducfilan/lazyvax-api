@@ -45,6 +45,7 @@ import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { EventStatusToText } from '@/entities/Event';
 import { update } from '@/services/api/users.services';
 import { sendMessage } from '@/services/utils/conversation.utils';
+import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
 
 export class WeeklyPlanningWorkflow {
   private checkpointer: MongoDBSaver;
@@ -91,22 +92,15 @@ export class WeeklyPlanningWorkflow {
     // TODO: Maybe this week so far if planning on Sunday.
     logger.debug(`checkLastWeekPlan`)
 
-    const timeZone = state.userInfo.preferences?.timezone
-    const lastWeekInfo = getWeekInfo(addWeeks(new Date(state.weekStartDate), -1), timeZone)
-    const lastWeekEvents = await getEvents({
-      userId: state.userInfo._id,
-      from: lastWeekInfo.weekStartDate,
-      to: lastWeekInfo.weekEndDate,
-    }) // TODO: More filters.
+    const lastWeekPlan = await getLastWeekPlan(
+      state.userInfo._id,
+      new Date(state.weekStartDate),
+      state.userInfo.preferences?.timezone
+    )
 
     return {
-      lastWeekPlan: lastWeekEvents?.map(e => {
-        const startTime = formatDateToWeekDayAndTime(e.startDate, timeZone)
-        const endTime = formatDateToWeekDayAndTime(e.endDate, timeZone)
-        const description = e.description ? ` (${e.description})` : ''
-        return `${startTime} to ${endTime}: ${e.title}${description}`
-      }) ?? [],
-      hasLastWeekPlan: lastWeekEvents?.length > 0
+      lastWeekPlan,
+      hasLastWeekPlan: lastWeekPlan.length > 0
     }
   }
 
@@ -130,20 +124,11 @@ export class WeeklyPlanningWorkflow {
 
   private async checkRoutineAndHabits(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`checkRoutineAndHabits`)
-    const habits = await getHabits({ userId: state.userInfo._id })
-    const buildDaysOfWeekString = (daysOfWeek: number[]) => daysOfWeek?.map(d => DaysOfWeekMap[d]).join(', ') // TODO: i18n.
-    // TODO: Days in month.
+    const habits = await getRoutineAndHabits(state.userInfo._id)
 
     return {
-      hasRoutineOrHabits: habits?.length > 0,
-      habits: habits?.map(h => {
-        const daysOfWeek = h.repeat.daysOfWeek ? `on ${buildDaysOfWeekString(h.repeat.daysOfWeek)}` : '';
-        if (h.startTime && h.endTime) {
-          return `${h.title} - priority: ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${daysOfWeek} from ${h.startTime} to ${h.endTime}`;
-        }
-
-        return `${h.title} - priority: ${h.priority} - every ${h.repeat.unit} ${h.repeat.frequency} times ${daysOfWeek}`;
-      }),
+      hasRoutineOrHabits: habits.length > 0,
+      habits,
     }
   }
 
@@ -162,21 +147,15 @@ export class WeeklyPlanningWorkflow {
   private async checkCalendarEvents(state: WeeklyPlanningState): Promise<NodeOutput> {
     logger.debug(`checkCalendarEvents`)
     const weekInfo = getWeekInfo(new Date(state.weekStartDate), state.userInfo.preferences?.timezone)
-    const calendarEvents = await getEvents({
-      userId: state.userInfo._id,
-      from: weekInfo.weekStartDate,
-      to: weekInfo.weekEndDate,
-    }, { "startDate": 1 })
+    const calendarEvents = await getCalendarEvents(
+      state.userInfo._id,
+      weekInfo.weekStartDate,
+      weekInfo.weekEndDate,
+      state.userInfo.preferences?.timezone
+    )
 
     return {
-      calendarEvents: calendarEvents?.map(e => {
-        const startTime = formatDateToWeekDayAndTime(e.startDate, state.userInfo.preferences?.timezone);
-        const endTime = formatDateToWeekDayAndTime(e.endDate, state.userInfo.preferences?.timezone);
-        const description = e.description ? ` (${e.description})` : '';
-        const status = e.status ? ` - status: ${EventStatusToText[e.status]}` : '';
-
-        return `${startTime} to ${endTime}: ${e.title}${description}${status}`;
-      }) ?? [],
+      calendarEvents,
     }
   }
 
