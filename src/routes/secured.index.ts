@@ -5,6 +5,7 @@ import { securedAiRouter } from './ai.route'
 import { securedEventRouter } from './event.route'
 import { securedObjectiveRouter } from './objective.route'
 import securedHabitsRouter from './habit.route'
+import { securedPlanningRouter } from './planning.route'
 
 let securedRouter = Router()
 
@@ -14,5 +15,6 @@ securedRouter.use('/ai', securedAiRouter)
 securedRouter.use('/events', securedEventRouter)
 securedRouter.use('/objectives', securedObjectiveRouter)
 securedRouter.use('/habits', securedHabitsRouter)
+securedRouter.use('/planning', securedPlanningRouter)
 
 export default securedRouter

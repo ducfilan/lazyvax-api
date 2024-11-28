@@ -11,7 +11,7 @@ import {
   isEvening,
   startOfDayInTimeZone,
 } from '@/common/utils/dateUtils';
-import { endOfDay, isSameDay, isSameWeek, startOfDay } from 'date-fns';
+import { isSameDay, isSameWeek } from 'date-fns';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { ObjectId } from 'mongodb';
@@ -41,7 +41,7 @@ const DayPlanSteps = {
   [arrangeDayStep]: 6,
 }
 
-export class DailyPlanningWorkflow {
+export class DayPlanWorkflow {
   private checkpointer: MongoDBSaver;
   private graph: CompiledStateGraph<DailyPlanningState, UpdateType<DailyPlanStateType>, NodeType, DailyPlanStateType, DailyPlanStateType, StateDefinition>;
 
@@ -75,10 +75,9 @@ export class DailyPlanningWorkflow {
     return targetStep === DayPlanSteps[nodeKey]
   }
 
-  private async checkLastWeekPlan(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
+  private async checkLastWeekPlan(state: DailyPlanningState): Promise<NodeOutput> {
     // TODO: Maybe this week so far if planning on Sunday.
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+    if (!this.isCurrentStep(checkLastWeekPlanStep, state.targetStep)) {
       return {}
     }
 
@@ -95,9 +94,8 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async checkRoutineAndHabits(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+  private async checkRoutineAndHabits(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(checkRoutineAndHabitsStep, state.targetStep)) {
       return {}
     }
 
@@ -110,9 +108,8 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async checkThisWeekCalendarEvents(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+  private async checkThisWeekCalendarEvents(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(checkThisWeekCalendarEventsStep, state.targetStep)) {
       return {}
     }
 
@@ -130,9 +127,8 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async checkWeekToDoTasks(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+  private async checkWeekToDoTasks(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(checkWeekToDoTasksStep, state.targetStep)) {
       return {}
     }
 
@@ -149,9 +145,8 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async getUserTimezone(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+  private async getUserTimezone(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(getUserTimezoneStep, state.targetStep)) {
       return {}
     }
 
@@ -160,9 +155,8 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async generateDayTasks(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+  private async generateDayTasks(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(generateDayTasksStep, state.targetStep)) {
       return {}
     }
 
@@ -220,9 +214,8 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async arrangeDay(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
-    const nodeName = config?.configurable?.node_name
-    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+  private async arrangeDay(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(arrangeDayStep, state.targetStep)) {
       return {}
     }
 
@@ -297,7 +290,7 @@ export class DailyPlanningWorkflow {
         }
       }
 
-      const finalState = await this.graph.invoke({ ...lastState, ...initialState }, config);
+      const finalState: DailyPlanStateType = await this.graph.invoke({ ...lastState, ...initialState }, config);
       return finalState;
     } catch (error) {
       logger.error(`Error running workflow: ${error}`);
@@ -315,23 +308,15 @@ type DailyPlanningState = {
   hasLastWeekPlan: boolean
   lastWeekPlan: string[]
   hasRoutineOrHabits: boolean
-  habitsAsked: boolean
   habits: string[]
   weekToDoTasks: string[]
-  weekToDoTasksAsked: boolean
-  weekToDoTasksConfirmAsked: boolean
   weekToDoTasksConfirmed: boolean
   needToConfirmToPlanLate: boolean
   forcedToPlanLate: boolean
   dislikeActivities: Set<string>
   dayActivitiesSuggestion: string | null
   dayActivitiesArrange: string | null
-  dayTasksSuggested: boolean
-  dayTasksConfirmed: boolean
   thisWeekCalendarEvents: string[]
-  motivationMessage: string | null
-  planningIsDone: boolean
-  flowIsDone: boolean
   messages: BaseMessage[]
 }
 
@@ -347,23 +332,15 @@ type DailyPlanStateType = {
   hasLastWeekPlan: LastValue<boolean>
   lastWeekPlan: LastValue<string[]>
   hasRoutineOrHabits: LastValue<boolean>
-  habitsAsked: LastValue<boolean>
   habits: LastValue<string[]>
   weekToDoTasks: LastValue<string[]>
-  weekToDoTasksAsked: LastValue<boolean>
-  weekToDoTasksConfirmAsked: LastValue<boolean>
   weekToDoTasksConfirmed: LastValue<boolean>
   needToConfirmToPlanLate: LastValue<boolean>
   forcedToPlanLate: LastValue<boolean>
   dislikeActivities: LastValue<Set<string>>
   dayActivitiesSuggestion: LastValue<string | null>
   dayActivitiesArrange: LastValue<string | null>
-  dayTasksSuggested: LastValue<boolean>
-  dayTasksConfirmed: LastValue<boolean>
   thisWeekCalendarEvents: LastValue<string[]>
-  motivationMessage: LastValue<string | null>
-  planningIsDone: LastValue<boolean>
-  flowIsDone: LastValue<boolean>
   messages: LastValue<Messages>
 }
 
@@ -379,23 +356,15 @@ const DailyPlanningAnnotation = Annotation.Root({
   hasLastWeekPlan: Annotation<boolean>(),
   lastWeekPlan: Annotation<string[]>(),
   hasRoutineOrHabits: Annotation<boolean>(),
-  habitsAsked: Annotation<boolean>(),
   habits: Annotation<string[]>(),
   weekToDoTasks: Annotation<string[]>(),
-  weekToDoTasksAsked: Annotation<boolean>(),
-  weekToDoTasksConfirmAsked: Annotation<boolean>(),
   weekToDoTasksConfirmed: Annotation<boolean>(),
   needToConfirmToPlanLate: Annotation<boolean>(),
   forcedToPlanLate: Annotation<boolean>(),
   dislikeActivities: Annotation<Set<string>>(),
   dayActivitiesSuggestion: Annotation<string | null>(),
   dayActivitiesArrange: Annotation<string | null>(),
-  dayTasksSuggested: Annotation<boolean>(),
-  dayTasksConfirmed: Annotation<boolean>(),
   thisWeekCalendarEvents: Annotation<string[]>(),
-  motivationMessage: Annotation<string | null>(),
-  planningIsDone: Annotation<boolean>(),
-  flowIsDone: Annotation<boolean>(),
   ...MessagesAnnotation.spec,
 })
 
