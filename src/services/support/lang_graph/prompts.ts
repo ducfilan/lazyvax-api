@@ -89,6 +89,9 @@ export const dayTasksSuggestionFirstDayTemplate =
 export const dayTasksSuggestTemplate =
   "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week:\n{calendarEvents}\n\nDisliked activities:\n{dislikeActivities}\n\n### Instructions: ###\n{instructions}";
 
+export const dayActivitiesArrangeTemplate =
+  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nActivities already planned for today:\n{targetDayActivities}\n\nActivities to arrange to fit into today:\n{activitiesToArrange}\n\n### Instructions: ###\n{instructions}";
+
 export const dayTasksSuggestInstruction = (
   timezone: string,
   targetDay: string = "today"
@@ -162,6 +165,35 @@ export const dayActivitiesSuggestionInstruction = (timezone: string, targetDay: 
   `Example format: [{
     "activity": "...",
     "description": "...",
+    },
+    ...
+  ]`,
+].join("\n");
+
+export const dayActivitiesArrangeInstruction = (timezone: string, targetDay: string = "today") => [
+  `Arrange the target activities into my current schedule for the day **${targetDay}**.`,
+  "",
+  "Guidelines for Scheduling:",
+  "- Avoid Overlaps: Do not schedule activities that conflict with my existing calendar events.",
+  "- Respect Priorities: Schedule high-priority activities first, followed by medium and low priorities.",
+  "- Energy Levels: Align activities that require high energy with my likely high-energy times",
+  "- Breaks: Include reasonable break times between long or mentally/physically demanding activities.",
+  "- Flexibility: If preferred timings are given, try to accommodate them. If not, arrange activities in the most logical order.",
+  "- Time Gaps: Fill gaps in my calendar efficiently but avoid over-packing the schedule.",
+  "- End of Day: Ensure the schedule allows me to wind down at least an hour before bedtime.",
+  "- Habits and routines scheduled for specific days must be respected.",
+  "- Length of activities: Decide by you but should be reasonable align with user properties in context.",
+  "",
+  "Output Format:",
+  "- Respond with a valid JSON array of activities, including:",
+  "1. **Activity**: From activities to arrange.",
+  `2. **Start and end times**: Date and time in ISO 8601 format, offset to ${timezone}.`,
+  "3. **Reminders**: Specify **reasonable reminders** (e.g., 10 and 0 minutes before reading; 10 and 1 minute before important events).",
+  `Example format:: [{
+    "activity": "...",
+    "start_time": ..., // Date and time, offset to ${timezone}
+    "end_time": ..., // Date and time, offset to ${timezone}
+    "reminder": [] // array of number minutes
     },
     ...
   ]`,

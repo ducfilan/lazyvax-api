@@ -37,8 +37,8 @@ export async function getRoutineAndHabits(userId: ObjectId): Promise<string[]> {
 export async function getCalendarEvents(userId: ObjectId, from: Date, to: Date, timezone?: string): Promise<string[]> {
   const calendarEvents = await getEvents({
     userId: userId,
-    from: from,
-    to: to,
+    from,
+    to,
   }, { "startDate": 1 });
 
   return calendarEvents?.map(e => {

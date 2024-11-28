@@ -4,26 +4,23 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
 import {
   dateInTimeZone,
+  endOfDayInTimeZone,
   formatDateToWeekDayAndDateTime,
   formatDateToWeekDayAndTime,
   getWeekInfo,
   isEvening,
   startOfDayInTimeZone,
 } from '@/common/utils/dateUtils';
-import { isSameDay, isSameWeek } from 'date-fns';
-import {
-  MessageTypePlainText
-} from '@common/consts/message-types';
+import { endOfDay, isSameDay, isSameWeek, startOfDay } from 'date-fns';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { ObjectId } from 'mongodb';
 import { getConversationById } from '@/services/api/conversations.services';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { dayActivitiesSuggestionInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
+import { dayActivitiesArrangeInstruction, dayActivitiesArrangeTemplate, dayActivitiesSuggestionInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
-import { sendMessage } from '@/services/utils/conversation.utils';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
 
 const checkLastWeekPlanStep = 'checkLastWeekPlan'
@@ -32,7 +29,7 @@ const checkThisWeekCalendarEventsStep = 'checkThisWeekCalendarEvents'
 const checkWeekToDoTasksStep = 'checkWeekToDoTasks'
 const getUserTimezoneStep = 'getUserTimezone'
 const generateDayTasksStep = 'generateDayTasks'
-const motivateUserStep = 'motivateUser'
+const arrangeDayStep = 'arrangeDay'
 
 const DayPlanSteps = {
   [checkLastWeekPlanStep]: 0,
@@ -41,7 +38,7 @@ const DayPlanSteps = {
   [checkWeekToDoTasksStep]: 3,
   [getUserTimezoneStep]: 4,
   [generateDayTasksStep]: 5,
-  [motivateUserStep]: 6,
+  [arrangeDayStep]: 6,
 }
 
 export class DailyPlanningWorkflow {
@@ -59,16 +56,16 @@ export class DailyPlanningWorkflow {
       .addNode(checkWeekToDoTasksStep, this.checkWeekToDoTasks.bind(this))
       .addNode(getUserTimezoneStep, this.getUserTimezone.bind(this))
       .addNode(generateDayTasksStep, this.generateDayTasks.bind(this))
-      .addNode(motivateUserStep, this.motivateUser.bind(this))
+      .addNode(arrangeDayStep, this.arrangeDay.bind(this))
       // Add edges.
-      .addConditionalEdges(START, this.decideStartFlow)
-      .addConditionalEdges(checkLastWeekPlanStep, this.decideLastWeekPlanFlow)
-      .addConditionalEdges(checkRoutineAndHabitsStep, this.decideRoutineFlow)
+      .addEdge(START, checkLastWeekPlanStep)
+      .addEdge(checkLastWeekPlanStep, checkRoutineAndHabitsStep)
+      .addEdge(checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep)
       .addEdge(checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep)
-      .addConditionalEdges(checkWeekToDoTasksStep, this.decideWeekToDoTasksFlow)
+      .addEdge(checkWeekToDoTasksStep, getUserTimezoneStep)
       .addEdge(getUserTimezoneStep, generateDayTasksStep)
-      .addEdge(generateDayTasksStep, motivateUserStep)
-      .addEdge(motivateUserStep, END)
+      .addEdge(generateDayTasksStep, arrangeDayStep)
+      .addEdge(arrangeDayStep, END)
 
     this.graph = builder.compile({ checkpointer: this.checkpointer })
   }
@@ -223,45 +220,47 @@ export class DailyPlanningWorkflow {
     }
   }
 
-  private async motivateUser(state: DailyPlanningState): Promise<NodeOutput> {
-    logger.debug(`motivateUser`)
-
-    if (state.motivationMessage && !state.flowIsDone) {
-      await sendMessage(state.conversationId, state.motivationMessage, MessageTypePlainText)
-
-      return {
-        flowIsDone: true,
-      }
+  private async arrangeDay(state: DailyPlanningState, config: RunnableConfig): Promise<NodeOutput> {
+    const nodeName = config?.configurable?.node_name
+    if (!this.isCurrentStep(nodeName, state.targetStep)) {
+      return {}
     }
 
-    return {}
-  }
+    const timezone = state.userInfo.preferences?.timezone
+    const targetDayActivities = await getCalendarEvents(
+      state.userInfo._id,
+      startOfDayInTimeZone(state.targetDayToPlan, timezone),
+      endOfDayInTimeZone(state.targetDayToPlan, timezone),
+      timezone
+    )
 
-  private decideStartFlow(state: DailyPlanningState) {
-    return state.flowIsDone ? END : 'checkLastWeekPlan'
-  }
+    const prompt = await ChatPromptTemplate.fromMessages([
+      ["system", systemMessageShort],
+      ["human", dayActivitiesArrangeTemplate],
+    ]).formatMessages({
+      now: formatDateToWeekDayAndDateTime(state.targetDayToPlan),
+      user_info: userInformationPrompt(state.userInfo),
+      habit: state.habits?.map(h => `- ${h}`).join('\n'),
+      targetDayActivities,
+      activitiesToArrange: state.dayActivitiesSuggestion,
+      instructions: dayActivitiesArrangeInstruction(timezone, "today"),
+    })
 
-  private decideLastWeekPlanFlow(state: DailyPlanningState) {
-    return state.hasLastWeekPlan ? 'checkRoutineAndHabits' : 'checkWeekToDoTasks';
-  }
+    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
 
-  private decideRoutineFlow(state: DailyPlanningState) {
-    return state.hasRoutineOrHabits ? 'checkThisWeekCalendarEvents' : 'askForHabits';
-  }
-
-
-  private decideWeekToDoTasksFlow(state: DailyPlanningState) {
-    return state.weekToDoTasks && state.weekToDoTasks.length > 0
-      ? 'confirmWeekToDoTasks'
-      : 'askForWeekToDoTasks';
+    return {
+      dayActivitiesArrange: result.content,
+      targetStep: state.targetStep + 1,
+    }
   }
 
   async runWorkflow(initialState: Partial<DailyPlanningState> = {}, updateState?: UpdateState) {
-    if (!initialState.userInfo || !initialState.conversationId) {
-      throw new Error('User info and conversation ID are required')
+    if (!initialState.userInfo || !initialState.conversationId || !initialState.targetDayToPlan) {
+      throw new Error('User info, conversation ID and target day to plan are required')
     }
+
     const config: RunnableConfig = {
-      configurable: { thread_id: initialState.conversationId.toHexString() }
+      configurable: { thread_id: `${initialState.conversationId.toHexString()}-${initialState.targetDayToPlan.getTime()}` }
     }
 
     const lastState = (await this.checkpointer.get(config))?.channel_values ?? {
@@ -326,6 +325,7 @@ type DailyPlanningState = {
   forcedToPlanLate: boolean
   dislikeActivities: Set<string>
   dayActivitiesSuggestion: string | null
+  dayActivitiesArrange: string | null
   dayTasksSuggested: boolean
   dayTasksConfirmed: boolean
   thisWeekCalendarEvents: string[]
@@ -357,6 +357,7 @@ type DailyPlanStateType = {
   forcedToPlanLate: LastValue<boolean>
   dislikeActivities: LastValue<Set<string>>
   dayActivitiesSuggestion: LastValue<string | null>
+  dayActivitiesArrange: LastValue<string | null>
   dayTasksSuggested: LastValue<boolean>
   dayTasksConfirmed: LastValue<boolean>
   thisWeekCalendarEvents: LastValue<string[]>
@@ -388,6 +389,7 @@ const DailyPlanningAnnotation = Annotation.Root({
   forcedToPlanLate: Annotation<boolean>(),
   dislikeActivities: Annotation<Set<string>>(),
   dayActivitiesSuggestion: Annotation<string | null>(),
+  dayActivitiesArrange: Annotation<string | null>(),
   dayTasksSuggested: Annotation<boolean>(),
   dayTasksConfirmed: Annotation<boolean>(),
   thisWeekCalendarEvents: Annotation<string[]>(),

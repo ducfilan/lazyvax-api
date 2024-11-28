@@ -2,7 +2,6 @@ import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateD
 import { BaseMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
-import { getEvents } from '@/services/api/events.services';
 import {
   dateInTimeZone,
   formatDateToWeekDay,
@@ -13,9 +12,9 @@ import {
   isEvening,
   startOfDayInTimeZone,
 } from '@/common/utils/dateUtils';
-import { addDays, addWeeks, getDay, isSameWeek, startOfDay } from 'date-fns';
+import { addDays, getDay, isSameWeek, startOfDay } from 'date-fns';
 import { WeekPlanType } from '@/common/types/types';
-import { BotUserId, BotUserName, DaysOfWeekMap, PlanTypeWeekInteractive } from '@common/consts/constants';
+import { PlanTypeWeekInteractive } from '@common/consts/constants';
 import {
   MessageTypeAskForNextDayTasks,
   MessageTypeAskForRoutine,
@@ -31,19 +30,13 @@ import {
 } from '@common/consts/message-types';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
-import { emitConversationMessage } from '../socket.io.service';
 import { ObjectId } from 'mongodb';
-import { Message } from '@/entities/Message';
-import { getHabits } from '@/services/api/habits.services';
 import { getConversationById } from '@/services/api/conversations.services';
-import { saveMessage } from '@/services/api/messages.services';
 import { RunnableConfig } from '@langchain/core/runnables';
 import { dayTasksSuggestInstruction, dayTasksSuggestionFirstDayTemplate, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
-import { EventStatusToText } from '@/entities/Event';
-import { update } from '@/services/api/users.services';
 import { sendMessage } from '@/services/utils/conversation.utils';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
 
