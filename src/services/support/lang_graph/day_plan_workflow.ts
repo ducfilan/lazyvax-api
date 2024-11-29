@@ -22,24 +22,7 @@ import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
-
-const checkLastWeekPlanStep = 'checkLastWeekPlan'
-const checkRoutineAndHabitsStep = 'checkRoutineAndHabits'
-const checkThisWeekCalendarEventsStep = 'checkThisWeekCalendarEvents'
-const checkWeekToDoTasksStep = 'checkWeekToDoTasks'
-const getUserTimezoneStep = 'getUserTimezone'
-const generateDayTasksStep = 'generateDayTasks'
-const arrangeDayStep = 'arrangeDay'
-
-const DayPlanSteps = {
-  [checkLastWeekPlanStep]: 0,
-  [checkRoutineAndHabitsStep]: 1,
-  [checkThisWeekCalendarEventsStep]: 2,
-  [checkWeekToDoTasksStep]: 3,
-  [getUserTimezoneStep]: 4,
-  [generateDayTasksStep]: 5,
-  [arrangeDayStep]: 6,
-}
+import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps } from '@/common/consts/shared';
 
 export class DayPlanWorkflow {
   private checkpointer: MongoDBSaver;

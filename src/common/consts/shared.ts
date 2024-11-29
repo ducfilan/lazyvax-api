@@ -27,3 +27,34 @@ export const JobStatusRetired = 5;
 export const JobStatusOther = 6;
 
 export const JobStatusMax = 6;
+
+export const checkLastWeekPlanStep = 'checkLastWeekPlan'
+export const checkRoutineAndHabitsStep = 'checkRoutineAndHabits'
+export const checkThisWeekCalendarEventsStep = 'checkThisWeekCalendarEvents'
+export const checkWeekToDoTasksStep = 'checkWeekToDoTasks'
+export const getUserTimezoneStep = 'getUserTimezone'
+export const generateDayTasksStep = 'generateDayTasks'
+export const arrangeDayStep = 'arrangeDay'
+
+export const DayPlanSteps = {
+  [checkLastWeekPlanStep]: 0,
+  [checkRoutineAndHabitsStep]: 1,
+  [checkThisWeekCalendarEventsStep]: 2,
+  [checkWeekToDoTasksStep]: 3,
+  [getUserTimezoneStep]: 4,
+  [generateDayTasksStep]: 5,
+  [arrangeDayStep]: 6,
+}
+
+export const ConversationTypeWeek = 'week'
+export const ConversationTypeDay = 'day'
+export const ConversationTypeMonth = 'month'
+export const ConversationTypeObjective = 'objective'
+export const ConversationTypeAll = 'all'
+export const ConversationTypes = [
+  ConversationTypeWeek, ConversationTypeDay, ConversationTypeMonth, ConversationTypeObjective, ConversationTypeAll
+]
+
+export const WeekPlanStageBegin = 1
+export const WeekPlanStageDonePlanning = 2
+export const WeekPlanStages = [WeekPlanStageBegin, WeekPlanStageDonePlanning]

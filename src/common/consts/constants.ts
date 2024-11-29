@@ -94,18 +94,6 @@ export const Envs = {
   dev: 'dev',
   prod: 'prod'
 }
-export const ConversationTypeWeek = 'week'
-export const ConversationTypeDay = 'day'
-export const ConversationTypeMonth = 'month'
-export const ConversationTypeObjective = 'objective'
-export const ConversationTypeAll = 'all'
-export const ConversationTypes = [
-  ConversationTypeWeek, ConversationTypeDay, ConversationTypeMonth, ConversationTypeObjective, ConversationTypeAll
-]
-
-export const WeekPlanStageBegin = 1
-export const WeekPlanStageDonePlanning = 2
-export const WeekPlanStages = [WeekPlanStageBegin, WeekPlanStageDonePlanning]
 
 export const OAuth2TokenReceiver = (host: string, targetPlatform: string) => {
   if (targetPlatform === TargetPlatformWeb) {

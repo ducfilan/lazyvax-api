@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
-import { ConversationTypes, MilestoneSources, PlanTypeWeekFull, PlanTypeWeekInteractive, SupportingLanguages } from "@/common/consts/constants";
+import { MilestoneSources, PlanTypeWeekFull, PlanTypeWeekInteractive, SupportingLanguages } from "@/common/consts/constants";
+import { ConversationTypes } from "@/common/consts/shared";
 import { EventMeta } from "@/entities/Event";
 import { MessageTypes } from "@/common/consts/message-types";
 import { formatDateToWeekDayAndTime } from "@common/utils/dateUtils";
