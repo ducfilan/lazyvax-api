@@ -1,4 +1,5 @@
-import { ConversationTypes, ConversationTypeWeek, MaxInt, MaxPaginationLimit } from "@/common/consts/constants"
+import { MaxInt, MaxPaginationLimit } from "@/common/consts/constants"
+import { ConversationTypes, ConversationTypeWeek } from "@/common/consts/shared"
 import { isEmpty } from "@/common/utils/objectUtils"
 import { isParticipantInConversation } from "@/services/api/conversations.services"
 import { check, validationResult } from "express-validator"

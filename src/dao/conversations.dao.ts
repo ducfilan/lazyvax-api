@@ -52,13 +52,16 @@ export default class ConversationsDao {
                             items: {
                               bsonType: 'object',
                               properties: {
+                                _id: { bsonType: 'objectId' },
                                 title: { bsonType: 'string' },
                                 description: { bsonType: 'string' },
+                                priority: { bsonType: 'int' },
                                 progress: { bsonType: 'int' },
+                                tags: { bsonType: 'array' },
                                 completed: { bsonType: 'bool' },
                                 dueDate: { bsonType: 'date' }
                               },
-                              required: ['title', 'completed'],
+                              required: ['_id', 'title', 'completed'],
                               additionalProperties: false
                             }
                           },
