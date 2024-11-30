@@ -65,6 +65,9 @@ export const GoalMaxLength = 255
 export const AspectMaxLength = 255
 export const StudyCourseLength = 255
 export const OccupationLength = 255
+export const TodoTaskTitleMaxLength = 250
+export const GeneralDescriptionMaxLength = 1000
+export const TagMaxLength = 50
 export const AgeGroupMaxLength = 10
 export const MaxInt = 2147483647
 

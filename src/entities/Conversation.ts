@@ -17,9 +17,12 @@ export type Conversation = {
 }
 
 export type TodoTask = {
+  _id?: ObjectId,
   title: string,
   description?: string,
+  priority?: number,
   progress?: number,
+  tags?: string[],
   completed: boolean,
   dueDate: Date,
 }

@@ -1,5 +1,5 @@
-import { MaxInt, MaxPaginationLimit } from "@/common/consts/constants"
-import { ConversationTypes, ConversationTypeWeek } from "@/common/consts/shared"
+import { GeneralDescriptionMaxLength, MaxInt, MaxPaginationLimit, TagMaxLength, TodoTaskTitleMaxLength } from "@/common/consts/constants"
+import { ConversationTypes, ConversationTypeWeek, TaskPriorities } from "@/common/consts/shared"
 import { isEmpty } from "@/common/utils/objectUtils"
 import { isParticipantInConversation } from "@/services/api/conversations.services"
 import { check, validationResult } from "express-validator"
@@ -7,7 +7,7 @@ import { ObjectId } from "mongodb"
 
 export const validateApiGetConversationById = [
   check('conversationId')
-    .customSanitizer(id => new ObjectId(id))
+    .customSanitizer(id => new ObjectId(id as string))
     .custom(async (conversationId, { req }) => {
       const userId = req.user._id
       if (!isParticipantInConversation(userId, conversationId)) {
@@ -51,7 +51,7 @@ export const validateApiGetConversationByType = [
 
 export const validateApiUpdateConversation = [
   check('conversationId')
-    .customSanitizer(id => new ObjectId(id))
+    .customSanitizer(id => new ObjectId(id as string))
     .custom(async (conversationId, { req }) => {
       const userId = req.user._id
       if (!isParticipantInConversation(userId, conversationId)) {
@@ -117,7 +117,7 @@ export const validateApiGetMessages = [
     .bail()
     .toInt(),
   check('conversationId')
-    .customSanitizer(id => new ObjectId(id))
+    .customSanitizer(id => new ObjectId(id as string))
     .custom(async (conversationId, { req }) => {
       const userId = req.user._id
       if (!isParticipantInConversation(userId, conversationId)) {
@@ -129,6 +129,49 @@ export const validateApiGetMessages = [
     if (!errors.isEmpty())
       return res.status(422).json({ errors: errors.array() })
 
+    next()
+  },
+]
+
+export const validateApiReplaceTodoTasks = [
+  check('conversationId')
+    .customSanitizer(id => new ObjectId(id as string))
+    .custom(async (conversationId, { req }) => {
+      const userId = req.user._id
+      if (!isParticipantInConversation(userId, conversationId)) {
+        throw new Error('You are not part of this conversation')
+      }
+    }),
+  check('tasks')
+    .isArray()
+    .bail()
+    .custom((tasks) => {
+      for (const task of tasks) {
+        if (!task._id || !task.title || typeof task.completed !== 'boolean') {
+          throw new Error('Each task must have _id, title, and completed fields')
+        }
+
+        if (task._id) new ObjectId(task._id as string)
+        if (task.title && (typeof task.title !== 'string' || task.title.length === 0 || task.title.length > TodoTaskTitleMaxLength)) throw new Error(`title must be a non-empty string with max length of ${TodoTaskTitleMaxLength} characters`)
+        if (task.description && (typeof task.description !== 'string' || task.description.length > GeneralDescriptionMaxLength)) throw new Error(`description must be a string with max length of ${GeneralDescriptionMaxLength} characters`)
+        if (task.priority && (!Number.isInteger(task.priority) || !TaskPriorities.includes(task.priority))) throw new Error('priority must be one of valid priority values')
+        if (task.progress && (!Number.isInteger(task.progress) || task.progress < 0 || task.progress > 100)) throw new Error('progress must be an integer between 0 and 100')
+        if (task.tags) {
+          if (!Array.isArray(task.tags)) throw new Error('tags must be an array')
+          for (const tag of task.tags) {
+            if (typeof tag !== 'string' || tag.length > TagMaxLength) throw new Error(`each tag must be a string with max length of ${TagMaxLength} characters`)
+          }
+        }
+        if (task.dueDate) new Date(task.dueDate)
+      }
+      return true
+    }),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      const error = errors.array({ onlyFirstError: true })[0]
+      return res.status(422).json({ error: error.msg })
+    }
     next()
   },
 ]

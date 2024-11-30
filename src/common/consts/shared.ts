@@ -58,3 +58,9 @@ export const ConversationTypes = [
 export const WeekPlanStageBegin = 1
 export const WeekPlanStageDonePlanning = 2
 export const WeekPlanStages = [WeekPlanStageBegin, WeekPlanStageDonePlanning]
+
+export const PriorityHigh = 2;
+export const PriorityMedium = 1;
+export const PriorityLow = 0;
+
+export const TaskPriorities = [PriorityHigh, PriorityMedium, PriorityLow]

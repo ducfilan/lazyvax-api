@@ -147,3 +147,7 @@ export async function generateFirstMessages(conversationType: string, locale: st
       return []
   }
 }
+
+export async function replaceTodoTasks(conversationId: ObjectId, tasks: TodoTask[]) {
+  return ConversationsDao.updateOne({ _id: conversationId }, { $set: { "meta.meta.todoTasks": tasks } })
+}
