@@ -11,8 +11,8 @@ export const validateApiRunDaySuggestions = [
     .isObject()
     .withMessage('Extra info must be an object')
     .customSanitizer((extraInfo: any) => {
-      const { weekToDoTasksConfirmed } = extraInfo
-      return { weekToDoTasksConfirmed }
+      const { weekToDoTasksConfirmed, forcedToPlanLate } = extraInfo
+      return { weekToDoTasksConfirmed, forcedToPlanLate }
     }),
   (req, res, next) => {
     const errors = validationResult(req)

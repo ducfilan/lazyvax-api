@@ -169,11 +169,21 @@ export class DayPlanWorkflow {
         }
       }
 
+      const isConfirmed = typeof state.forcedToPlanLate === 'boolean'
+      if (!isConfirmed) {
+        return {}
+      }
+
       if (!state.forcedToPlanLate) {
         return {
           targetStep: state.targetStep + 1,
         }
       }
+    }
+
+    const isSuggested = state.dayActivitiesToArrange?.length > 0
+    if (isSuggested && !state.dayActivitiesConfirmed) {
+      return {}
     }
 
     const prompt = await ChatPromptTemplate.fromMessages([
@@ -199,7 +209,7 @@ export class DayPlanWorkflow {
   }
 
   private async arrangeDay(state: DailyPlanningState): Promise<NodeOutput> {
-    if (!this.isCurrentStep(arrangeDayStep, state.targetStep)) {
+    if (!this.isCurrentStep(arrangeDayStep, state.targetStep) || !state.dayActivitiesToArrange?.length) {
       return {}
     }
 

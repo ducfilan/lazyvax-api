@@ -12,6 +12,7 @@ export async function getDaySuggestions(user: User, conversationId: ObjectId, ta
 
   return {
     currentStep: result.targetStep,
+    forcedToPlanLate: result.forcedToPlanLate,
     needToConfirmToPlanLate: result.needToConfirmToPlanLate,
     dayActivitiesSuggestion: result.dayActivitiesSuggestion,
     activitiesArrange: result.dayActivitiesArrange,
