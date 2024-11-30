@@ -147,24 +147,50 @@ export const validateApiReplaceTodoTasks = [
     .bail()
     .custom((tasks) => {
       for (const task of tasks) {
-        if (!task._id || !task.title || typeof task.completed !== 'boolean') {
-          throw new Error('Each task must have _id, title, and completed fields')
+        if (!task.title || (task.completed !== undefined && typeof task.completed !== 'boolean')) {
+          throw new Error('Each task must have title and completed fields')
         }
-
-        if (task._id) new ObjectId(task._id as string)
-        if (task.title && (typeof task.title !== 'string' || task.title.length === 0 || task.title.length > TodoTaskTitleMaxLength)) throw new Error(`title must be a non-empty string with max length of ${TodoTaskTitleMaxLength} characters`)
-        if (task.description && (typeof task.description !== 'string' || task.description.length > GeneralDescriptionMaxLength)) throw new Error(`description must be a string with max length of ${GeneralDescriptionMaxLength} characters`)
-        if (task.priority && (!Number.isInteger(task.priority) || !TaskPriorities.includes(task.priority))) throw new Error('priority must be one of valid priority values')
-        if (task.progress && (!Number.isInteger(task.progress) || task.progress < 0 || task.progress > 100)) throw new Error('progress must be an integer between 0 and 100')
+        if (task.title && (typeof task.title !== 'string' || task.title.length === 0 || task.title.length > TodoTaskTitleMaxLength)) {
+          throw new Error(`title must be a non-empty string with max length of ${TodoTaskTitleMaxLength} characters`);
+        }
+        if (task.description && (typeof task.description !== 'string' || task.description.length > GeneralDescriptionMaxLength)) {
+          throw new Error(`description must be a string with max length of ${GeneralDescriptionMaxLength} characters`);
+        }
+        if (task.priority && (!Number.isInteger(task.priority) || !TaskPriorities.includes(task.priority))) {
+          throw new Error('priority must be one of valid priority values');
+        }
+        if (task.progress && (!Number.isInteger(task.progress) || task.progress < 0 || task.progress > 100)) {
+          throw new Error('progress must be an integer between 0 and 100');
+        }
         if (task.tags) {
-          if (!Array.isArray(task.tags)) throw new Error('tags must be an array')
-          for (const tag of task.tags) {
-            if (typeof tag !== 'string' || tag.length > TagMaxLength) throw new Error(`each tag must be a string with max length of ${TagMaxLength} characters`)
+          if (!Array.isArray(task.tags)) throw new Error('tags must be an array');
+          if (!task.tags.every(tag => typeof tag === 'string' && tag.length <= TagMaxLength)) {
+            throw new Error(`each tag must be a string with max length of ${TagMaxLength} characters`);
           }
         }
-        if (task.dueDate) new Date(task.dueDate)
+        if (task.dueDate && !(new Date(task.dueDate)).getTime()) {
+          throw new Error('dueDate must be a valid date');
+        }
       }
-      return true
+      return true;
+    })
+    .customSanitizer(tasks => {
+      return tasks.map(task => {
+        const sanitizedTask = { ...task };
+
+        sanitizedTask._id = task._id ? new ObjectId(task._id as string) : new ObjectId();
+        sanitizedTask.completed = task.completed ?? false;
+
+        if (sanitizedTask.dueDate) {
+          sanitizedTask.dueDate = new Date(sanitizedTask.dueDate);
+        }
+
+        if (sanitizedTask.tags) {
+          sanitizedTask.tags = sanitizedTask.tags.map(tag => tag.trim());
+        }
+
+        return sanitizedTask;
+      });
     }),
   (req, res, next) => {
     const errors = validationResult(req)
