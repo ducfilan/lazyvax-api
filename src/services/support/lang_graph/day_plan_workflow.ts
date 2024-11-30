@@ -186,6 +186,7 @@ export class DayPlanWorkflow {
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       calendarEvents: state.thisWeekCalendarEvents?.map(e => `- ${e}`).join('\n'),
+      dislikeActivities: state.dislikeActivities.size > 0 ? [...state.dislikeActivities].map(a => `- ${a}`).join('\n') : "Not specified",
       instructions: dayActivitiesSuggestionInstruction(timezone, "today"),
     })
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
@@ -239,12 +240,12 @@ export class DayPlanWorkflow {
       configurable: { thread_id: `${initialState.conversationId.toHexString()}-${initialState.targetDayToPlan.getTime()}` }
     }
 
-    const lastState = (await this.checkpointer.get(config))?.channel_values ?? {
-      targetStep: DayPlanSteps.checkLastWeekPlan,
-      dislikeActivities: new Set(),
-    }
-
     try {
+      const lastState = (await this.checkpointer.get(config))?.channel_values ?? {
+        targetStep: DayPlanSteps.checkLastWeekPlan,
+        dislikeActivities: new Set(),
+      }
+
       if (!lastState.conversation) {
         const conversation = await getConversationById(initialState.conversationId)
         if (!conversation) {
