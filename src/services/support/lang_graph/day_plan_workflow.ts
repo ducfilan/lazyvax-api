@@ -194,7 +194,7 @@ export class DayPlanWorkflow {
     return {
       ...newState,
       dayActivitiesSuggestion: result.content,
-      targetStep: state.targetStep + 1,
+      targetStep: state.dayActivitiesConfirmed ? state.targetStep + 1 : state.targetStep,
     }
   }
 
@@ -219,7 +219,7 @@ export class DayPlanWorkflow {
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       targetDayActivities,
-      activitiesToArrange: state.dayActivitiesSuggestion,
+      activitiesToArrange: state.dayActivitiesToArrange,
       instructions: dayActivitiesArrangeInstruction(timezone, "today"),
     })
 
@@ -299,6 +299,8 @@ type DailyPlanningState = {
   forcedToPlanLate: boolean
   dislikeActivities: Set<string>
   dayActivitiesSuggestion: string | null
+  dayActivitiesConfirmed: boolean
+  dayActivitiesToArrange: string[]
   dayActivitiesArrange: string | null
   thisWeekCalendarEvents: string[]
   messages: BaseMessage[]
@@ -323,6 +325,8 @@ type DailyPlanStateType = {
   forcedToPlanLate: LastValue<boolean>
   dislikeActivities: LastValue<Set<string>>
   dayActivitiesSuggestion: LastValue<string | null>
+  dayActivitiesConfirmed: LastValue<boolean>
+  dayActivitiesToArrange: LastValue<string[]>
   dayActivitiesArrange: LastValue<string | null>
   thisWeekCalendarEvents: LastValue<string[]>
   messages: LastValue<Messages>
@@ -347,6 +351,8 @@ const DailyPlanningAnnotation = Annotation.Root({
   forcedToPlanLate: Annotation<boolean>(),
   dislikeActivities: Annotation<Set<string>>(),
   dayActivitiesSuggestion: Annotation<string | null>(),
+  dayActivitiesConfirmed: Annotation<boolean>(),
+  dayActivitiesToArrange: Annotation<string[]>(),
   dayActivitiesArrange: Annotation<string | null>(),
   thisWeekCalendarEvents: Annotation<string[]>(),
   ...MessagesAnnotation.spec,
