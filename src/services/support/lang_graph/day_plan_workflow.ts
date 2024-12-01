@@ -145,7 +145,6 @@ export class DayPlanWorkflow {
 
     // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
     // TODO: What if it's Sunday?
-    const newState: Partial<DailyPlanningState> = {}
     const timezone = state.userInfo.preferences?.timezone
     const now = new Date()
     const nowInTz = dateInTimeZone(now, timezone)
@@ -182,8 +181,10 @@ export class DayPlanWorkflow {
     }
 
     const isSuggested = state.dayActivitiesSuggestion?.length > 0
-    if (isSuggested && !state.dayActivitiesConfirmed) {
-      return {}
+    if (isSuggested) {
+      return state.dayActivitiesConfirmed ? {
+        targetStep: state.targetStep + 1,
+      } : {}
     }
 
     const prompt = await ChatPromptTemplate.fromMessages([
@@ -202,7 +203,6 @@ export class DayPlanWorkflow {
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
 
     return {
-      ...newState,
       dayActivitiesSuggestion: result.content,
       targetStep: state.dayActivitiesConfirmed ? state.targetStep + 1 : state.targetStep,
     }
@@ -242,7 +242,6 @@ export class DayPlanWorkflow {
 
     return {
       dayActivitiesArrange: result.content,
-      targetStep: state.targetStep,
     }
   }
 

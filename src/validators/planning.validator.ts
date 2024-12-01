@@ -1,3 +1,4 @@
+import { TodoTaskTitleMaxLength } from '@/common/consts/constants';
 import { check, validationResult } from 'express-validator';
 import { ObjectId } from 'mongodb';
 
@@ -10,6 +11,21 @@ export const validateApiRunDaySuggestions = [
     .optional()
     .isObject()
     .withMessage('Extra info must be an object')
+    .custom((extraInfo) => {
+      if (extraInfo?.dayActivitiesToArrange !== undefined) {
+        if (!Array.isArray(extraInfo.dayActivitiesToArrange)) {
+          throw new Error('dayActivitiesToArrange must be an array')
+        }
+        if (!extraInfo.dayActivitiesToArrange.every(item =>
+          typeof item === 'string' &&
+          item.length > 0 &&
+          item.length <= TodoTaskTitleMaxLength
+        )) {
+          throw new Error(`each item in dayActivitiesToArrange must be a string with max length of ${TodoTaskTitleMaxLength} characters`)
+        }
+      }
+      return true
+    })
     .customSanitizer((extraInfo: any) => {
       const {
         weekToDoTasksConfirmed,
