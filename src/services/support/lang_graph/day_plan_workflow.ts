@@ -181,7 +181,7 @@ export class DayPlanWorkflow {
       }
     }
 
-    const isSuggested = state.dayActivitiesToArrange?.length > 0
+    const isSuggested = state.dayActivitiesSuggestion?.length > 0
     if (isSuggested && !state.dayActivitiesConfirmed) {
       return {}
     }
