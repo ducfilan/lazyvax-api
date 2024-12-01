@@ -213,6 +213,11 @@ export class DayPlanWorkflow {
       return {}
     }
 
+    const isArranged = state.dayActivitiesArrange?.length > 0
+    if (isArranged) {
+      return {}
+    }
+
     const timezone = state.userInfo.preferences?.timezone
     const targetDayActivities = await getCalendarEvents(
       state.userInfo._id,
@@ -237,7 +242,7 @@ export class DayPlanWorkflow {
 
     return {
       dayActivitiesArrange: result.content,
-      targetStep: state.targetStep + 1,
+      targetStep: state.targetStep,
     }
   }
 
