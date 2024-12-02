@@ -57,6 +57,7 @@ export default class ConversationsDao {
                                 description: { bsonType: 'string' },
                                 priority: { bsonType: 'int' },
                                 progress: { bsonType: 'int' },
+                                expectedDuration: { bsonType: 'double', minimum: 0, maximum: 24 },
                                 tags: { bsonType: 'array' },
                                 completed: { bsonType: 'bool' },
                                 dueDate: { bsonType: 'date' }

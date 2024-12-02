@@ -34,12 +34,16 @@ export const validateApiRunDaySuggestions = [
         dayActivitiesToArrange,
       } = extraInfo
 
-      return {
+      const finalExtraInfo = {
         weekToDoTasksConfirmed,
         forcedToPlanLate,
         dayActivitiesConfirmed,
         dayActivitiesToArrange,
       }
+
+      return Object.fromEntries(
+        Object.entries(finalExtraInfo).filter(([_, value]) => value !== undefined)
+      )
     }),
   (req, res, next) => {
     const errors = validationResult(req)
