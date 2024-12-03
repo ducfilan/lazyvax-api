@@ -157,6 +157,7 @@ export const dayActivitiesSuggestionInstruction = (timezone: string, targetDay: 
   "- Be varied and aligned with the user's life priorities (e.g., work, health, family, learning).",
   "- Avoid suggesting or repeating activities already on the calendar on the same day.",
   "- Habits and routines scheduled for specific days must be respected.",
+  "- **Don't** suggest planning for some days or reflection for the day as an activity.",
   "",
   "Output Format:",
   "Respond with a valid JSON array of activities, nothing else:",
