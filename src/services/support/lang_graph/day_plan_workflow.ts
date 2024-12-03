@@ -148,20 +148,15 @@ export class DayPlanWorkflow {
     const timezone = state.userInfo.preferences?.timezone
     const now = new Date()
     const nowInTz = dateInTimeZone(now, timezone)
-    const weekStartDate = new Date(state.weekStartDate)
-    const weekStartDateInTz = dateInTimeZone(weekStartDate, timezone)
-    const isPlanThisWeek = isSameWeek(nowInTz, weekStartDateInTz, { weekStartsOn: 1 }) // TODO: What about week starts on Sun.
     const targetDayToPlanInTz = dateInTimeZone(state.targetDayToPlan, timezone)
     const isTargetDayToday = isSameDay(nowInTz, targetDayToPlanInTz)
 
     // Set initial planning date/time.
-    let dateTimeToStartPlanning = isPlanThisWeek
-      ? isTargetDayToday ? nowInTz : startOfDayInTimeZone(state.targetDayToPlan, timezone)
-      : startOfDayInTimeZone(weekStartDate, timezone)
+    let dateTimeToStartPlanning = isTargetDayToday ? nowInTz : startOfDayInTimeZone(state.targetDayToPlan, timezone)
 
     // Check if it's late and adjust planning time if needed
     const isLateOnToday = isEvening(nowInTz)
-    if (isLateOnToday && isPlanThisWeek) {
+    if (isLateOnToday && isTargetDayToday) {
       if (!state.needToConfirmToPlanLate) {
         return {
           needToConfirmToPlanLate: true,
