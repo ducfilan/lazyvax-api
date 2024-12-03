@@ -11,7 +11,7 @@ import {
   isEvening,
   startOfDayInTimeZone,
 } from '@/common/utils/dateUtils';
-import { isSameDay, isSameWeek } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { ObjectId } from 'mongodb';
@@ -22,7 +22,8 @@ import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
-import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps } from '@/common/consts/shared';
+import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, ObjectiveTypeShort, ObjectiveTypeLong } from '@/common/consts/shared';
+import { getObjectivesByUserId } from '@/services/api/objectives.services';
 
 export class DayPlanWorkflow {
   private checkpointer: MongoDBSaver;
@@ -116,6 +117,7 @@ export class DayPlanWorkflow {
     }
 
     const todoTasks = state.conversation?.meta?.meta?.todoTasks || []
+    logger.debug("checkWeekToDoTasks todoTasks: " + todoTasks)
     const timezone = state.userInfo.preferences?.timezone
 
     return {
@@ -182,6 +184,10 @@ export class DayPlanWorkflow {
       } : {}
     }
 
+    const objectives = await getObjectivesByUserId(state.userInfo._id)
+    const shortTermGoals = objectives.filter(o => o.type === ObjectiveTypeShort).map(o => o.title)
+    const longTermGoals = objectives.filter(o => o.type === ObjectiveTypeLong).map(o => o.title)
+
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
       ["human", dayTasksSuggestTemplate],
@@ -189,6 +195,8 @@ export class DayPlanWorkflow {
       now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
+      shortTermGoals: shortTermGoals?.map(t => `- ${t}`).join('\n'),
+      longTermGoals: longTermGoals?.map(t => `- ${t}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       calendarEvents: state.thisWeekCalendarEvents?.map(e => `- ${e}`).join('\n'),
@@ -214,6 +222,11 @@ export class DayPlanWorkflow {
     }
 
     const timezone = state.userInfo.preferences?.timezone
+    const now = new Date()
+    const nowInTz = dateInTimeZone(now, timezone)
+    const targetDayToPlanInTz = dateInTimeZone(state.targetDayToPlan, timezone)
+    const isTargetDayToday = isSameDay(nowInTz, targetDayToPlanInTz)
+    let dateTimeToStartPlanning = isTargetDayToday ? nowInTz : startOfDayInTimeZone(state.targetDayToPlan, timezone)
     const targetDayActivities = await getCalendarEvents(
       state.userInfo._id,
       startOfDayInTimeZone(state.targetDayToPlan, timezone),
@@ -225,7 +238,7 @@ export class DayPlanWorkflow {
       ["system", systemMessageShort],
       ["human", dayActivitiesArrangeTemplate],
     ]).formatMessages({
-      now: formatDateToWeekDayAndDateTime(state.targetDayToPlan),
+      now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
       targetDayActivities,

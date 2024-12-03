@@ -64,3 +64,8 @@ export const PriorityMedium = 1;
 export const PriorityLow = 0;
 
 export const TaskPriorities = [PriorityHigh, PriorityMedium, PriorityLow]
+
+export const ObjectiveTypeLife = 'life'
+export const ObjectiveTypeLong = 'long'
+export const ObjectiveTypeShort = 'short'
+export const ObjectiveTypes = [ObjectiveTypeLife, ObjectiveTypeLong, ObjectiveTypeShort]

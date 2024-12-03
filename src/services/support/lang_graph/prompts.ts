@@ -84,10 +84,10 @@ export const userInformationPrompt = (user: User) => {
 };
 
 export const dayTasksSuggestionFirstDayTemplate =
-  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week:\n{calendarEvents}\n\n### Instructions: ###\n{instructions}";
+  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week, includes today:\n{calendarEvents}\n\n### Instructions: ###\n{instructions}";
 
 export const dayTasksSuggestTemplate =
-  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week:\n{calendarEvents}\n\nDisliked activities:\n{dislikeActivities}\n\n### Instructions: ###\n{instructions}";
+  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nShort term goals:\n{shortTermGoals}\n\nLong term goals:\n{longTermGoals}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week, includes today:\n{calendarEvents}\n\nDisliked activities:\n{dislikeActivities}\n\n### Instructions: ###\n{instructions}";
 
 export const dayActivitiesArrangeTemplate =
   "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nActivities already planned for today:\n{targetDayActivities}\n\nActivities to arrange to fit into today:\n{activitiesToArrange}\n\n### Instructions: ###\n{instructions}";

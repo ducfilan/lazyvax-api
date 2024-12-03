@@ -1,6 +1,6 @@
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
-import { ObjectiveTypes } from '@/common/consts/constants'
+import { ObjectiveTypes } from '@/common/consts/shared'
 
 export const validateObjectiveCreation = [
   check('title')

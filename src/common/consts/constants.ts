@@ -126,8 +126,6 @@ export const I18nDbCodeSummarizeQuestionnaires = 'summarize-questionnaires'
 
 export const RegisterStep = 1
 
-export const ObjectiveTypes = ['life', 'long', 'short']
-
 export const CalendarSourceGoogle = "Google"
 export const CalendarSourceApp = AppName
 

@@ -39,6 +39,9 @@ import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { sendMessage } from '@/services/utils/conversation.utils';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
+import { ObjectiveTypeLong } from '@/common/consts/shared';
+import { ObjectiveTypeShort } from '@/common/consts/shared';
+import { getObjectivesByUserId } from '@/services/api/objectives.services';
 
 export class WeeklyPlanningWorkflow {
   private checkpointer: MongoDBSaver;
@@ -353,6 +356,10 @@ export class WeeklyPlanningWorkflow {
       MessageTypePlainText
     )
 
+    const objectives = await getObjectivesByUserId(state.userInfo._id)
+    const shortTermGoals = objectives.filter(o => o.type === ObjectiveTypeShort).map(o => o.title)
+    const longTermGoals = objectives.filter(o => o.type === ObjectiveTypeLong).map(o => o.title)
+
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
       ["human", dayTasksSuggestTemplate],
@@ -360,6 +367,8 @@ export class WeeklyPlanningWorkflow {
       now: formatDateToWeekDayAndDate(new Date(), timezone),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
+      shortTermGoals: shortTermGoals?.map(t => `- ${t}`).join('\n'),
+      longTermGoals: longTermGoals?.map(t => `- ${t}`).join('\n'),
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
