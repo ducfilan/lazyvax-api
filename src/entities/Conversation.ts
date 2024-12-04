@@ -23,7 +23,9 @@ export type TodoTask = {
   priority?: number,
   progress?: number,
   tags?: string[],
+  status: number,
   completed: boolean,
+  expectedDuration?: number;
   dueDate: Date,
 }
 

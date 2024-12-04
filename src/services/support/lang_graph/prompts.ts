@@ -157,7 +157,7 @@ export const dayActivitiesSuggestionInstruction = (timezone: string, targetDay: 
   "- Be varied and aligned with the user's life priorities (e.g., work, health, family, learning).",
   "- Avoid suggesting or repeating activities already on the calendar on the same day.",
   "- Habits and routines scheduled for specific days must be respected.",
-  "- **Don't** suggest planning for some days or reflection for the day as an activity.",
+  "- **Don't** suggest planning for some days or reflection for the day as activity.",
   "",
   "Output Format:",
   "Respond with a valid JSON array of activities, nothing else, including:",
@@ -170,6 +170,25 @@ export const dayActivitiesSuggestionInstruction = (timezone: string, targetDay: 
     ...
   ]`,
 ].join("\n");
+
+export const askMoreInfoInstruction = (targetDay: string = "today") => [
+  `From those information, do you need more info to plan user's day **${targetDay}** properly? true/false`,
+  "If true, ask multiple choice questions that you need to know.",
+  "",
+  "Guidelines for questions:",
+  "- **Don't** ask questions about tasks outside of provided calendar",
+  "",
+  "Output template in json format:",
+  `{
+  "needMoreInfo": [true or false],
+  "questions": [
+    {
+      "question": "Question 1",
+      "answerOptions": ["Option 1", "Option 2", "Option 3"]
+    },
+    ...
+  ]
+}`].join("\n");
 
 export const dayActivitiesArrangeInstruction = (timezone: string, targetDay: string = "today") => [
   `Arrange the target activities into my current schedule for the day **${targetDay}**.`,

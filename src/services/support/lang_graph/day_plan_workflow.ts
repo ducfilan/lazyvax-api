@@ -1,5 +1,5 @@
 import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, UpdateType, Annotation, MessagesAnnotation } from '@langchain/langgraph';
-import { BaseMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
 import {
@@ -17,13 +17,14 @@ import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.confi
 import { ObjectId } from 'mongodb';
 import { getConversationById } from '@/services/api/conversations.services';
 import { RunnableConfig } from '@langchain/core/runnables';
-import { dayActivitiesArrangeInstruction, dayActivitiesArrangeTemplate, dayActivitiesSuggestionInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
+import { askMoreInfoInstruction, dayActivitiesArrangeInstruction, dayActivitiesArrangeTemplate, dayActivitiesSuggestionInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
-import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
-import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, ObjectiveTypeShort, ObjectiveTypeLong } from '@/common/consts/shared';
+import { extractJsonFromMessage, getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
+import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, ObjectiveTypeShort, ObjectiveTypeLong, askMoreInfoStep, checkObjectivesStep } from '@/common/consts/shared';
 import { getObjectivesByUserId } from '@/services/api/objectives.services';
+import { PlanQuestion } from '@/common/types/shared';
 
 export class DayPlanWorkflow {
   private checkpointer: MongoDBSaver;
@@ -35,19 +36,23 @@ export class DayPlanWorkflow {
     const builder = new StateGraph(DailyPlanningAnnotation)
       // Add nodes.
       .addNode(checkLastWeekPlanStep, this.checkLastWeekPlan.bind(this))
+      .addNode(checkObjectivesStep, this.checkObjectives.bind(this))
       .addNode(checkRoutineAndHabitsStep, this.checkRoutineAndHabits.bind(this))
       .addNode(checkThisWeekCalendarEventsStep, this.checkThisWeekCalendarEvents.bind(this))
       .addNode(checkWeekToDoTasksStep, this.checkWeekToDoTasks.bind(this))
       .addNode(getUserTimezoneStep, this.getUserTimezone.bind(this))
+      .addNode(askMoreInfoStep, this.askMoreInfo.bind(this))
       .addNode(generateDayTasksStep, this.generateDayTasks.bind(this))
       .addNode(arrangeDayStep, this.arrangeDay.bind(this))
       // Add edges.
       .addEdge(START, checkLastWeekPlanStep)
-      .addEdge(checkLastWeekPlanStep, checkRoutineAndHabitsStep)
+      .addEdge(checkLastWeekPlanStep, checkObjectivesStep)
+      .addEdge(checkObjectivesStep, checkRoutineAndHabitsStep)
       .addEdge(checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep)
       .addEdge(checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep)
       .addEdge(checkWeekToDoTasksStep, getUserTimezoneStep)
-      .addEdge(getUserTimezoneStep, generateDayTasksStep)
+      .addEdge(getUserTimezoneStep, askMoreInfoStep)
+      .addEdge(askMoreInfoStep, generateDayTasksStep)
       .addEdge(generateDayTasksStep, arrangeDayStep)
       .addEdge(arrangeDayStep, END)
 
@@ -74,6 +79,30 @@ export class DayPlanWorkflow {
     return {
       lastWeekPlan,
       hasLastWeekPlan: lastWeekPlan.length > 0,
+      targetStep: state.targetStep + 1,
+    }
+  }
+
+  private async checkObjectives(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(checkObjectivesStep, state.targetStep)) {
+      return {}
+    }
+
+    const objectives = await getObjectivesByUserId(state.userInfo._id)
+    const shortTermGoals = objectives.filter(o => o.type === ObjectiveTypeShort).map(o => {
+      const detail = o.detail ? ` - ${o.detail}` : ""
+      const atAge = o.atAge ? ` - At age: ${o.atAge}` : ""
+      return `${o.title}${detail}${atAge}`
+    })
+    const longTermGoals = objectives.filter(o => o.type === ObjectiveTypeLong).map(o => {
+      const detail = o.detail ? ` - ${o.detail}` : ""
+      const atAge = o.atAge ? ` - At age: ${o.atAge}` : ""
+      return `${o.title}${detail}${atAge}`
+    })
+
+    return {
+      shortTermGoals,
+      longTermGoals,
       targetStep: state.targetStep + 1,
     }
   }
@@ -122,9 +151,10 @@ export class DayPlanWorkflow {
 
     return {
       weekToDoTasks: todoTasks?.map(t => {
-        const dueDate = t.dueDate ? formatDateToWeekDayAndTime(t.dueDate, timezone) : ""
+        const dueDate = t.dueDate ? ` - Due date: ${formatDateToWeekDayAndTime(t.dueDate, timezone)}` : ""
+        const duration = t.expectedDuration ? ` - Duration: ${t.expectedDuration}` : ""
         const status = t.completed ? "Done" : "Not done"
-        return `${t.title} - ${dueDate}: ${status}`
+        return `${t.title}${duration}${dueDate}: ${status}`
       }),
       targetStep: state.weekToDoTasksConfirmed ? state.targetStep + 1 : state.targetStep,
     }
@@ -137,6 +167,55 @@ export class DayPlanWorkflow {
 
     return {
       targetStep: state.userInfo.preferences?.timezone ? state.targetStep + 1 : state.targetStep,
+    }
+  }
+
+  private async askMoreInfo(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(askMoreInfoStep, state.targetStep)) {
+      return {}
+    }
+
+    const isQuestionsGenerated = state.questions?.length > 0
+    if (isQuestionsGenerated) {
+      return {
+        targetStep: state.isQuestionsAnswered ? state.targetStep + 1 : state.targetStep,
+      }
+    }
+
+    // TODO: May generate for today instead of tomorrow if it's not too late, or maybe ask for confirmation.
+    // TODO: What if it's Sunday?
+    const timezone = state.userInfo.preferences?.timezone
+    const now = new Date()
+    const nowInTz = dateInTimeZone(now, timezone)
+    const targetDayToPlanInTz = dateInTimeZone(state.targetDayToPlan, timezone)
+    const isTargetDayToday = isSameDay(nowInTz, targetDayToPlanInTz)
+
+    // Set initial planning date/time.
+    let dateTimeToStartPlanning = isTargetDayToday ? nowInTz : startOfDayInTimeZone(state.targetDayToPlan, timezone)
+
+    const prompt = await ChatPromptTemplate.fromMessages([
+      ["system", systemMessageShort],
+      ["human", dayTasksSuggestTemplate],
+    ]).formatMessages({
+      now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning),
+      user_info: userInformationPrompt(state.userInfo),
+      habit: state.habits?.map(h => `- ${h}`).join('\n'),
+      shortTermGoals: state.shortTermGoals?.map(t => `- ${t}`).join('\n'),
+      longTermGoals: state.longTermGoals?.map(t => `- ${t}`).join('\n'),
+      weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
+      calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
+      calendarEvents: state.thisWeekCalendarEvents?.map(e => `- ${e}`).join('\n'),
+      dislikeActivities: state.dislikeActivities.size > 0 ? [...state.dislikeActivities].map(a => `- ${a}`).join('\n') : "Not specified",
+      instructions: askMoreInfoInstruction(),
+    })
+    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
+    const { questions } = extractJsonFromMessage<{
+      needMoreInfo: boolean,
+      questions: PlanQuestion[],
+    }>(result.content)
+
+    return {
+      questions,
     }
   }
 
@@ -184,19 +263,20 @@ export class DayPlanWorkflow {
       } : {}
     }
 
-    const objectives = await getObjectivesByUserId(state.userInfo._id)
-    const shortTermGoals = objectives.filter(o => o.type === ObjectiveTypeShort).map(o => o.title)
-    const longTermGoals = objectives.filter(o => o.type === ObjectiveTypeLong).map(o => o.title)
+    const questionsAnswersMessages = state.questions?.reduce((acc, q) => {
+      return [...acc, new AIMessage(q.question), new HumanMessage(q.selectedAnswer)]
+    }, [] as BaseMessage[])
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],
+      ...questionsAnswersMessages,
       ["human", dayTasksSuggestTemplate],
     ]).formatMessages({
       now: formatDateToWeekDayAndDateTime(dateTimeToStartPlanning),
       user_info: userInformationPrompt(state.userInfo),
       habit: state.habits?.map(h => `- ${h}`).join('\n'),
-      shortTermGoals: shortTermGoals?.map(t => `- ${t}`).join('\n'),
-      longTermGoals: longTermGoals?.map(t => `- ${t}`).join('\n'),
+      shortTermGoals: state.shortTermGoals?.map(t => `- ${t}`).join('\n'),
+      longTermGoals: state.longTermGoals?.map(t => `- ${t}`).join('\n'),
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       calendarEvents: state.thisWeekCalendarEvents?.map(e => `- ${e}`).join('\n'),
@@ -296,7 +376,7 @@ export class DayPlanWorkflow {
         }
       }
 
-      const finalState: DailyPlanStateType = await this.graph.invoke({ ...lastState, ...initialState }, config);
+      const finalState: DailyPlanningState = await this.graph.invoke({ ...lastState, ...initialState }, config);
       return finalState;
     } catch (error) {
       logger.error(`Error running workflow: ${error}`);
@@ -315,17 +395,21 @@ type DailyPlanningState = {
   lastWeekPlan: string[]
   hasRoutineOrHabits: boolean
   habits: string[]
+  shortTermGoals: string[]
+  longTermGoals: string[]
   weekToDoTasks: string[]
   weekToDoTasksConfirmed: boolean
   needToConfirmToPlanLate: boolean
   forcedToPlanLate: boolean
   dislikeActivities: Set<string>
+  questions: PlanQuestion[]
   dayActivitiesSuggestion: string | null
   dayActivitiesConfirmed: boolean
   dayActivitiesToArrange: string[]
   dayActivitiesArrange: string | null
   thisWeekCalendarEvents: string[]
   messages: BaseMessage[]
+  isQuestionsAnswered: boolean
 }
 
 type NodeType = typeof START | (keyof typeof DayPlanSteps)
@@ -341,10 +425,13 @@ type DailyPlanStateType = {
   lastWeekPlan: LastValue<string[]>
   hasRoutineOrHabits: LastValue<boolean>
   habits: LastValue<string[]>
+  shortTermGoals: LastValue<string[]>
+  longTermGoals: LastValue<string[]>
   weekToDoTasks: LastValue<string[]>
   weekToDoTasksConfirmed: LastValue<boolean>
   needToConfirmToPlanLate: LastValue<boolean>
   forcedToPlanLate: LastValue<boolean>
+  questions: LastValue<PlanQuestion[]>
   dislikeActivities: LastValue<Set<string>>
   dayActivitiesSuggestion: LastValue<string | null>
   dayActivitiesConfirmed: LastValue<boolean>
@@ -352,6 +439,7 @@ type DailyPlanStateType = {
   dayActivitiesArrange: LastValue<string | null>
   thisWeekCalendarEvents: LastValue<string[]>
   messages: LastValue<Messages>
+  isQuestionsAnswered: LastValue<boolean>
 }
 
 type NodeOutput = Partial<DailyPlanningState>
@@ -367,16 +455,20 @@ const DailyPlanningAnnotation = Annotation.Root({
   lastWeekPlan: Annotation<string[]>(),
   hasRoutineOrHabits: Annotation<boolean>(),
   habits: Annotation<string[]>(),
+  shortTermGoals: Annotation<string[]>(),
+  longTermGoals: Annotation<string[]>(),
   weekToDoTasks: Annotation<string[]>(),
   weekToDoTasksConfirmed: Annotation<boolean>(),
   needToConfirmToPlanLate: Annotation<boolean>(),
   forcedToPlanLate: Annotation<boolean>(),
+  questions: Annotation<PlanQuestion[]>(),
   dislikeActivities: Annotation<Set<string>>(),
   dayActivitiesSuggestion: Annotation<string | null>(),
   dayActivitiesConfirmed: Annotation<boolean>(),
   dayActivitiesToArrange: Annotation<string[]>(),
   dayActivitiesArrange: Annotation<string | null>(),
   thisWeekCalendarEvents: Annotation<string[]>(),
+  isQuestionsAnswered: Annotation<boolean>(),
   ...MessagesAnnotation.spec,
 })
 

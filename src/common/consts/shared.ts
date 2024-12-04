@@ -29,21 +29,25 @@ export const JobStatusOther = 6;
 export const JobStatusMax = 6;
 
 export const checkLastWeekPlanStep = 'checkLastWeekPlan'
+export const checkObjectivesStep = 'checkObjectives'
 export const checkRoutineAndHabitsStep = 'checkRoutineAndHabits'
 export const checkThisWeekCalendarEventsStep = 'checkThisWeekCalendarEvents'
 export const checkWeekToDoTasksStep = 'checkWeekToDoTasks'
 export const getUserTimezoneStep = 'getUserTimezone'
+export const askMoreInfoStep = 'askMoreInfo'
 export const generateDayTasksStep = 'generateDayTasks'
 export const arrangeDayStep = 'arrangeDay'
 
 export const DayPlanSteps = {
   [checkLastWeekPlanStep]: 0,
-  [checkRoutineAndHabitsStep]: 1,
-  [checkThisWeekCalendarEventsStep]: 2,
-  [checkWeekToDoTasksStep]: 3,
-  [getUserTimezoneStep]: 4,
-  [generateDayTasksStep]: 5,
-  [arrangeDayStep]: 6,
+  [checkObjectivesStep]: 1,
+  [checkRoutineAndHabitsStep]: 2,
+  [checkThisWeekCalendarEventsStep]: 3,
+  [checkWeekToDoTasksStep]: 4,
+  [getUserTimezoneStep]: 5,
+  [askMoreInfoStep]: 6,
+  [generateDayTasksStep]: 7,
+  [arrangeDayStep]: 8,
 }
 
 export const ConversationTypeWeek = 'week'

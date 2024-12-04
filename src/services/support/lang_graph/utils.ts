@@ -50,3 +50,14 @@ export async function getCalendarEvents(userId: ObjectId, from: Date, to: Date, 
     return `${startTime} to ${endTime}: ${e.title}${description}${status}`;
   }) ?? [];
 }
+
+export function extractJsonFromMessage<T>(input: string): T | null {
+  const jsonMatch = input.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ?? input.match(/^[\s\S]*$/);
+  if (!jsonMatch) return null;
+
+  try {
+    return JSON.parse(jsonMatch[1]);
+  } catch (e) {
+    return null;
+  }
+}

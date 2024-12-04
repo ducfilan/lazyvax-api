@@ -69,6 +69,8 @@ export const TodoTaskTitleMaxLength = 250
 export const GeneralDescriptionMaxLength = 1000
 export const TagMaxLength = 50
 export const AgeGroupMaxLength = 10
+export const PlanQuestionMaxLength = 1000
+export const PlanQuestionAnswerOptionMaxLength = 250
 export const MaxInt = 2147483647
 
 export const AscOrder = 'asc'

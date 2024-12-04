@@ -1,4 +1,4 @@
-import { TodoTaskTitleMaxLength } from '@/common/consts/constants';
+import { PlanQuestionAnswerOptionMaxLength, PlanQuestionMaxLength, TodoTaskTitleMaxLength } from '@/common/consts/constants';
 import { check, validationResult } from 'express-validator';
 import { ObjectId } from 'mongodb';
 
@@ -16,6 +16,40 @@ export const validateApiRunDaySuggestions = [
         if (!Array.isArray(extraInfo.dayActivitiesToArrange)) {
           throw new Error('dayActivitiesToArrange must be an array')
         }
+        if (extraInfo?.isQuestionsAnswered !== undefined && typeof extraInfo.isQuestionsAnswered !== 'boolean') {
+          throw new Error('isQuestionsAnswered must be a boolean')
+        }
+
+        if (extraInfo?.questions !== undefined) {
+          if (!Array.isArray(extraInfo.questions)) {
+            throw new Error('questions must be an array')
+          }
+
+          if (!extraInfo.questions.every(q => {
+            if (typeof q !== 'object' || q === null) return false
+            if (typeof q.question !== 'string' || q.question.length === 0 || q.question.length > PlanQuestionMaxLength) return false
+
+            if (q.selectedAnswer !== undefined) {
+              if (typeof q.selectedAnswer !== 'string' ||
+                q.selectedAnswer.length === 0 ||
+                q.selectedAnswer.length > PlanQuestionAnswerOptionMaxLength) return false
+            }
+
+            if (q.answerOptions !== undefined) {
+              if (!Array.isArray(q.answerOptions)) return false
+              if (!q.answerOptions.every(opt =>
+                typeof opt === 'string' &&
+                opt.length > 0 &&
+                opt.length <= PlanQuestionAnswerOptionMaxLength
+              )) return false
+            }
+
+            return true
+          })) {
+            throw new Error(`Invalid questions format. Each question must have a string question field (max ${PlanQuestionMaxLength} chars) and optional selectedAnswer/answerOptions (max ${PlanQuestionAnswerOptionMaxLength} chars each)`)
+          }
+        }
+
         if (!extraInfo.dayActivitiesToArrange.every(item =>
           typeof item === 'string' &&
           item.length > 0 &&
@@ -32,6 +66,8 @@ export const validateApiRunDaySuggestions = [
         forcedToPlanLate,
         dayActivitiesConfirmed,
         dayActivitiesToArrange,
+        questions,
+        isQuestionsAnswered,
       } = extraInfo
 
       const finalExtraInfo = {
@@ -39,6 +75,8 @@ export const validateApiRunDaySuggestions = [
         forcedToPlanLate,
         dayActivitiesConfirmed,
         dayActivitiesToArrange,
+        questions,
+        isQuestionsAnswered,
       }
 
       return Object.fromEntries(
