@@ -175,10 +175,11 @@ export class DayPlanWorkflow {
       return {}
     }
 
-    const isQuestionsGenerated = state.questions?.length > 0
+    const isQuestionsGenerated = state.questions !== null
     if (isQuestionsGenerated) {
+      const noQuestions = state.questions?.length === 0
       return {
-        targetStep: state.isQuestionsAnswered ? state.targetStep + 1 : state.targetStep,
+        targetStep: noQuestions || state.isQuestionsAnswered ? state.targetStep + 1 : state.targetStep,
       }
     }
 
