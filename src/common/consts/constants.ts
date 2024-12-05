@@ -60,7 +60,7 @@ export const SupportingContentTypes = ['image/jpeg', 'image/png']
 
 export const MaxPaginationLimit = 100
 export const DefaultMostItemsInteractionsLimit = 5
-export const MaxRegistrationsStep = 11
+export const MaxRegistrationsStep = 13
 export const GoalMaxLength = 255
 export const AspectMaxLength = 255
 export const StudyCourseLength = 255

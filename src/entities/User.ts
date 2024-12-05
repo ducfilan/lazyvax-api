@@ -30,7 +30,7 @@ export type Preference = {
   jobStatus?: number,
   yearsOfExperience?: number,
   maritalStatus?: number,
-  preferredFocusSessionLength_minutes?: number;
+  preferredFocusSessionLengthMinutes?: number;
   timezone?: string,
   dob?: Date
 }

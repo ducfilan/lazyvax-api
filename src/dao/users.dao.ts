@@ -72,7 +72,7 @@ export default class UsersDao {
                   futureSelf: { bsonType: 'array', items: { bsonType: 'string', maxLength: GoalMaxLength } },
                   aspects: { bsonType: 'array', items: { bsonType: 'string', maxLength: AspectMaxLength } },
                   workLifeBalance: { bsonType: 'int', 'enum': workLifeBalanceTypes },
-                  preferredFocusSessionLength_minutes: { bsonType: 'int', minimum: 15, maximum: 600 },
+                  preferredFocusSessionLengthMinutes: { bsonType: 'int', minimum: 15, maximum: 600 },
                   dob: { bsonType: 'date' },
                   timezone: { bsonType: 'string' }
                 },
