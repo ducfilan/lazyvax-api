@@ -84,7 +84,9 @@ export const userInformationPrompt = (user: User) => {
     ? `${user.preferences.preferredFocusSessionLengthMinutes} minutes`
     : "(Not specified)";
 
-  return `User info: Name: ${user.name}, Age: ${age}, Gender: ${gender}, marital status: ${maritalStatus}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}. For work-life balance, prefer: ${workLifeBalance}. Preferred focus session length: ${preferredFocusSessionLength} minutes`;
+  const otherPreferences = user.preferences?.otherPreferences;
+
+  return `User info: Name: ${user.name}, Age: ${age}, Gender: ${gender}, marital status: ${maritalStatus}, ${roleInfo}, want to be a person: ${futureSelf}, priorities in life: ${aspects}. For work-life balance, prefer: ${workLifeBalance}. Preferred focus session length: ${preferredFocusSessionLength} minutes.${otherPreferences ? `\n\nOther preferences: ${otherPreferences}` : ""}`;
 };
 
 export const dayTasksSuggestionFirstDayTemplate =
