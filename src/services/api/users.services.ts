@@ -82,6 +82,10 @@ export async function updateDob({ _id, email }: User, dob: Date) {
   return UsersDao.updateOne({ _id, email }, { $set: { 'preferences.dob': dob } })
 }
 
+export async function updateOtherPreferences({ _id, email }: User, otherPreferences: string) {
+  return UsersDao.updateOne({ _id, email }, { $set: { 'preferences.otherPreferences': otherPreferences } })
+}
+
 export async function updateTimezone({ _id, email }: User, timezone: string) {
   return UsersDao.updateOne({ _id, email }, { $set: { 'preferences.timezone': timezone } })
 }
@@ -95,6 +99,7 @@ export default {
   getUserByEmail,
   update,
   updateDob,
+  updateOtherPreferences,
   updateTimezone,
   logout,
 }

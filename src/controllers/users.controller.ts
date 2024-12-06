@@ -62,6 +62,15 @@ export default class UsersController {
     }
   }
 
+  static async updateOtherPreferences(req, res) {
+    try {
+      await usersServices.updateOtherPreferences(req.user, req.body.otherPreferences)
+      res.sendStatus(200)
+    } catch (e) {
+      res.status(400).send({ error: e.message })
+    }
+  }
+
   static async logout(req, res) {
     try {
       await usersServices.logout(req.user)

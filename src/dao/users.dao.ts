@@ -74,6 +74,7 @@ export default class UsersDao {
                   workLifeBalance: { bsonType: 'int', 'enum': workLifeBalanceTypes },
                   preferredFocusSessionLengthMinutes: { bsonType: 'int', minimum: 15, maximum: 600 },
                   dob: { bsonType: 'date' },
+                  otherPreferences: { bsonType: 'string', maxLength: 2000 },
                   timezone: { bsonType: 'string' }
                 },
                 additionalProperties: false

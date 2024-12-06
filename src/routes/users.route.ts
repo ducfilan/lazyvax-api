@@ -15,6 +15,7 @@ securedUserRouter.route('/me').patch(auth, upload.none(), validateApiUpdateUser,
 
 securedUserRouter.route('/me').get(auth, UsersController.me)
 securedUserRouter.route('/me/dob').patch(auth, validateApiUpdateDob, UsersController.updateDob)
+securedUserRouter.route('/me/other-preferences').patch(auth, upload.none(), UsersController.updateOtherPreferences)
 securedUserRouter.route('/:userId').get(UsersController.getUserInfo)
 securedUserRouter.route('/logout').post(auth, UsersController.logout)
 
