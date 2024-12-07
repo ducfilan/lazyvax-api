@@ -63,7 +63,7 @@ export default class ConversationsController {
       const { tasks } = req.body
 
       await replaceTodoTasks(conversationId, tasks)
-      res.sendStatus(200)
+      res.sendStatus(200).json(tasks)
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
