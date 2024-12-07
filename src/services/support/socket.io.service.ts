@@ -248,11 +248,6 @@ export function registerSocketIo(server: HttpServer) {
                   conversationId
                 }
               })
-
-              weeklyPlanningWorkflow.runWorkflow({
-                userInfo: socket.user,
-                conversationId
-              })
             } else {
               ack({
                 error: ErrorMessageNotParticipant
