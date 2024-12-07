@@ -1,4 +1,7 @@
+import { EventStatuses } from '@/common/consts/shared';
+import EventsDao from '@/dao/events.dao';
 import { body, param, query } from 'express-validator';
+import { ObjectId } from 'mongodb';
 
 export const validateEventCreation = [
   body('title').isString().isLength({ max: 255 }).withMessage('Title must be a string with a maximum length of 255 characters.'),
@@ -25,28 +28,42 @@ export const validateEventCreation = [
 ];
 
 export const validateEventUpdate = [
-  param('eventId').isMongoId().withMessage('Event ID must be a valid Mongo ID.'),
-  body('title').optional().isString().isLength({ max: 255 }).withMessage('Title must be a string with a maximum length of 255 characters.'),
-  body('description').optional().isString().withMessage('Description must be a string.'),
-  body('startDate').optional().isISO8601().toDate().withMessage('Start date must be a valid ISO 8601 date.'),
-  body('endDate').optional().isISO8601().toDate().withMessage('End date must be a valid ISO 8601 date.'),
+  param('eventId')
+    .custom(async (eventId, { req }) => {
+      const event = await EventsDao.getEventById(eventId);
+      if (!event) {
+        throw new Error('Event not found');
+      }
+      if (!event.userId.equals(req.user._id)) {
+        throw new Error('Event does not belong to user');
+      }
+
+      return true;
+    })
+    .customSanitizer(id => new ObjectId(id as string))
+    .isMongoId().withMessage('Event ID must be a valid Mongo ID.'),
   body('allDayEvent').optional().isBoolean().withMessage('All day event must be a boolean value.'),
-  body('location').optional().isString().isLength({ max: 500 }).withMessage('Location must be a string with a maximum length of 500 characters.'),
-  body('reminders').optional().isArray().withMessage('Reminders must be an array of reminder objects.'),
-  body('reminders.*.type').isString().withMessage('Reminder type must be a string.'),
-  body('reminders.*.minutes').isNumeric().withMessage('Reminder time must be a numeric value.'),
   body('attendees').optional().isArray().withMessage('Attendees must be an array of attendee objects.'),
   body('attendees.*.email').optional().isEmail().withMessage('Attendee email must be valid.'),
   body('attendees.*.name').optional().isString().withMessage('Attendee name must be a string.'),
   body('attendees.*.response').optional().isIn(['accepted', 'declined', 'tentative']).withMessage('Response must be one of: accepted, declined, or tentative.'),
+  body('calendarId').optional().isMongoId().withMessage('Calendar ID must be a valid Mongo ID.'),
   body('categories').optional().isArray().withMessage('Categories must be an array of strings.'),
-  body('taskIds').optional().isArray().withMessage('Task IDs must be an array of object IDs.'),
-  body('taskIds.*').optional().isMongoId().withMessage('Each task ID must be a valid Mongo ID.'),
+  body('color').optional().isHexColor().withMessage('Color must be a valid hex code.'),
+  body('description').optional().isString().withMessage('Description must be a string.'),
+  body('endDate').optional().isISO8601().toDate().withMessage('End date must be a valid ISO 8601 date.'),
+  body('isPrivate').optional().isBoolean().withMessage('Private flag must be a boolean.'),
+  body('location').optional().isString().isLength({ max: 500 }).withMessage('Location must be a string with a maximum length of 500 characters.'),
   body('objectiveIds').optional().isArray().withMessage('Objective IDs must be an array of object IDs.'),
   body('objectiveIds.*').optional().isMongoId().withMessage('Each objective ID must be a valid Mongo ID.'),
-  body('color').optional().isHexColor().withMessage('Color must be a valid hex code.'),
-  body('calendarId').optional().isMongoId().withMessage('Calendar ID must be a valid Mongo ID.'),
-  body('isPrivate').optional().isBoolean().withMessage('Private flag must be a boolean.'),
+  body('reminders').optional().isArray().withMessage('Reminders must be an array of reminder objects.'),
+  body('reminders.*.minutes').isNumeric().withMessage('Reminder time must be a numeric value.'),
+  body('reminders.*.type').isString().withMessage('Reminder type must be a string.'),
+  body('startDate').optional().isISO8601().toDate().withMessage('Start date must be a valid ISO 8601 date.'),
+  body('status').optional().isIn(EventStatuses).withMessage(`Status must be one of ${EventStatuses.join(', ')}`),
+  body('taskIds').optional().isArray().withMessage('Task IDs must be an array of object IDs.'),
+  body('taskIds.*').optional().isMongoId().withMessage('Each task ID must be a valid Mongo ID.'),
+  body('title').optional().isString().isLength({ max: 255 }).withMessage('Title must be a string with a maximum length of 255 characters.'),
 ];
 
 export const validateEventFilters = [
