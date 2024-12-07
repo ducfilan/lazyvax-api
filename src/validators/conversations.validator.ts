@@ -231,6 +231,9 @@ export const validateApiUpdateTodoTask = [
     .customSanitizer(task => {
       const sanitizedTask = { ...task };
 
+      sanitizedTask._id = task._id ? new ObjectId(task._id as string) : new ObjectId();
+      sanitizedTask.completed = task.completed ?? false;
+
       if (sanitizedTask.dueDate) {
         sanitizedTask.dueDate = new Date(sanitizedTask.dueDate);
       }

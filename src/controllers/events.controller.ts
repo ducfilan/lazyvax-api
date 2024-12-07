@@ -7,7 +7,7 @@ import { OAuth2Client } from 'google-auth-library'
 import { addEventsToGoogleCalendar, getCalendarTimezone } from '@/services/support/calendar_facade'
 import usersServices from '@/services/api/users.services'
 import { CalendarSourceApp } from '@/common/consts/constants'
-import { EventStatusDefault } from '@/entities/Event'
+import { EventStatusDefault } from '@/common/consts/shared'
 
 export default class EventsController {
   static async getEvents(req: Request & { user: User }, res: Response) {

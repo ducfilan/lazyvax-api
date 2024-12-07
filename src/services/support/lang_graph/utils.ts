@@ -4,7 +4,7 @@ import { getWeekInfo, formatDateToWeekDayAndTime } from '@/common/utils/dateUtil
 import { ObjectId } from 'mongodb';
 import { DaysOfWeekMap } from '@/common/consts/constants';
 import { getHabits } from '@/services/api/habits.services';
-import { EventStatusToText } from '@/entities/Event';
+import { EventStatusToTextEn } from '@/entities/Event';
 
 export async function getLastWeekPlan(userId: ObjectId, dayStartDate: Date, timezone?: string): Promise<string[]> {
   const lastWeekInfo = getWeekInfo(addWeeks(dayStartDate, -1), timezone);
@@ -45,7 +45,7 @@ export async function getCalendarEvents(userId: ObjectId, from: Date, to: Date, 
     const startTime = formatDateToWeekDayAndTime(e.startDate, timezone);
     const endTime = formatDateToWeekDayAndTime(e.endDate, timezone);
     const description = e.description ? ` (${e.description})` : '';
-    const status = e.status ? ` - status: ${EventStatusToText[e.status]}` : '';
+    const status = e.status ? ` - status: ${EventStatusToTextEn[e.status]}` : '';
 
     return `${startTime} to ${endTime}: ${e.title}${description}${status}`;
   }) ?? [];

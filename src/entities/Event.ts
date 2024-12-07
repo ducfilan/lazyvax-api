@@ -1,19 +1,16 @@
 import { AppDomain, AppName, CalendarSourceGoogle } from "@/common/consts/constants";
+import { EventStatuses, EventStatusUndone } from "@/common/consts/shared";
+import { EventStatusDefault, EventStatusDone } from "@/common/consts/shared";
 import { calendar_v3 } from "googleapis";
 import { ObjectId } from "mongodb";
 
 export type EventMeta = GoogleCalendarMeta | AppleCalendarMeta | MicrosoftCalendarMeta
 
-export const EventStatusDefault = 0
-export const EventStatusDone = 1
-export const EventStatusUnDone = 3
-
-export const EventStatuses = [EventStatusDefault, EventStatusDone, EventStatusUnDone] as const
 export const EventReminders = ['email', 'popup'] as const
-export const EventStatusToText = {
+export const EventStatusToTextEn = {
   [EventStatusDefault]: '',
   [EventStatusDone]: 'Done',
-  [EventStatusUnDone]: 'Not done',
+  [EventStatusUndone]: 'Not done',
 }
 
 export type Event = {

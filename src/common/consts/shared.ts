@@ -73,3 +73,12 @@ export const ObjectiveTypeLife = 'life'
 export const ObjectiveTypeLong = 'long'
 export const ObjectiveTypeShort = 'short'
 export const ObjectiveTypes = [ObjectiveTypeLife, ObjectiveTypeLong, ObjectiveTypeShort]
+
+export const EventStatusDefault = 0;
+export const EventStatusDone = 1;
+export const EventStatusUndone = 3;
+export const EventStatuses = [
+  EventStatusDefault,
+  EventStatusDone,
+  EventStatusUndone,
+] as const;

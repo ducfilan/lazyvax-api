@@ -1,8 +1,9 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { DatabaseName } from '@common/configs/mongodb-client.config';
 import { CalendarSourceGoogle, EventsCollectionName } from '@/common/consts/constants';
+import { EventStatuses } from '@/common/consts/shared';
 import logger from '@/common/logger';
-import { Event, EventStatuses, GoogleCalendarMeta, EventReminders } from '@/entities/Event';
+import { Event, GoogleCalendarMeta, EventReminders } from '@/entities/Event';
 import { GetEventFilters } from '@/common/types/types';
 
 let _events: Collection<Event>;

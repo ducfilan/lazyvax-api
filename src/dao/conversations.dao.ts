@@ -1,7 +1,7 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
 import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { CacheKeyConversation, ConversationsCollectionName } from '@/common/consts/constants'
-import { WeekPlanStages } from '@/common/consts/shared'
+import { EventStatuses, WeekPlanStages } from '@/common/consts/shared'
 import { ConversationTypes, ConversationTypeWeek } from '@/common/consts/shared'
 import { Conversation } from '@/entities/Conversation'
 import { delCache, getConversationCache, setCache } from '@/common/redis'
@@ -59,6 +59,7 @@ export default class ConversationsDao {
                                 progress: { bsonType: 'int' },
                                 expectedDuration: { bsonType: ['int', 'double'], minimum: 0, maximum: 24 },
                                 tags: { bsonType: 'array' },
+                                status: { enum: EventStatuses },
                                 completed: { bsonType: 'bool' },
                                 dueDate: { bsonType: 'date' }
                               },
