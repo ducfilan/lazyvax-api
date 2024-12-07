@@ -18,7 +18,8 @@ export async function getLastWeekPlan(userId: ObjectId, dayStartDate: Date, time
     const startTime = formatDateToWeekDayAndTime(e.startDate, timezone);
     const endTime = formatDateToWeekDayAndTime(e.endDate, timezone);
     const description = e.description ? ` (${e.description})` : '';
-    return `${startTime} to ${endTime}: ${e.title}${description}`;
+    const status = typeof e.status === 'number' ? ` - status: ${EventStatusToTextEn[e.status]}` : '';
+    return `${startTime} to ${endTime}: ${e.title}${description}${status}`;
   }) ?? [];
 }
 
@@ -45,7 +46,7 @@ export async function getCalendarEvents(userId: ObjectId, from: Date, to: Date, 
     const startTime = formatDateToWeekDayAndTime(e.startDate, timezone);
     const endTime = formatDateToWeekDayAndTime(e.endDate, timezone);
     const description = e.description ? ` (${e.description})` : '';
-    const status = e.status ? ` - status: ${EventStatusToTextEn[e.status]}` : '';
+    const status = typeof e.status === 'number' ? ` - status: ${EventStatusToTextEn[e.status]}` : '';
 
     return `${startTime} to ${endTime}: ${e.title}${description}${status}`;
   }) ?? [];

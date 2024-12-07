@@ -78,7 +78,6 @@ export class DayPlanWorkflow {
 
     return {
       lastWeekPlan,
-      hasLastWeekPlan: lastWeekPlan.length > 0,
       targetStep: state.targetStep + 1,
     }
   }
@@ -392,7 +391,6 @@ type DailyPlanningState = {
   userInfo: User
   conversationId: ObjectId
   conversation: Conversation | null
-  hasLastWeekPlan: boolean
   lastWeekPlan: string[]
   hasRoutineOrHabits: boolean
   habits: string[]
@@ -422,7 +420,6 @@ type DailyPlanStateType = {
   userInfo: LastValue<User>
   conversationId: LastValue<ObjectId>
   conversation: LastValue<Conversation | null>
-  hasLastWeekPlan: LastValue<boolean>
   lastWeekPlan: LastValue<string[]>
   hasRoutineOrHabits: LastValue<boolean>
   habits: LastValue<string[]>
@@ -452,7 +449,6 @@ const DailyPlanningAnnotation = Annotation.Root({
   userInfo: Annotation<User>(),
   conversationId: Annotation<ObjectId>(),
   conversation: Annotation<Conversation | null>(),
-  hasLastWeekPlan: Annotation<boolean>(),
   lastWeekPlan: Annotation<string[]>(),
   hasRoutineOrHabits: Annotation<boolean>(),
   habits: Annotation<string[]>(),

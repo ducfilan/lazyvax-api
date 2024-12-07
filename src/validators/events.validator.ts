@@ -69,6 +69,9 @@ export const validateEventUpdate = [
 export const validateEventFilters = [
   query('start').isISO8601().withMessage('Start date must be a valid ISO 8601 date.'),
   query('end').isISO8601().withMessage('End date must be a valid ISO 8601 date.'),
-  query('calendarId').optional().isMongoId().withMessage('Calendar ID must be a valid Mongo ID.'),
+  query('calendarId')
+    .optional()
+    .customSanitizer(id => new ObjectId(id as string))
+    .isMongoId().withMessage('Calendar ID must be a valid Mongo ID.'),
   query('categories').optional().isString().withMessage('Categories must be a comma-separated string of category names.'),
 ];
