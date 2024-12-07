@@ -1,5 +1,5 @@
 import { User } from '@/entities/User'
-import { getConversationById, getConversationByType, replaceTodoTasks, updateById } from '@/services/api/conversations.services'
+import { addTodoTask, deleteTodoTask, getConversationById, getConversationByType, replaceTodoTasks, updateById, updateTodoTask } from '@/services/api/conversations.services'
 import { getMessages } from '@services/api/messages.services'
 import { Request } from 'express'
 export default class ConversationsController {
@@ -52,6 +52,10 @@ export default class ConversationsController {
     try {
       const { conversationId } = req.params
       const { task } = req.body
+
+      await addTodoTask(conversationId, task)
+
+      res.sendStatus(200).json(task)
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -73,6 +77,10 @@ export default class ConversationsController {
     try {
       const { conversationId, taskId } = req.params
       const { task } = req.body
+
+      await updateTodoTask(conversationId, taskId, task)
+
+      res.sendStatus(200)
     } catch (e) {
       res.status(500).json({ error: e.message })
     }
@@ -81,6 +89,10 @@ export default class ConversationsController {
   static async deleteTodoTask(req, res) {
     try {
       const { conversationId, taskId } = req.params
+
+      await deleteTodoTask(conversationId, taskId)
+
+      res.sendStatus(200)
     } catch (e) {
       res.status(500).json({ error: e.message })
     }

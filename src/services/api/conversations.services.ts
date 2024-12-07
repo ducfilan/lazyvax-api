@@ -151,3 +151,15 @@ export async function generateFirstMessages(conversationType: string, locale: st
 export async function replaceTodoTasks(conversationId: ObjectId, tasks: TodoTask[]) {
   return ConversationsDao.updateOne({ _id: conversationId }, { $set: { "meta.meta.todoTasks": tasks } })
 }
+
+export async function addTodoTask(conversationId: ObjectId, task: TodoTask) {
+  return ConversationsDao.updateOne({ _id: conversationId }, { $push: { "meta.meta.todoTasks": task } })
+}
+
+export async function updateTodoTask(conversationId: ObjectId, taskId: ObjectId, task: TodoTask) {
+  return ConversationsDao.updateOne({ _id: conversationId, "meta.meta.todoTasks._id": taskId }, { $set: { "meta.meta.todoTasks.$": task } })
+}
+
+export async function deleteTodoTask(conversationId: ObjectId, taskId: ObjectId) {
+  return ConversationsDao.updateOne({ _id: conversationId, "meta.meta.todoTasks._id": taskId }, { $pull: { "meta.meta.todoTasks": { _id: taskId } } })
+}
