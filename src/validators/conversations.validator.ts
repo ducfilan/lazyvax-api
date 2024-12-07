@@ -9,6 +9,8 @@ const checkParticipant = (userId, conversationId) => {
   if (!isParticipantInConversation(userId, conversationId)) {
     throw new Error('You are not part of this conversation')
   }
+
+  return true
 }
 
 const validateTask = (task) => {
@@ -36,6 +38,8 @@ const validateTask = (task) => {
   if (task.dueDate && !(new Date(task.dueDate)).getTime()) {
     throw new Error('dueDate must be a valid date');
   }
+
+  return true
 }
 
 export const validateApiGetConversationById = [
@@ -150,7 +154,7 @@ export const validateApiReplaceTodoTasks = [
     .bail()
     .custom((tasks) => {
       for (const task of tasks) {
-        validateTask(task); // Reuse task validation
+        validateTask(task);
       }
       return true;
     })
@@ -188,10 +192,7 @@ export const validateApiAddTodoTask = [
     .custom((conversationId, { req }) => checkParticipant(req?.user?._id, conversationId)),
   check('task')
     .isObject()
-    .custom(task => {
-      validateTask(task); // Reuse task validation
-      return true;
-    })
+    .custom(task => validateTask(task))
     .customSanitizer(task => {
       const sanitizedTask = { ...task };
 
@@ -226,10 +227,7 @@ export const validateApiUpdateTodoTask = [
     .customSanitizer(id => new ObjectId(id as string)),
   check('task')
     .isObject()
-    .custom(task => {
-      validateTask(task); // Reuse task validation
-      return true;
-    })
+    .custom(task => validateTask(task))
     .customSanitizer(task => {
       const sanitizedTask = { ...task };
 
