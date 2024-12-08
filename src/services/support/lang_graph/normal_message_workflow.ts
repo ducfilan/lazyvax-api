@@ -1,11 +1,11 @@
 import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, UpdateType, Annotation, MessagesAnnotation } from '@langchain/langgraph';
-import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { AIMessageChunk, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
 import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
 import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { ObjectId } from 'mongodb';
-import { RunnableConfig } from '@langchain/core/runnables';
+import { Runnable, RunnableConfig } from '@langchain/core/runnables';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4oMini } from './model_repo';
@@ -13,10 +13,13 @@ import { summarizeConversationConditionPrompt, systemMessageShort } from './prom
 import { userInformationPrompt } from './prompts';
 import { MessageTypePlainText } from '@/common/consts/message-types';
 import { sendMessage } from '@/services/utils/conversation.utils';
+import { ChatOpenAI, ChatOpenAICallOptions } from '@langchain/openai';
+import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
 
 export class NormalMessageWorkflow {
   private checkpointer: MongoDBSaver;
   private graph: CompiledStateGraph<NormalMessageState, UpdateType<NormalMessageStateType>, NodeType, NormalMessageStateType, NormalMessageStateType, StateDefinition>;
+  private model: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAICallOptions>;
 
   constructor() {
     this.checkpointer = new MongoDBSaver({ client: getDbClient(), dbName: DatabaseName })
@@ -34,6 +37,7 @@ export class NormalMessageWorkflow {
       .addEdge('summarizeConversation', END)
 
     this.graph = builder.compile({ checkpointer: this.checkpointer })
+    this.model = (getModel(ModelNameChatGPT4oMini) as ChatOpenAI).bindTools([])
   }
 
   private async checkMessageIntent(state: NormalMessageState): Promise<NodeOutput> {
