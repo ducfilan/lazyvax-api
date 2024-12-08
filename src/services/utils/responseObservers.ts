@@ -1,4 +1,4 @@
-import { BotUserId, BotUserName } from "@/common/consts/constants"
+import { LavaUserId, LavaUserName } from "@/common/consts/constants"
 import { MilestoneSuggestion, SmartQuestion } from "@/entities/Conversation"
 import { Message } from "@/entities/Message"
 import { saveMessage } from "../api/messages.services"
@@ -16,8 +16,8 @@ export class FirstQuestionObserver implements IResponseObserver {
 
   async work(smartQuestion: SmartQuestion) {
     const responseMessage: Message = {
-      authorId: BotUserId,
-      authorName: BotUserName,
+      authorId: LavaUserId,
+      authorName: LavaUserName,
       content: JSON.stringify(smartQuestion),
       conversationId: this.currentMessage.conversationId,
       type: MessageTypeAnswerSmartQuestion,
@@ -51,8 +51,8 @@ export class MilestoneSuggestionObserver implements IResponseObserver {
       })
 
       const responseMessage: Message = {
-        authorId: BotUserId,
-        authorName: BotUserName,
+        authorId: LavaUserId,
+        authorName: LavaUserName,
         content: JSON.stringify(milestoneSuggestion),
         conversationId: this.currentMessage.conversationId,
         type: MessageTypeSuggestMilestoneAndActions,

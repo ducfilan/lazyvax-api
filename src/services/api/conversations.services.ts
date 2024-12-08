@@ -4,6 +4,7 @@ import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import { Conversation, TodoTask, UserMilestone } from "@/entities/Conversation"
 import { I18n } from "@/entities/I18n"
+import { Message } from "@/entities/Message"
 import { ObjectId } from "mongodb"
 
 export async function isParticipantInConversation(userId: ObjectId, conversationId: ObjectId): Promise<boolean> {
@@ -162,4 +163,8 @@ export async function updateTodoTask(conversationId: ObjectId, taskId: ObjectId,
 
 export async function deleteTodoTask(conversationId: ObjectId, taskId: ObjectId) {
   return ConversationsDao.updateOne({ _id: conversationId, "meta.meta.todoTasks._id": taskId }, { $pull: { "meta.meta.todoTasks": { _id: taskId } } })
+}
+
+export async function updateConversationSummary(conversationId: ObjectId, summary: string) {
+  return ConversationsDao.updateOne({ _id: conversationId }, { $set: { summary } })
 }

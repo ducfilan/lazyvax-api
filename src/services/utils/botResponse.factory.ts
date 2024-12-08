@@ -1,4 +1,4 @@
-import { BotUserId, BotUserName, I18nDbCodeConfirmQuestionnaires } from "@common/consts/constants"
+import { LavaUserId, LavaUserName, I18nDbCodeConfirmQuestionnaires } from "@common/consts/constants"
 import { Message } from "@/entities/Message"
 import { ChatAiService } from "../support/ai_querier"
 import { User } from "@/entities/User"
@@ -39,7 +39,7 @@ export class BotResponseFactory {
             markMessageResponded(currentMessage._id)
               .catch(err => logger.error("failed to mark message state goal responded", err))
           }
-          emitEndTypingUser(conversationId, BotUserName)
+          emitEndTypingUser(conversationId, LavaUserName)
         }))
 
         return builder
@@ -227,10 +227,10 @@ export class AIResponse implements IResponse {
   }
 
   async getResponses(): Promise<Message[]> {
-    normalMessageWorkflow.runWorkflow({
+    const result = await normalMessageWorkflow.runWorkflow({
       userInfo: this.user,
       conversationId: this.currentMessage.conversationId,
-      messages: [new HumanMessage(this.currentMessage.content)]
+      lastMessage: new HumanMessage(this.currentMessage.content)
     })
     return []
   }

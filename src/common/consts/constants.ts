@@ -112,8 +112,12 @@ export const MilestoneSourceSuggestion = 1
 export const MilestoneSourceUser = 2
 export const MilestoneSources = [MilestoneSourceSuggestion, MilestoneSourceUser]
 
-export const BotUserId = new ObjectId('643d76223fa22a6c66c191c0')
-export const BotUserName = 'Lava'
+export const LavaUserId = new ObjectId('643d76223fa22a6c66c191c0')
+export const LavaUserName = 'Lava'
+
+export const BotUserIds = {
+  [LavaUserId.toHexString()]: true
+} as const
 
 export const AgeGroups = ["< 18", "18-24", "25-34", "35-44", "45-54", "55-64", "> 65"]
 

@@ -2,7 +2,7 @@ import { CreateConversationMessage, CreateConversationMessageConversation } from
 import { Conversation } from "@/entities/Conversation"
 import { ObjectId } from "mongodb"
 import { getUserById } from "../api/users.services"
-import { BotUserId, BotUserName } from "@/common/consts/constants"
+import { LavaUserId, LavaUserName } from "@/common/consts/constants"
 import { ConversationTypeWeek } from "@/common/consts/shared"
 import { emitConversationMessage } from "../support/socket.io.service"
 import { saveMessage } from "../api/messages.services"
@@ -51,8 +51,8 @@ export class ConversationBuilder {
 export const createChatMessage = (conversationId: ObjectId, content: string, type: number): Message => {
   return {
     conversationId,
-    authorId: BotUserId,
-    authorName: BotUserName,
+    authorId: LavaUserId,
+    authorName: LavaUserName,
     content,
     type,
     timestamp: new Date(),

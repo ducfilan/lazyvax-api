@@ -29,7 +29,12 @@ export async function getMessages(
   return MessagesDao.getMessagesInConversation(conversationId, skip, limit);
 }
 
+export async function getConversationLastMessages(conversationId: ObjectId, limit: number = 4): Promise<Message[]> {
+  return MessagesDao.getConversationLastMessages(conversationId, limit);
+}
+
 export default {
   getMessages,
   saveMessage,
+  getConversationLastMessages,
 };

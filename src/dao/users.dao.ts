@@ -3,8 +3,8 @@ import { DatabaseName, getDbClient, transactionOptions } from '@common/configs/m
 import {
   AgeGroupMaxLength,
   AspectMaxLength,
-  BotUserId,
-  BotUserName,
+  LavaUserId,
+  LavaUserName,
   CacheKeyUser,
   GoalMaxLength,
   I18nDbCodeFirstMessages,
@@ -146,7 +146,7 @@ export default class UsersDao {
   }
 }
 
-async function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Promise<Message[]> {
+async function generateFirstMessages(locale: LangCode, conversationId: ObjectId, authorId: ObjectId = LavaUserId, authorName: string = LavaUserName): Promise<Message[]> {
   const i18nMessages = await I18nDao.getByCode(I18nDbCodeFirstMessages, locale)
 
   const orderToFormatArgs = {

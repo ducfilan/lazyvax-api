@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb"
 import { I18n } from "./I18n"
-import { BotUserId, BotUserName } from "@/common/consts/constants"
+import { LavaUserId, LavaUserName } from "@/common/consts/constants"
 import { formatString } from "@/common/utils/stringUtils"
 
 export type Message = {
@@ -36,7 +36,7 @@ export class MessageGroupBuilder {
    * @param authorName name of the author
    * @returns list of messages
    */
-  build(conversationId: ObjectId, authorId: ObjectId = BotUserId, authorName: string = BotUserName): Message[] {
+  build(conversationId: ObjectId, authorId: ObjectId = LavaUserId, authorName: string = LavaUserName): Message[] {
     this.i18ns.sort((m1, m2) => m1.order - m2.order)
 
     return this.i18ns.map((i18n) => ({

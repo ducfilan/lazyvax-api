@@ -88,7 +88,8 @@ export default class ConversationsDao {
                   required: ['_id', 'name', 'pictureUrl'],
                   additionalProperties: false
                 }
-              }
+              },
+              summary: { bsonType: 'string' }
             },
             required: ['type', 'unreadCount'],
             additionalProperties: false

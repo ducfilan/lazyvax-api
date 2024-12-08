@@ -34,8 +34,8 @@ import {
   updateProgress
 } from "../api/conversations.services"
 import {
-  BotUserId,
-  BotUserName,
+  LavaUserId,
+  LavaUserName,
   CalendarSourceApp,
   DefaultLangCode,
   DislikeReasonToExplanation,
@@ -264,8 +264,8 @@ export function registerSocketIo(server: HttpServer) {
 
             const chatMessage = {
               conversationId: new ObjectId(message.conversationId),
-              authorId: BotUserId,
-              authorName: BotUserName,
+              authorId: LavaUserId,
+              authorName: LavaUserName,
               content: content,
               type: MessageTypePlainText,
               timestamp: new Date(),
@@ -359,7 +359,7 @@ export function registerSocketIo(server: HttpServer) {
         async function respondMessage(currentMessage: Message) {
           const conversationIdHex = currentMessage.conversationId.toHexString()
 
-          emitTypingUser(conversationIdHex, BotUserName)
+          emitTypingUser(conversationIdHex, LavaUserName)
 
           const builder = BotResponseFactory.createResponseBuilder(currentMessage, socket.user)
           await builder.preprocess()
@@ -375,7 +375,7 @@ export function registerSocketIo(server: HttpServer) {
           }
 
           currentMessage.isResponded === false && (await markMessageResponded(currentMessage._id))
-          emitEndTypingUser(conversationIdHex, BotUserName)
+          emitEndTypingUser(conversationIdHex, LavaUserName)
           await builder.postprocess()
         }
 
@@ -410,8 +410,8 @@ export function registerSocketIo(server: HttpServer) {
 
             const chatMessage = {
               conversationId: new ObjectId(message.conversationId),
-              authorId: BotUserId,
-              authorName: BotUserName,
+              authorId: LavaUserId,
+              authorName: LavaUserName,
               content: "Generating, wait...", // TODO: i18n
               type: MessageTypePlainText,
               timestamp: new Date(),

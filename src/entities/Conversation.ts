@@ -14,6 +14,7 @@ export type Conversation = {
   },
   unreadCount: number,
   participants: Participant[],
+  summary?: string,
 }
 
 export type TodoTask = {

@@ -120,4 +120,13 @@ export default class MessagesDao {
       skip, limit
     }).toArray()
   }
+
+  static async getConversationLastMessages(conversationId: ObjectId, limit: number = 4): Promise<Message[]> {
+    return _messages.find({
+      conversationId
+    }, {
+      sort: { timestamp: -1 },
+      limit
+    }).toArray()
+  }
 }

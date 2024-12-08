@@ -1,11 +1,9 @@
 import { StateGraph, START, END, CompiledStateGraph, LastValue, Messages, StateDefinition, UpdateType, Annotation, MessagesAnnotation } from '@langchain/langgraph';
-import { AIMessageChunk, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { User } from '@/entities/User';
-import { MongoDBSaver } from '@langchain/langgraph-checkpoint-mongodb';
-import { DatabaseName, getDbClient } from '@/common/configs/mongodb-client.config';
 import { ObjectId } from 'mongodb';
-import { Runnable, RunnableConfig } from '@langchain/core/runnables';
+import { RunnableConfig } from '@langchain/core/runnables';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4oMini } from './model_repo';
@@ -13,17 +11,14 @@ import { summarizeConversationConditionPrompt, systemMessageShort } from './prom
 import { userInformationPrompt } from './prompts';
 import { MessageTypePlainText } from '@/common/consts/message-types';
 import { sendMessage } from '@/services/utils/conversation.utils';
-import { ChatOpenAI, ChatOpenAICallOptions } from '@langchain/openai';
-import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
+import { getConversationById } from '@/services/api/conversations.services';
+import { getConversationLastMessages } from '@/services/api/messages.services';
+import { BotUserIds } from '@/common/consts/constants';
 
 export class NormalMessageWorkflow {
-  private checkpointer: MongoDBSaver;
   private graph: CompiledStateGraph<NormalMessageState, UpdateType<NormalMessageStateType>, NodeType, NormalMessageStateType, NormalMessageStateType, StateDefinition>;
-  private model: Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAICallOptions>;
 
   constructor() {
-    this.checkpointer = new MongoDBSaver({ client: getDbClient(), dbName: DatabaseName })
-
     const builder = new StateGraph(NormalMessageAnnotation)
       // Add nodes
       .addNode('checkMessageIntent', this.checkMessageIntent.bind(this))
@@ -36,26 +31,25 @@ export class NormalMessageWorkflow {
       .addConditionalEdges('handleGeneralMessage', this.decideNeedsSummary)
       .addEdge('summarizeConversation', END)
 
-    this.graph = builder.compile({ checkpointer: this.checkpointer })
-    this.model = (getModel(ModelNameChatGPT4oMini) as ChatOpenAI).bindTools([])
+    this.graph = builder.compile({})
   }
 
   private async checkMessageIntent(state: NormalMessageState): Promise<NodeOutput> {
     logger.debug('checkMessageIntent')
-    // TODO: Add tool calling logic to determine message intent
-    const isPlanningRelated = false // Replace with actual tool call
+    const isPlanningRelated = false;
 
     return {
       isPlanningRelated,
-      intentChecked: true
+      intentChecked: true,
+      targetStep: state.targetStep + 1,
     }
   }
 
   private async handlePlanningMessage(state: NormalMessageState): Promise<NodeOutput> {
     logger.debug('handlePlanningMessage')
-    // TODO: Add planning-specific logic
     return {
-      responseGenerated: true
+      responseGenerated: true,
+      targetStep: state.targetStep + 1,
     }
   }
 
@@ -80,7 +74,8 @@ export class NormalMessageWorkflow {
 
     return {
       responseGenerated: true,
-      messages: [...messages, response]
+      messages: [...messages, response],
+      targetStep: state.targetStep + 1,
     }
   }
 
@@ -109,8 +104,8 @@ export class NormalMessageWorkflow {
 
     return {
       summary: response.content,
-      // Keep only last 4 messages in state
-      messages: messages.slice(-4)
+      messages: messages.slice(-4),
+      targetStep: state.targetStep + 1,
     }
   }
 
@@ -120,12 +115,6 @@ export class NormalMessageWorkflow {
   }
 
   private decideNeedsSummary(state: NormalMessageState) {
-    // Decide if we need to update the summary based on various factors:
-    // 1. Number of messages since last summary
-    // 2. Significant topic changes
-    // 3. Time elapsed
-    // etc.
-
     const needsSummary = state.messages.length >= 5 && (!state.summary || state.messages.length % 10 === 0)
     return needsSummary ? 'summarizeConversation' : END
   }
@@ -135,22 +124,23 @@ export class NormalMessageWorkflow {
       throw new Error('User info and conversation ID are required')
     }
 
-    const config: RunnableConfig = {
-      configurable: { thread_id: `normal_message_${initialState.conversationId.toHexString()}` }
-    }
+    initialState.conversation = await getConversationById(initialState.conversationId)
+    const lastMessages = (await getConversationLastMessages(initialState.conversationId))
+      .map(m => BotUserIds[m.authorId.toHexString()] ? new AIMessage(m.content) : new HumanMessage(m.content))
 
-    const lastState = (await this.checkpointer.get(config))?.channel_values ?? {}
+    initialState.messages = [...lastMessages, initialState.lastMessage]
 
     try {
-      const finalState = await this.graph.invoke({ ...lastState, ...initialState }, config);
-      return finalState;
+      const finalState = await this.graph.invoke(initialState)
+      return finalState
     } catch (error) {
-      logger.error(`Error running workflow: ${error}`);
+      logger.error(`Error running workflow: ${error}`)
     }
   }
 }
 
 type NormalMessageState = {
+  targetStep: number
   userInfo: User
   conversationId: ObjectId
   conversation: Conversation | null
@@ -159,11 +149,13 @@ type NormalMessageState = {
   responseGenerated: boolean
   messages: BaseMessage[]
   summary: string | null
+  lastMessage: BaseMessage | null
 }
 
 type NodeType = typeof START | 'checkMessageIntent' | 'handlePlanningMessage' | 'handleGeneralMessage' | 'summarizeConversation'
 
 type NormalMessageStateType = {
+  targetStep: LastValue<number>
   userInfo: LastValue<User>
   conversationId: LastValue<ObjectId>
   conversation: LastValue<Conversation | null>
@@ -172,11 +164,13 @@ type NormalMessageStateType = {
   responseGenerated: LastValue<boolean>
   messages: LastValue<Messages>
   summary: LastValue<string | null>
+  lastMessage: LastValue<BaseMessage | null>
 }
 
 type NodeOutput = Partial<NormalMessageState>
 
 const NormalMessageAnnotation = Annotation.Root({
+  targetStep: Annotation<number>(),
   userInfo: Annotation<User>(),
   conversationId: Annotation<ObjectId>(),
   conversation: Annotation<Conversation | null>(),
@@ -184,5 +178,6 @@ const NormalMessageAnnotation = Annotation.Root({
   isPlanningRelated: Annotation<boolean>(),
   responseGenerated: Annotation<boolean>(),
   summary: Annotation<string | null>(),
+  lastMessage: Annotation<BaseMessage | null>(),
   ...MessagesAnnotation.spec,
 })
