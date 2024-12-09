@@ -31,6 +31,7 @@ export const SupportingUiLanguages = ['en', 'vi', 'zh', 'ja']
 
 export const UsersCollectionName = 'users'
 export const ConversationsCollectionName = 'conversations'
+export const ConversationMemoriesCollectionName = 'conversation_memories'
 export const MessagesCollectionName = 'messages'
 export const I18nCollectionName = 'i18n'
 export const ConfigsCollectionName = 'configs'
