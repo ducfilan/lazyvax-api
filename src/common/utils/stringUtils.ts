@@ -93,6 +93,17 @@ export const tryParseJson = <T>(json: string, fallback: any = {}): T => {
   }
 }
 
+export function extractJsonFromMessage<T>(input: string): T | null {
+  const jsonMatch = input.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ?? input.match(/^[\s\S]*$/);
+  if (!jsonMatch) return null;
+
+  try {
+    return JSON.parse(jsonMatch[1]);
+  } catch (e) {
+    return null;
+  }
+}
+
 export const langCodeToDateFnsLocale = (code: string | undefined) => {
   switch (code) {
     case "en":

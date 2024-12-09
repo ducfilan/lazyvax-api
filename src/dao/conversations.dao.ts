@@ -47,6 +47,7 @@ export default class ConversationsDao {
                         properties: {
                           startDate: { "bsonType": "date" },
                           currentStage: { enum: WeekPlanStages },
+                          aiMemory: { bsonType: 'string', maxLength: 5000 },
                           todoTasks: {
                             bsonType: 'array',
                             items: {

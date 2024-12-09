@@ -78,7 +78,8 @@ export default class UsersDao {
                   timezone: { bsonType: 'string' }
                 },
                 additionalProperties: false
-              }
+              },
+              aiMemory: { bsonType: 'string', maxLength: 5000 },
             },
             additionalProperties: false
           }

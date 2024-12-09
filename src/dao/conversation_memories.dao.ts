@@ -3,8 +3,9 @@ import { DatabaseName } from '@common/configs/mongodb-client.config'
 import { ConversationTypeWeek } from '@/common/consts/shared'
 import logger from '@/common/logger'
 import { ConversationMemoriesCollectionName } from '@/common/consts/constants'
+import { ConversationMemory } from '@/entities/ConversationMemory'
 
-let _conversationMemories: Collection
+let _conversationMemories: Collection<ConversationMemory>
 let _db: Db
 
 export default class ConversationMemoryDao {

@@ -5,6 +5,15 @@ import { ObjectId } from 'mongodb';
 import { DaysOfWeekMap } from '@/common/consts/constants';
 import { getHabits } from '@/services/api/habits.services';
 import { EventStatusToTextEn } from '@/entities/Event';
+import logger from '@/common/logger';
+import { GeneralMessageMemorizeInfo, GeneralMessageMemory } from '@/common/types/types';
+import { ModelNameChatGPT4oMini } from './model_repo';
+import { getModel } from './model_repo';
+import { deduplicateMemoryPrompt } from './prompts';
+import { extractJsonFromMessage } from '@/common/utils/stringUtils';
+import { updateAiMemory } from '@/services/api/users.services';
+import { User } from '@/entities/User';
+import { updateConversationMemory } from '@/services/api/conversation_memories.services';
 
 export async function getLastWeekPlan(userId: ObjectId, dayStartDate: Date, timezone?: string): Promise<string[]> {
   const lastWeekInfo = getWeekInfo(addWeeks(dayStartDate, -1), timezone);
@@ -52,13 +61,29 @@ export async function getCalendarEvents(userId: ObjectId, from: Date, to: Date, 
   }) ?? [];
 }
 
-export function extractJsonFromMessage<T>(input: string): T | null {
-  const jsonMatch = input.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ?? input.match(/^[\s\S]*$/);
-  if (!jsonMatch) return null;
+export async function saveMemorizeInfo(user: User, dayIndex: number, currentMemory: GeneralMessageMemory, newMemory: GeneralMessageMemorizeInfo) {
+  logger.debug('saveMemorizeInfo')
+  const prompt = deduplicateMemoryPrompt(currentMemory, newMemory)
 
-  try {
-    return JSON.parse(jsonMatch[1]);
-  } catch (e) {
-    return null;
+  const deduplicatedMemory = await getModel(ModelNameChatGPT4oMini)
+    .invoke(prompt)
+
+  const updatedMemory = extractJsonFromMessage<GeneralMessageMemory>(deduplicatedMemory)
+
+  if (!updatedMemory) {
+    throw new Error('Failed to deduplicate memory')
   }
+
+  const { longTermMemory, weeklyMemory, dailyMemory } = updatedMemory
+  await Promise.all([
+    updateAiMemory(user, longTermMemory),
+    updateConversationMemory(user, {
+      $set: {
+        'meta.weekAiMemory': weeklyMemory,
+        [`meta.dayAiMemory.${dayIndex}`]: dailyMemory
+      }
+    })
+  ])
+
+  return updatedMemory
 }

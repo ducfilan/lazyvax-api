@@ -19,6 +19,8 @@ export type Habit = {
   createdAt: Date;
   updatedAt: Date;
   completedDates?: Date[]; // Dates when the habit was marked as completed
+  isCurrent?: boolean;
+  isDesired?: boolean;
   startTime?: string;
   endTime?: string;
 };

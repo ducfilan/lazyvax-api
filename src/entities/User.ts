@@ -13,7 +13,8 @@ export type User = {
   password?: string,
   pictureUrl: string,
   preferences?: Preference,
-  conversations?: Conversation[]
+  conversations?: Conversation[],
+  aiMemory?: string,
 }
 
 export type Preference = {

@@ -8,7 +8,7 @@ import ObjectivesDao from '@/dao/objectives.dao';
 import EventsDao from '@/dao/events.dao';
 import HabitsDao from '@/dao/habits.dao';
 import CheckpointDao from '@/dao/checkpoint.dao';
-import ConversationMemoryDao from '@/dao/conversation_memory';
+import ConversationMemoryDao from '@/dao/conversation_memories.dao';
 
 const {
   NODE_ENV,

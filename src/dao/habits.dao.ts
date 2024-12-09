@@ -35,6 +35,8 @@ export default class HabitsDao {
               category: { bsonType: 'string', maxLength: 100 },
               color: { bsonType: 'string' }, // HEX code or color name
               emoji: { bsonType: 'string', maxLength: 10 },
+              isCurrent: { bsonType: 'bool' },
+              isDesired: { bsonType: 'bool' },
               repeat: {
                 bsonType: 'object',
                 required: ['unit', 'frequency'],

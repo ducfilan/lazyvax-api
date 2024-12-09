@@ -1,4 +1,4 @@
-import { differenceInYears, endOfDay, endOfWeek, format, formatDuration, getISOWeek, intervalToDuration, startOfDay, startOfWeek, subWeeks } from 'date-fns'
+import { differenceInYears, endOfDay, endOfWeek, format, formatDuration, getDay, getISOWeek, intervalToDuration, startOfDay, startOfWeek, subWeeks } from 'date-fns'
 import { DefaultLangCode, LiteralDurationsExtractRegex, i18n } from "@/common/consts/constants"
 import { langCodeToDateFnsLocale } from './stringUtils'
 import { WeekInfo } from '@/common/types/types'
@@ -131,6 +131,13 @@ export function endOfDayInTimeZone(date: Date, timeZone?: string): Date {
   return endOfDay(toZonedTime(date, timeZone))
 }
 
+export function formatDateToStringInTimeZone(date: Date, timeZone?: string, formatString: string = "dd MMM yyyy HH:mm"): string {
+  if (!timeZone) return format(date, formatString)
+
+  const zonedDate = toZonedTime(date, timeZone)
+  return format(zonedDate, formatString)
+}
+
 export function formatDateToWeekDayAndTime(date: Date, timeZone?: string, longDay: boolean = false): string {
   if (!timeZone) return format(date, longDay ? "EEEE, HH:mm" : "EEE, HH:mm")
 
@@ -175,4 +182,11 @@ export function dateInTimeZone(date: Date, timeZone?: string): Date {
   if (!timeZone) return date
 
   return toZonedTime(date, timeZone)
+}
+
+export function getDayIndexFromDateInTimeZone(date: Date, timeZone?: string): number {
+  if (!timeZone) return getDay(date)
+
+  const zonedDate = toZonedTime(date, timeZone)
+  return getDay(zonedDate)
 }

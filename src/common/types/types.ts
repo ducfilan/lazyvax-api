@@ -159,3 +159,21 @@ export class ActivitySuggestion {
     return `[${formatDateToWeekDayAndTime(new Date(this.start_time), timeZone)} - ${formatDateToWeekDayAndTime(new Date(this.end_time), timeZone)}] ${this.activity}`
   }
 }
+
+export type GeneralMessageResponse = {
+  response: string,
+  memorize: boolean,
+  memorizeInfo: GeneralMessageMemorizeInfo
+}
+
+export type GeneralMessageMemorizeInfo = {
+  dailyMemory: string[],
+  weeklyMemory: string[],
+  longTermMemory: string[]
+}
+
+export type GeneralMessageMemory = {
+  longTermMemory: string,
+  weeklyMemory: string,
+  dailyMemory: string,
+}

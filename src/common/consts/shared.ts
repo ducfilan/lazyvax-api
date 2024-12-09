@@ -50,6 +50,18 @@ export const DayPlanSteps = {
   [arrangeDayStep]: 8,
 }
 
+export const checkMessageIntentStep = 'checkMessageIntent'
+export const handlePlanningMessageStep = 'handlePlanningMessage'
+export const handleGeneralMessageStep = 'handleGeneralMessage'
+export const summarizeConversationStep = 'summarizeConversation'
+
+export const NormalMessageSteps = {
+  [checkMessageIntentStep]: 0,
+  [handlePlanningMessageStep]: 1,
+  [handleGeneralMessageStep]: 1,
+  [summarizeConversationStep]: 2,
+}
+
 export const ConversationTypeWeek = 'week'
 export const ConversationTypeDay = 'day'
 export const ConversationTypeMonth = 'month'
