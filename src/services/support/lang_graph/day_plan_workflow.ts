@@ -21,10 +21,13 @@ import { askMoreInfoInstruction, dayActivitiesArrangeInstruction, dayActivitiesA
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
-import { extractJsonFromMessage, getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
+import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
 import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, ObjectiveTypeShort, ObjectiveTypeLong, askMoreInfoStep, checkObjectivesStep } from '@/common/consts/shared';
 import { getObjectivesByUserId } from '@/services/api/objectives.services';
 import { PlanQuestion } from '@/common/types/shared';
+import { extractJsonFromMessage } from '@/common/utils/stringUtils';
+import { ConversationMemory } from '@/entities/ConversationMemory';
+import { getConversationMemoryByConversationId } from '@/services/api/conversation_memories.services';
 
 export class DayPlanWorkflow {
   private checkpointer: MongoDBSaver;
@@ -206,6 +209,9 @@ export class DayPlanWorkflow {
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       calendarEvents: state.thisWeekCalendarEvents?.map(e => `- ${e}`).join('\n'),
       dislikeActivities: state.dislikeActivities.size > 0 ? [...state.dislikeActivities].map(a => `- ${a}`).join('\n') : "Not specified",
+      longTermMemory: state.userInfo.aiMemory,
+      weekMemory: state.conversationMemory?.meta.weekAiMemory,
+      dayMemory: state.conversationMemory?.meta.dayAiMemory[targetDayToPlanInTz.getDay()],
       instructions: askMoreInfoInstruction(),
     })
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
@@ -281,6 +287,9 @@ export class DayPlanWorkflow {
       calendarLastWeekEvents: state.lastWeekPlan?.map(e => `- ${e}`).join('\n'),
       calendarEvents: state.thisWeekCalendarEvents?.map(e => `- ${e}`).join('\n'),
       dislikeActivities: state.dislikeActivities.size > 0 ? [...state.dislikeActivities].map(a => `- ${a}`).join('\n') : "Not specified",
+      longTermMemory: state.userInfo.aiMemory,
+      weekMemory: state.conversationMemory?.meta.weekAiMemory,
+      dayMemory: state.conversationMemory?.meta.dayAiMemory[targetDayToPlanInTz.getDay()],
       instructions: dayActivitiesSuggestionInstruction(timezone, "today"),
     })
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
@@ -346,6 +355,7 @@ export class DayPlanWorkflow {
       const lastState = (await this.checkpointer.get(config))?.channel_values ?? {
         targetStep: DayPlanSteps.checkLastWeekPlan,
         dislikeActivities: new Set(),
+        conversationMemory: null,
       }
 
       if (!lastState.conversation) {
@@ -360,6 +370,14 @@ export class DayPlanWorkflow {
 
         lastState.conversation = conversation
         lastState.weekStartDate = conversation.meta?.meta?.startDate
+      }
+
+      if (!lastState.conversationMemory) {
+        const conversationMemory = await getConversationMemoryByConversationId(initialState.conversationId)
+        if (!conversationMemory) {
+          throw new Error(`Conversation memory not found: ${initialState.conversationId}`)
+        }
+        lastState.conversationMemory = conversationMemory
       }
 
       if (updateState) {
@@ -409,6 +427,7 @@ type DailyPlanningState = {
   thisWeekCalendarEvents: string[]
   messages: BaseMessage[]
   isQuestionsAnswered: boolean
+  conversationMemory: ConversationMemory | null
 }
 
 type NodeType = typeof START | (keyof typeof DayPlanSteps)
@@ -438,6 +457,7 @@ type DailyPlanStateType = {
   thisWeekCalendarEvents: LastValue<string[]>
   messages: LastValue<Messages>
   isQuestionsAnswered: LastValue<boolean>
+  conversationMemory: LastValue<ConversationMemory | null>
 }
 
 type NodeOutput = Partial<DailyPlanningState>
@@ -466,6 +486,7 @@ const DailyPlanningAnnotation = Annotation.Root({
   dayActivitiesArrange: Annotation<string | null>(),
   thisWeekCalendarEvents: Annotation<string[]>(),
   isQuestionsAnswered: Annotation<boolean>(),
+  conversationMemory: Annotation<ConversationMemory | null>(),
   ...MessagesAnnotation.spec,
 })
 

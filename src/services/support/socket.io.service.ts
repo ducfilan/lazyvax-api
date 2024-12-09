@@ -87,6 +87,8 @@ import {
   EventNameConfirmToGenerateNextDayTasks,
   EventNameDislikeActivity
 } from "@/common/consts/event-names"
+import { createConversationMemory } from "../api/conversation_memories.services"
+import { ConversationTypeWeek } from "@/common/consts/shared"
 
 interface ISocket extends Socket {
   isAuthenticated?: boolean;
@@ -290,6 +292,7 @@ export function registerSocketIo(server: HttpServer) {
             const session = getDbClient().startSession()
             await session.withTransaction(async () => {
               const conversationId = await createConversation(conversation)
+              await createConversationMemory(conversationId, ConversationTypeWeek)
 
               const firstMessages = await generateFirstMessages(message.conversation.type, socket.user?.locale || DefaultLangCode)
               await MessagesDao.insertMany(new MessageGroupBuilder(firstMessages).build(conversationId))

@@ -2,14 +2,14 @@ import { ObjectId } from 'mongodb'
 import ConversationMemoryDao from '@/dao/conversation_memories.dao'
 import logger from '@/common/logger'
 
-export const createConversationMemory = async (conversationId: ObjectId, type: string) => {
+export const createConversationMemory = async (conversationId: ObjectId, type: string, weekAiMemory?: string, dayAiMemory?: string[]) => {
   try {
     const memory = {
       conversationId,
       meta: {
         type,
-        weekAiMemory: '',
-        dayAiMemory: Array(7).fill('')
+        weekAiMemory: weekAiMemory ?? '',
+        dayAiMemory: dayAiMemory ?? Array(7).fill('')
       }
     }
 

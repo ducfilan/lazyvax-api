@@ -373,6 +373,9 @@ export class WeeklyPlanningWorkflow {
       weekToDoTask: state.weekToDoTasks?.map(t => `- ${t}`).join('\n'),
       calendarEvents: state.calendarEvents?.map(e => `- ${e}`).join('\n'),
       dislikeActivities: state.dislikeActivities.size > 0 ? [...state.dislikeActivities].map(a => `- ${a}`).join('\n') : "Not specified",
+      longTermMemory: state.userInfo.aiMemory,
+      weekMemory: "",
+      dayMemory: "",
       instructions: dayTasksSuggestInstruction(timezone, formatDateToWeekDayAndDate(addDays(new Date(state.weekStartDate), notConfirmedDayIndex), timezone)),
     })
     logger.debug(`generateMoreDays prompt: ${JSON.stringify(prompt)}`)
