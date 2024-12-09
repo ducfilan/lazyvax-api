@@ -194,7 +194,7 @@ export const validateApiAddTodoTask = [
     .isObject()
     .custom(task => validateTask(task))
     .customSanitizer(task => {
-      const sanitizedTask = { ...task };
+      const sanitizedTask = { ...(task || {}) };
 
       sanitizedTask._id = new ObjectId();
       sanitizedTask.completed = task.completed ?? false;
