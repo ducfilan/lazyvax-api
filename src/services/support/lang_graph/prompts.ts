@@ -294,8 +294,8 @@ ${newMemory.dailyMemory?.map(item => `- ${item}`).join("\n") ?? ""}
 
 ### Output: ###
 {
-  "longTermMemory": "[your response]",
-  "weeklyMemory": "[your response]",
-  "dailyMemory": "[your response]"
+  "longTermMemory": "[your response, type: string]",
+  "weeklyMemory": "[your response, type: string]",
+  "dailyMemory": "[your response, type: string]"
 }`
 }
