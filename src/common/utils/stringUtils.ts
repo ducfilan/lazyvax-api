@@ -94,11 +94,10 @@ export const tryParseJson = <T>(json: string, fallback: any = {}): T => {
 }
 
 export function extractJsonFromMessage<T>(input: string): T | null {
-  const jsonMatch = input.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ?? input.match(/^[\s\S]*$/);
-  if (!jsonMatch) return null;
+  const jsonMatch = input.match(/```(?:json)?\s*([\s\S]*?)\s*```/)?.[1] ?? input;
 
   try {
-    return JSON.parse(jsonMatch[1]);
+    return JSON.parse(jsonMatch);
   } catch (e) {
     return null;
   }

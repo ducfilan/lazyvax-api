@@ -61,14 +61,14 @@ export async function getCalendarEvents(userId: ObjectId, from: Date, to: Date, 
   }) ?? [];
 }
 
-export async function saveMemorizeInfo(user: User, dayIndex: number, currentMemory: GeneralMessageMemory, newMemory: GeneralMessageMemorizeInfo) {
+export async function saveMemorizeInfo(user: User, conversationId: ObjectId, dayIndex: number, currentMemory: GeneralMessageMemory, newMemory: GeneralMessageMemorizeInfo) {
   logger.debug('saveMemorizeInfo')
   const prompt = deduplicateMemoryPrompt(currentMemory, newMemory)
 
-  const deduplicatedMemory = await getModel(ModelNameChatGPT4oMini)
+  const deduplicatedMemoryResponse = await getModel(ModelNameChatGPT4oMini)
     .invoke(prompt)
 
-  const updatedMemory = extractJsonFromMessage<GeneralMessageMemory>(deduplicatedMemory)
+  const updatedMemory = extractJsonFromMessage<GeneralMessageMemory>(deduplicatedMemoryResponse.content)
 
   if (!updatedMemory) {
     throw new Error('Failed to deduplicate memory')
@@ -77,7 +77,7 @@ export async function saveMemorizeInfo(user: User, dayIndex: number, currentMemo
   const { longTermMemory, weeklyMemory, dailyMemory } = updatedMemory
   await Promise.all([
     updateAiMemory(user, longTermMemory),
-    updateConversationMemory(user, {
+    updateConversationMemory({ conversationId }, {
       $set: {
         'meta.weekAiMemory': weeklyMemory,
         [`meta.dayAiMemory.${dayIndex}`]: dailyMemory

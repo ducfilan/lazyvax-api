@@ -240,19 +240,22 @@ User message:
 `
 
 export const generalMessageInstruction = [
-  `Besides respond to user, analyze the user's input and determine if it contains relevant information to memorize for planning or understanding the user. First, evaluate the input's intent and whether it includes details related to daily/weekly planning or feelings, or long-term insights. If it does, organize the relevant information into the following **structured JSON format** with no extra words. Focus on extracting **concise** info, keywords, facts, NO NEED full sentences. Do not make assumptions beyond the provided input.`,
+  "1. **Respond to the user** in a way that aligns with your persona and the user's information.",
+  "2. **Analyze the user's input** to determine if it contains information relevant to planning or understanding the user. Evaluate the input's intent and whether it includes details related to daily/weekly planning, feelings, or long-term insights.",
+  "3. If the input does contain relevant information, **organize it into the following structured JSON format** without any extra words or conversation. Focus on extracting concise info, keywords, and facts, **NO NEED*** full sentences and linking words. Use empty arrays or objects if no information is available for a specific memory category.",
+  "",
   `Output format:`,
   `{
     "response": "...",
-    "memorize": [true or false],
+    "memorize": [true if have anything you need to memorize or false if not],
     "memorizeInfo": {
-      "daily_memory": [
+      "dailyMemory": [
         ...
       ],
-      "weekly_memory": [
+      "weeklyMemory": [
         ...
       ],
-      "long_term_memory": [
+      "longTermMemory": [
         ...
       ]
     }
@@ -278,15 +281,15 @@ ${currentMemory.dailyMemory}
 New info:
 Long term memory: 
 ---
-${newMemory.longTermMemory.map(item => `- ${item}`).join("\n")}
+${newMemory.longTermMemory?.map(item => `- ${item}`).join("\n") ?? ""}
 ---
 Weekly memory:
 ---
-${newMemory.weeklyMemory.map(item => `- ${item}`).join("\n")}
+${newMemory.weeklyMemory?.map(item => `- ${item}`).join("\n") ?? ""}
 ---
 Daily memory:
 ---
-${newMemory.dailyMemory.map(item => `- ${item}`).join("\n")}
+${newMemory.dailyMemory?.map(item => `- ${item}`).join("\n") ?? ""}
 ---
 
 ### Output: ###

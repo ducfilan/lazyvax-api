@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { Runnable } from '@langchain/core/runnables';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
-import { getModel, ModelNameChatGPT4oMini } from './model_repo';
+import { getModel, ModelNameChatGPT4o, ModelNameChatGPT4oMini } from './model_repo';
 import { generalMessageInstruction, generalMessageTemplate, summarizeConversationConditionPrompt, systemMessageShort } from './prompts';
 import { userInformationPrompt } from './prompts';
 import { MessageTypePlainText } from '@/common/consts/message-types';
@@ -43,7 +43,8 @@ export class NormalMessageWorkflow {
       .addNode(handleGeneralMessageStep, this.handleGeneralMessage.bind(this))
       .addNode(summarizeConversationStep, this.summarizeConversation.bind(this))
       // Add edges
-      .addConditionalEdges(START, this.decideStartFlow)
+      .addEdge(START, checkMessageIntentStep)
+      .addConditionalEdges(checkMessageIntentStep, this.decideMessageIntentStepNextStep)
       .addConditionalEdges(handlePlanningMessageStep, this.decideNeedsSummary)
       .addConditionalEdges(handleGeneralMessageStep, this.decideNeedsSummary)
       .addEdge(summarizeConversationStep, END)
@@ -58,7 +59,6 @@ export class NormalMessageWorkflow {
 
     return {
       isPlanningRelated,
-      intentChecked: true,
     }
   }
 
@@ -87,7 +87,7 @@ export class NormalMessageWorkflow {
       instructions: generalMessageInstruction
     })
 
-    const response = await getModel(ModelNameChatGPT4oMini).invoke(prompt)
+    const response = await getModel(ModelNameChatGPT4o).invoke(prompt)
     const parsedResponse = extractJsonFromMessage<GeneralMessageResponse>(response.content)
     const { response: responseMessage, memorize, memorizeInfo } = parsedResponse
     await sendMessage(conversationId, responseMessage, MessageTypePlainText)
@@ -101,14 +101,14 @@ export class NormalMessageWorkflow {
         dailyMemory: state.conversationMemory.meta.dayAiMemory[dayIndex] || '',
       }
 
-      const updatedMemory = await saveMemorizeInfo(state.userInfo, dayIndex, currentMemory, memorizeInfo)
+      const updatedMemory = await saveMemorizeInfo(state.userInfo, state.conversationId, dayIndex, currentMemory, memorizeInfo)
       state.userInfo.aiMemory = updatedMemory.longTermMemory
       state.conversationMemory.meta.weekAiMemory = updatedMemory.weeklyMemory
       state.conversationMemory.meta.dayAiMemory[dayIndex] = updatedMemory.dailyMemory
     }
 
     return {
-      messages: [...messages, response],
+      messages: [...messages, new AIMessage(responseMessage)],
     }
   }
 
@@ -141,8 +141,7 @@ export class NormalMessageWorkflow {
     }
   }
 
-  private decideStartFlow(state: NormalMessageState) {
-    if (!state.intentChecked) return checkMessageIntentStep
+  private decideMessageIntentStepNextStep(state: NormalMessageState) {
     return state.isPlanningRelated ? handlePlanningMessageStep : handleGeneralMessageStep
   }
 

@@ -90,7 +90,9 @@ export async function updateTimezone({ _id, email }: User, timezone: string) {
   return UsersDao.updateOne({ _id, email }, { $set: { 'preferences.timezone': timezone } })
 }
 
-export async function updateAiMemory({ _id, email }: User, aiMemory: string) {
+export async function updateAiMemory({ _id, email, aiMemory: currentAiMemory }: User, aiMemory: string) {
+  if (currentAiMemory === aiMemory || !aiMemory) return
+
   return UsersDao.updateOne({ _id, email }, { $set: { 'aiMemory': aiMemory } })
 }
 
