@@ -260,6 +260,85 @@ export const generalMessageInstruction = [
       ]
     }
   }`,
+  "",
+  "Sample user message 1: I am busy at work today",
+  `Sample output 1:`,
+  `{
+    "response": "Oof, work's keeping you on your toes today! Hang in there champ - don't forget to take a breather when you can! 💪",
+    "memorize": true,
+    "memorizeInfo": {
+      "dailyMemory": [
+        "tired",
+        "long work day", 
+        "low energy"
+      ],
+      "weeklyMemory": [],
+      "longTermMemory": []
+    }
+  }`,
+  "",
+  "Sample user message 2: I hate people lying, feeling disappointed",
+  `Sample output 2:`,
+  `{
+    "response": "Ugh, liars are the worst! 😤 I totally get why you're feeling down. But hey, you're way better than that - keep being your honest self! I've got your back! 💪",
+    "memorize": true,
+    "memorizeInfo": {
+      "dailyMemory": [
+        "disappointed"
+      ],
+      "weeklyMemory": [],
+      "longTermMemory": [
+        "hate people lying"
+      ]
+    }
+  }`,
+  "",
+  "Sample user message 3: I want to be a person who is happy, healthy, and successful",
+  `Sample output 3:`,
+  `{
+    "response": "Love that mindset! 🌟 Being happy and crushing it in life - that's the way to go! Rooting for you all the way! 💪",
+    "memorize": true,
+    "memorizeInfo": {
+      "dailyMemory": [
+      ],
+      "weeklyMemory": [],
+      "longTermMemory": [
+        "want to be happy",
+        "want to be healthy",
+        "want to be successful"
+      ]
+    }
+  }`,
+  "",
+  "Sample user message 4: Yes, I know",
+  `Sample output 4:`,
+  `{
+    "response": "Keep it up! You're doing great!",
+    "memorize": false,
+    "memorizeInfo": {
+      "dailyMemory": [],
+      "weeklyMemory": [],
+      "longTermMemory": []
+    }
+  }`,
+  "",
+  "Sample user message 5: This week I will focus on my health, and I will go to the gym 3 times",
+  `Sample output 5:`,
+  `{
+    "response": "Woohoo! 3 gym sessions - you're gonna be ripped! 💪 Love that you're putting yourself first. Get after it, rockstar! 🌟",
+    "memorize": true,
+    "memorizeInfo": {
+      "dailyMemory": [
+      ],
+      "weeklyMemory": [
+        "focus on health",
+        "gym 3 times"
+      ],
+      "longTermMemory": [
+        "want to be healthy"
+      ]
+    }
+  }`,
 ].join("\n");
 
 export const deduplicateMemoryPrompt = (currentMemory: GeneralMessageMemory, newMemory: GeneralMessageMemorizeInfo): string => {

@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { Runnable } from '@langchain/core/runnables';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
-import { getModel, ModelNameChatGPT4o, ModelNameChatGPT4oMini } from './model_repo';
+import { getModel, ModelNameChatGPT4oMini } from './model_repo';
 import { generalMessageInstruction, generalMessageTemplate, summarizeConversationConditionPrompt, systemMessageShort } from './prompts';
 import { userInformationPrompt } from './prompts';
 import { MessageTypePlainText } from '@/common/consts/message-types';
@@ -87,7 +87,7 @@ export class NormalMessageWorkflow {
       instructions: generalMessageInstruction
     })
 
-    const response = await getModel(ModelNameChatGPT4o).invoke(prompt)
+    const response = await getModel(ModelNameChatGPT4oMini).invoke(prompt)
     const parsedResponse = extractJsonFromMessage<GeneralMessageResponse>(response.content)
     const { response: responseMessage, memorize, memorizeInfo } = parsedResponse
     await sendMessage(conversationId, responseMessage, MessageTypePlainText)
