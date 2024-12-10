@@ -1,3 +1,4 @@
+import logger from '@/common/logger'
 import { User } from '@/entities/User'
 import { addTodoTask, deleteTodoTask, getConversationById, getConversationByType, replaceTodoTasks, updateById, updateTodoTask } from '@/services/api/conversations.services'
 import { getMessages } from '@services/api/messages.services'
@@ -55,8 +56,9 @@ export default class ConversationsController {
 
       await addTodoTask(conversationId, task)
 
-      res.sendStatus(200).json(task)
+      res.status(200).send(task)
     } catch (e) {
+      logger.error(e)
       res.status(500).json({ error: e.message })
     }
   }
@@ -67,8 +69,9 @@ export default class ConversationsController {
       const { tasks } = req.body
 
       await replaceTodoTasks(conversationId, tasks)
-      res.sendStatus(200).json(tasks)
+      res.status(200).send(tasks)
     } catch (e) {
+      logger.error(e)
       res.status(500).json({ error: e.message })
     }
   }
