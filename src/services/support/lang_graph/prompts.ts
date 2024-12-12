@@ -97,7 +97,7 @@ export const dayTasksSuggestTemplate =
   "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nShort term goals:\n{shortTermGoals}\n\nLong term goals:\n{longTermGoals}\n\nTo do tasks this week:\n{weekToDoTask}\n\nWhat's on calendar last week:\n{calendarLastWeekEvents}\n\nWhat's on calendar this week, includes today:\n{calendarEvents}\n\nDisliked activities:\n{dislikeActivities}\n\nLong term memory about user:\n{longTermMemory}\n\nWeek memory about user:\n{weekMemory}\n\nDay memory about user:\n{dayMemory}\n\n### Instructions: ###\n{instructions}";
 
 export const dayActivitiesArrangeTemplate =
-  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nActivities already planned for today:\n{targetDayActivities}\n\nActivities to arrange to fit into today:\n{activitiesToArrange}\n\n### Instructions: ###\n{instructions}";
+  "### Context: ###\nNow is {now}.\n{user_info}\n\nHabits:\n{habit}\n\nActivities already planned for today:\n{targetDayActivities}\n\nActivities to arrange and its number of sessions to fit into today:\n{activitiesToArrange}\n\n### Instructions: ###\n{instructions}";
 
 export const dayTasksSuggestInstruction = (
   timezone: string,
@@ -201,6 +201,7 @@ export const dayActivitiesArrangeInstruction = (timezone: string, targetDay: str
   `Arrange the target activities into my current schedule for the day **${targetDay}**.`,
   "",
   "Guidelines for Scheduling:",
+  "- Pay attention to how many sessions user specified for activities and align **multiple reasonable timing** for activities if number of sessions are more than 1.",
   "- Avoid Overlaps: Do not schedule activities that conflict with my existing calendar events.",
   "- Respect Priorities: Schedule high-priority activities first, followed by medium and low priorities.",
   "- Energy Levels: Align activities that require high energy with my likely high-energy times",

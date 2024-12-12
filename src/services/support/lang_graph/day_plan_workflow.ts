@@ -244,6 +244,13 @@ export class DayPlanWorkflow {
     // Check if it's late and adjust planning time if needed
     const isLateOnToday = isEvening(nowInTz)
     if (isLateOnToday && isTargetDayToday) {
+      if (state.dayActivitiesSuggestion) {
+        return {
+          needToConfirmToPlanLate: false,
+          targetStep: state.targetStep + (state.dayActivitiesConfirmed ? 1 : 0)
+        }
+      }
+
       if (!state.needToConfirmToPlanLate) {
         return {
           needToConfirmToPlanLate: true,
