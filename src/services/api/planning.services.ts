@@ -4,12 +4,16 @@ import { User } from '@/entities/User';
 import { arrangeDayStep, askMoreInfoStep, DayPlanSteps, generateDayTasksStep } from '@/common/consts/shared';
 
 export async function getDaySuggestions(user: User, conversationId: ObjectId, targetDayToPlan: Date, extraInfo: object) {
-  const result = await dayPlanWorkflow.runWorkflow({
+  const { result, error } = await dayPlanWorkflow.runWorkflow({
     userInfo: user,
     conversationId,
     targetDayToPlan,
     ...(extraInfo ?? {}),
   })
+
+  if (error) {
+    throw error
+  }
 
   const output: any = {
     currentStep: result.targetStep,

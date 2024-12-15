@@ -50,7 +50,7 @@ export class NormalMessageWorkflow {
       .addEdge(summarizeConversationStep, END)
 
     this.graph = builder.compile()
-    this.model = (getModel(ModelNameChatGPT4oMini) as ChatOpenAI).bindTools([])
+    this.model = getModel(ModelNameChatGPT4oMini)
   }
 
   private async checkMessageIntent(state: NormalMessageState): Promise<NodeOutput> {
@@ -88,7 +88,7 @@ export class NormalMessageWorkflow {
     })
 
     const response = await getModel(ModelNameChatGPT4oMini).invoke(prompt)
-    const parsedResponse = extractJsonFromMessage<GeneralMessageResponse>(response.content)
+    const parsedResponse = extractJsonFromMessage<GeneralMessageResponse>(response.content as string)
     const { response: responseMessage, memorize, memorizeInfo } = parsedResponse
     await sendMessage(conversationId, responseMessage, MessageTypePlainText)
 

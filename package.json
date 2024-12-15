@@ -16,15 +16,15 @@
     "test:watch": "jest --passWithNoTests --watch"
   },
   "_moduleAliases": {
-    "@": "build",
-    "@common": "build/common",
-    "@controllers": "build/controllers",
-    "@dao": "build/dao",
-    "@middlewares": "build/middlewares",
-    "@models": "build/models",
-    "@routes": "build/routes",
-    "@services": "build/services",
-    "@validators": "build/validators"
+    "@": "src",
+    "@common": "src/common",
+    "@controllers": "src/controllers",
+    "@dao": "src/dao",
+    "@middlewares": "src/middlewares",
+    "@models": "src/models",
+    "@routes": "src/routes",
+    "@services": "src/services",
+    "@validators": "src/validators"
   },
   "lint-staged": {
     "linters": {
@@ -47,6 +47,7 @@
     "@babel/register": "^7.25.9",
     "@babel/runtime": "^7.26.0",
     "@google-cloud/text-to-speech": "^5.5.0",
+    "@langchain/anthropic": "^0.3.9",
     "@langchain/core": "^0.3.16",
     "@langchain/langgraph": "^0.2.19",
     "@langchain/langgraph-checkpoint-mongodb": "^0.0.4",

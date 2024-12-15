@@ -68,7 +68,7 @@ export async function saveMemorizeInfo(user: User, conversationId: ObjectId, day
   const deduplicatedMemoryResponse = await getModel(ModelNameChatGPT4oMini)
     .invoke(prompt)
 
-  const updatedMemory = extractJsonFromMessage<GeneralMessageMemory>(deduplicatedMemoryResponse.content)
+  const updatedMemory = extractJsonFromMessage<GeneralMessageMemory>(deduplicatedMemoryResponse.content as string)
 
   if (!updatedMemory) {
     throw new Error('Failed to deduplicate memory')

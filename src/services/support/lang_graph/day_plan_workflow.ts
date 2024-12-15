@@ -20,7 +20,7 @@ import { RunnableConfig } from '@langchain/core/runnables';
 import { askMoreInfoInstruction, dayActivitiesArrangeInstruction, dayActivitiesArrangeTemplate, dayActivitiesSuggestionInstruction, dayTasksSuggestTemplate, systemMessageShort, userInformationPrompt } from './prompts';
 import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
-import { getModel, ModelNameChatGPT4o } from './model_repo';
+import { getModel, ModelNameChatGPT4o, ModelNameLlama3370BInstruct } from './model_repo';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
 import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, ObjectiveTypeShort, ObjectiveTypeLong, askMoreInfoStep, checkObjectivesStep } from '@/common/consts/shared';
 import { getObjectivesByUserId } from '@/services/api/objectives.services';
@@ -32,6 +32,7 @@ import { getConversationMemoryByConversationId } from '@/services/api/conversati
 export class DayPlanWorkflow {
   private checkpointer: MongoDBSaver;
   private graph: CompiledStateGraph<DailyPlanningState, UpdateType<DailyPlanStateType>, NodeType, DailyPlanStateType, DailyPlanStateType, StateDefinition>;
+  private modelName: string;
 
   constructor() {
     this.checkpointer = new MongoDBSaver({ client: getDbClient(), dbName: DatabaseName })
@@ -60,6 +61,7 @@ export class DayPlanWorkflow {
       .addEdge(arrangeDayStep, END)
 
     this.graph = builder.compile({ checkpointer: this.checkpointer })
+    this.modelName = ModelNameChatGPT4o
   }
 
   private isCurrentStep(nodeKey: string, targetStep: number) {
@@ -214,11 +216,11 @@ export class DayPlanWorkflow {
       dayMemory: state.conversationMemory?.meta.dayAiMemory[targetDayToPlanInTz.getDay()],
       instructions: askMoreInfoInstruction(),
     })
-    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
+    const result = await getModel(this.modelName).invoke(prompt)
     const { questions } = extractJsonFromMessage<{
       needMoreInfo: boolean,
       questions: PlanQuestion[],
-    }>(result.content)
+    }>(result.content as string)
 
     return {
       questions,
@@ -299,10 +301,10 @@ export class DayPlanWorkflow {
       dayMemory: state.conversationMemory?.meta.dayAiMemory[targetDayToPlanInTz.getDay()],
       instructions: dayActivitiesSuggestionInstruction(timezone, "today"),
     })
-    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
+    const result = await getModel(this.modelName).invoke(prompt)
 
     return {
-      dayActivitiesSuggestion: result.content,
+      dayActivitiesSuggestion: result.content as string,
       targetStep: state.dayActivitiesConfirmed ? state.targetStep + 1 : state.targetStep,
     }
   }
@@ -342,10 +344,10 @@ export class DayPlanWorkflow {
       instructions: dayActivitiesArrangeInstruction(timezone, "today"),
     })
 
-    const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
+    const result = await getModel(this.modelName).invoke(prompt)
 
     return {
-      dayActivitiesArrange: result.content,
+      dayActivitiesArrange: result.content as string,
     }
   }
 
@@ -402,9 +404,10 @@ export class DayPlanWorkflow {
       }
 
       const finalState: DailyPlanningState = await this.graph.invoke({ ...lastState, ...initialState }, config);
-      return finalState;
+      return { result: finalState, error: null };
     } catch (error) {
       logger.error(`Error running workflow: ${error}`);
+      return { result: null, error: error };
     }
   }
 }

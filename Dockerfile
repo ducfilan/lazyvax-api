@@ -16,4 +16,4 @@ RUN yarn build
 
 EXPOSE 80 9292
 
-CMD [ "yarn", "start" ]
+CMD [ "yarn", "debug" ]

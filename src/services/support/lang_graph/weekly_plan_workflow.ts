@@ -264,7 +264,7 @@ export class WeeklyPlanningWorkflow {
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
     logger.debug(`generateFirstDayTasks result: ${result.content}`)
 
-    await sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
+    await sendMessage(state.conversationId, result.content as string, MessageTypeTextWithEvents)
 
     const daysInWeekTasksSuggested = [...state.daysInWeekTasksSuggested]
     daysInWeekTasksSuggested[firstDayIndex] = true
@@ -382,7 +382,7 @@ export class WeeklyPlanningWorkflow {
     const result = await getModel(ModelNameChatGPT4o).invoke(prompt)
     logger.debug(`generateMoreDays result: ${result.content}`)
 
-    await sendMessage(state.conversationId, result.content, MessageTypeTextWithEvents)
+    await sendMessage(state.conversationId, result.content as string, MessageTypeTextWithEvents)
 
     const daysInWeekTasksSuggested = [...state.daysInWeekTasksSuggested]
     daysInWeekTasksSuggested[notConfirmedDayIndex] = true
