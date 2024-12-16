@@ -36,7 +36,7 @@ const gpt4oMiniYescaleModel = new ChatOpenAI({
   modelName: 'gpt-4o-mini',
   temperature: 0.6,
   cache: true,
-  maxRetries: 1,
+  maxRetries: 0,
   verbose: Env === Envs.dev,
   configuration: {
     baseURL: "https://api.yescale.io/v1",
@@ -48,7 +48,7 @@ const gpt4oYescaleModel = new ChatOpenAI({
   modelName: 'gpt-4o',
   temperature: 0.6,
   cache: true,
-  maxRetries: 1,
+  maxRetries: 0,
   verbose: Env === Envs.dev,
   configuration: {
     baseURL: "https://api.yescale.io/v1",
@@ -79,7 +79,7 @@ const llama3370BInstructModel = new ChatOpenAI({
   maxTokens: 4196,
   cache: true,
   verbose: Env === Envs.dev,
-  maxRetries: 1,
+  maxRetries: 0,
   configuration: {
     apiKey: process.env.HYPERBOLIC_API_KEY,
     baseURL: 'https://api.hyperbolic.xyz/v1',
