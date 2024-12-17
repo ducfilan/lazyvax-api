@@ -16,15 +16,15 @@
     "test:watch": "jest --passWithNoTests --watch"
   },
   "_moduleAliases": {
-    "@": "src",
-    "@common": "src/common",
-    "@controllers": "src/controllers",
-    "@dao": "src/dao",
-    "@middlewares": "src/middlewares",
-    "@models": "src/models",
-    "@routes": "src/routes",
-    "@services": "src/services",
-    "@validators": "src/validators"
+    "@": "build",
+    "@common": "build/common",
+    "@controllers": "build/controllers",
+    "@dao": "build/dao",
+    "@middlewares": "build/middlewares",
+    "@models": "build/models",
+    "@routes": "build/routes",
+    "@services": "build/services",
+    "@validators": "build/validators"
   },
   "lint-staged": {
     "linters": {
