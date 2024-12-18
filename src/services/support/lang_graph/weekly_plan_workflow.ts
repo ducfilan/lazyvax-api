@@ -39,9 +39,8 @@ import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o } from './model_repo';
 import { sendMessage } from '@/services/utils/conversation.utils';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
-import { ObjectiveTypeLong } from '@/common/consts/shared';
-import { ObjectiveTypeShort } from '@/common/consts/shared';
-import { getObjectivesByUserId } from '@/services/api/objectives.services';
+import { GoalTypeLong, GoalTypeShort } from '@/common/consts/shared';
+import { getGoalsByUserId } from '@/services/api/goals.services';
 
 export class WeeklyPlanningWorkflow {
   private checkpointer: MongoDBSaver;
@@ -356,9 +355,9 @@ export class WeeklyPlanningWorkflow {
       MessageTypePlainText
     )
 
-    const objectives = await getObjectivesByUserId(state.userInfo._id)
-    const shortTermGoals = objectives.filter(o => o.type === ObjectiveTypeShort).map(o => o.title)
-    const longTermGoals = objectives.filter(o => o.type === ObjectiveTypeLong).map(o => o.title)
+    const goals = await getGoalsByUserId(state.userInfo._id)
+    const shortTermGoals = goals.filter(o => o.type === GoalTypeShort).map(o => o.title)
+    const longTermGoals = goals.filter(o => o.type === GoalTypeLong).map(o => o.title)
 
     const prompt = await ChatPromptTemplate.fromMessages([
       ["system", systemMessageShort],

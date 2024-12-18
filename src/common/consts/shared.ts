@@ -29,7 +29,7 @@ export const JobStatusOther = 6;
 export const JobStatusMax = 6;
 
 export const checkLastWeekPlanStep = 'checkLastWeekPlan'
-export const checkObjectivesStep = 'checkObjectives'
+export const checkGoalsStep = 'checkGoals'
 export const checkRoutineAndHabitsStep = 'checkRoutineAndHabits'
 export const checkThisWeekCalendarEventsStep = 'checkThisWeekCalendarEvents'
 export const checkWeekToDoTasksStep = 'checkWeekToDoTasks'
@@ -40,7 +40,7 @@ export const arrangeDayStep = 'arrangeDay'
 
 export const DayPlanSteps = {
   [checkLastWeekPlanStep]: 0,
-  [checkObjectivesStep]: 1,
+  [checkGoalsStep]: 1,
   [checkRoutineAndHabitsStep]: 2,
   [checkThisWeekCalendarEventsStep]: 3,
   [checkWeekToDoTasksStep]: 4,
@@ -65,10 +65,10 @@ export const NormalMessageSteps = {
 export const ConversationTypeWeek = 'week'
 export const ConversationTypeDay = 'day'
 export const ConversationTypeMonth = 'month'
-export const ConversationTypeObjective = 'objective'
+export const ConversationTypeGoal = 'goal'
 export const ConversationTypeAll = 'all'
 export const ConversationTypes = [
-  ConversationTypeWeek, ConversationTypeDay, ConversationTypeMonth, ConversationTypeObjective, ConversationTypeAll
+  ConversationTypeWeek, ConversationTypeDay, ConversationTypeMonth, ConversationTypeGoal, ConversationTypeAll
 ]
 
 export const WeekPlanStageBegin = 1
@@ -81,10 +81,10 @@ export const PriorityLow = 0;
 
 export const TaskPriorities = [PriorityHigh, PriorityMedium, PriorityLow]
 
-export const ObjectiveTypeLife = 'life'
-export const ObjectiveTypeLong = 'long'
-export const ObjectiveTypeShort = 'short'
-export const ObjectiveTypes = [ObjectiveTypeLife, ObjectiveTypeLong, ObjectiveTypeShort]
+export const GoalTypeLife = 'life'
+export const GoalTypeLong = 'long'
+export const GoalTypeShort = 'short'
+export const GoalTypes = [GoalTypeLife, GoalTypeLong, GoalTypeShort]
 
 export const EventStatusDefault = 0;
 export const EventStatusDone = 1;

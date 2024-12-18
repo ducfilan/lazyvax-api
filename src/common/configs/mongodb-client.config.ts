@@ -4,7 +4,7 @@ import UsersDao from '@dao/users.dao'
 import ConversationsDao from '@/dao/conversations.dao';
 import MessagesDao from '@/dao/messages.dao';
 import I18nDao from '@/dao/i18n';
-import ObjectivesDao from '@/dao/objectives.dao';
+import GoalsDao from '@/dao/goals.dao';
 import EventsDao from '@/dao/events.dao';
 import HabitsDao from '@/dao/habits.dao';
 import CheckpointDao from '@/dao/checkpoint.dao';
@@ -44,7 +44,7 @@ export const injectTables = async () => {
   MessagesDao.injectDB(client)
   ConfigsDao.injectDB(client)
   I18nDao.injectDB(client)
-  ObjectivesDao.injectDB(client)
+  GoalsDao.injectDB(client)
   EventsDao.injectDB(client)
   HabitsDao.injectDB(client)
   CheckpointDao.injectDB(client)

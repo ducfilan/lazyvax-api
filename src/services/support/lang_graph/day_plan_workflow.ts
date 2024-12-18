@@ -22,8 +22,8 @@ import logger from '@/common/logger';
 import { Conversation } from '@/entities/Conversation';
 import { getModel, ModelNameChatGPT4o, ModelNameLlama3370BInstruct } from './model_repo';
 import { getCalendarEvents, getLastWeekPlan, getRoutineAndHabits } from './utils';
-import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, ObjectiveTypeShort, ObjectiveTypeLong, askMoreInfoStep, checkObjectivesStep } from '@/common/consts/shared';
-import { getObjectivesByUserId } from '@/services/api/objectives.services';
+import { checkLastWeekPlanStep, checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep, getUserTimezoneStep, generateDayTasksStep, arrangeDayStep, DayPlanSteps, GoalTypeShort, GoalTypeLong, askMoreInfoStep, checkGoalsStep } from '@/common/consts/shared';
+import { getGoalsByUserId } from '@/services/api/goals.services';
 import { PlanQuestion } from '@/common/types/shared';
 import { extractJsonFromMessage } from '@/common/utils/stringUtils';
 import { ConversationMemory } from '@/entities/ConversationMemory';
@@ -40,7 +40,7 @@ export class DayPlanWorkflow {
     const builder = new StateGraph(DailyPlanningAnnotation)
       // Add nodes.
       .addNode(checkLastWeekPlanStep, this.checkLastWeekPlan.bind(this))
-      .addNode(checkObjectivesStep, this.checkObjectives.bind(this))
+      .addNode(checkGoalsStep, this.checkGoals.bind(this))
       .addNode(checkRoutineAndHabitsStep, this.checkRoutineAndHabits.bind(this))
       .addNode(checkThisWeekCalendarEventsStep, this.checkThisWeekCalendarEvents.bind(this))
       .addNode(checkWeekToDoTasksStep, this.checkWeekToDoTasks.bind(this))
@@ -50,8 +50,8 @@ export class DayPlanWorkflow {
       .addNode(arrangeDayStep, this.arrangeDay.bind(this))
       // Add edges.
       .addEdge(START, checkLastWeekPlanStep)
-      .addEdge(checkLastWeekPlanStep, checkObjectivesStep)
-      .addEdge(checkObjectivesStep, checkRoutineAndHabitsStep)
+      .addEdge(checkLastWeekPlanStep, checkGoalsStep)
+      .addEdge(checkGoalsStep, checkRoutineAndHabitsStep)
       .addEdge(checkRoutineAndHabitsStep, checkThisWeekCalendarEventsStep)
       .addEdge(checkThisWeekCalendarEventsStep, checkWeekToDoTasksStep)
       .addEdge(checkWeekToDoTasksStep, getUserTimezoneStep)
@@ -87,21 +87,21 @@ export class DayPlanWorkflow {
     }
   }
 
-  private async checkObjectives(state: DailyPlanningState): Promise<NodeOutput> {
-    if (!this.isCurrentStep(checkObjectivesStep, state.targetStep)) {
+  private async checkGoals(state: DailyPlanningState): Promise<NodeOutput> {
+    if (!this.isCurrentStep(checkGoalsStep, state.targetStep)) {
       return {}
     }
 
-    const objectives = await getObjectivesByUserId(state.userInfo._id)
-    const shortTermGoals = objectives.filter(o => o.type === ObjectiveTypeShort).map(o => {
-      const detail = o.detail ? ` - ${o.detail}` : ""
-      const atAge = o.atAge ? ` - At age: ${o.atAge}` : ""
-      return `${o.title}${detail}${atAge}`
+    const goals = await getGoalsByUserId(state.userInfo._id)
+    const shortTermGoals = goals.filter(g => g.type === GoalTypeShort).map(g => {
+      const detail = g.detail ? ` - ${g.detail}` : ""
+      const atAge = g.atAge ? ` - At age: ${g.atAge}` : ""
+      return `${g.title}${detail}${atAge}`
     })
-    const longTermGoals = objectives.filter(o => o.type === ObjectiveTypeLong).map(o => {
-      const detail = o.detail ? ` - ${o.detail}` : ""
-      const atAge = o.atAge ? ` - At age: ${o.atAge}` : ""
-      return `${o.title}${detail}${atAge}`
+    const longTermGoals = goals.filter(g => g.type === GoalTypeLong).map(g => {
+      const detail = g.detail ? ` - ${g.detail}` : ""
+      const atAge = g.atAge ? ` - At age: ${g.atAge}` : ""
+      return `${g.title}${detail}${atAge}`
     })
 
     return {

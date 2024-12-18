@@ -1,8 +1,8 @@
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
-import { ObjectiveTypes } from '@/common/consts/shared'
+import { GoalTypes } from '@/common/consts/shared'
 
-export const validateObjectiveCreation = [
+export const validateGoalCreation = [
   check('title')
     .notEmpty()
     .withMessage('Title is required')
@@ -17,7 +17,7 @@ export const validateObjectiveCreation = [
     .notEmpty()
     .withMessage('Type is required')
     .bail()
-    .isIn(ObjectiveTypes)
+    .isIn(GoalTypes)
     .withMessage('Invalid type'),
   check('fromDate')
     .optional()
@@ -40,11 +40,11 @@ export const validateObjectiveCreation = [
     .isInt()
     .withMessage('At age must be an integer')
     .customSanitizer(atAge => parseInt(atAge)),
-  check('alignObjectives')
+  check('alignGoals')
     .optional()
     .isArray()
     .withMessage('Align targets must be an array'),
-  check('alignObjectives.*')
+  check('alignGoals.*')
     .isMongoId()
     .withMessage('Align targets must contain valid IDs'),
   check('alignAreas')
@@ -70,7 +70,7 @@ export const validateObjectiveCreation = [
   },
 ]
 
-export const validateObjectiveUpdate = [
+export const validateGoalUpdate = [
   check('title')
     .optional()
     .isLength({ min: 1, max: 200 })
@@ -81,7 +81,7 @@ export const validateObjectiveUpdate = [
     .withMessage('Detail must be less than 50,000 characters long'),
   check('type')
     .optional()
-    .isIn(ObjectiveTypes)
+    .isIn(GoalTypes)
     .withMessage('Invalid type'),
   check('fromDate')
     .optional()
@@ -97,11 +97,11 @@ export const validateObjectiveUpdate = [
       }
       return true
     }),
-  check('alignObjectives')
+  check('alignGoals')
     .optional()
     .isArray()
     .withMessage('Align targets must be an array'),
-  check('alignObjectives.*')
+  check('alignGoals.*')
     .isMongoId()
     .withMessage('Align targets must contain valid IDs'),
   check('areas')
@@ -131,10 +131,10 @@ export const validateObjectiveUpdate = [
   },
 ]
 
-export const validateObjectiveFilters = [
+export const validateGoalFilters = [
   check('type')
     .optional()
-    .isIn(ObjectiveTypes)
+    .isIn(GoalTypes)
     .withMessage('Invalid type'),
   check('fromDate')
     .optional()

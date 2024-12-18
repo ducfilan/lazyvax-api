@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-export interface Objective {
+export interface Goal {
   _id?: ObjectId;
   title: string;
   type: string;
@@ -8,6 +8,6 @@ export interface Objective {
   fromDate: Date;
   toDate: Date;
   detail?: string;
-  alignObjectives?: ObjectId[];
+  alignGoals?: ObjectId[];
   alignAreas?: ObjectId[];
 }

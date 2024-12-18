@@ -1,5 +1,5 @@
 import { I18nDbCodeGoalFirstMessage, I18nDbCodeWeekFirstMessage } from "@/common/consts/constants"
-import { ConversationTypeObjective, ConversationTypeWeek } from "@/common/consts/shared"
+import { ConversationTypeGoal, ConversationTypeWeek } from "@/common/consts/shared"
 import ConversationsDao from "@/dao/conversations.dao"
 import I18nDao from "@/dao/i18n"
 import { Conversation, TodoTask, UserMilestone } from "@/entities/Conversation"
@@ -138,7 +138,7 @@ export async function getWeeklyPlanTodoTasks(conversationId: ObjectId): Promise<
 
 export async function generateFirstMessages(conversationType: string, locale: string): Promise<I18n[]> {
   switch (conversationType) {
-    case ConversationTypeObjective:
+    case ConversationTypeGoal:
       return I18nDao.getByCode(I18nDbCodeGoalFirstMessage, locale)
 
     case ConversationTypeWeek:
