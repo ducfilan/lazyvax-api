@@ -1,6 +1,7 @@
 import { check, validationResult } from 'express-validator'
 import { isEmpty } from '@common/utils/objectUtils'
 import { GoalTypes } from '@/common/consts/shared'
+import { GeneralMaxLength } from '@/common/consts/constants'
 
 export const validateGoalCreation = [
   check('title')
@@ -170,6 +171,43 @@ export const validateGoalFilters = [
       }
     }
 
+    next()
+  },
+]
+
+export const validateDetermineGoalSettingCategory = [
+  check('answers')
+    .notEmpty()
+    .withMessage('Answers are required')
+    .isArray()
+    .withMessage('Answers must be an array'),
+  check('answers.*')
+    .customSanitizer(answer => {
+      if (typeof answer === 'string') {
+        try {
+          return JSON.parse(answer);
+        } catch (e) {
+          return answer;
+        }
+      }
+      return answer;
+    })
+    .isObject()
+    .withMessage('Answers must be an array of objects')
+    .custom((answer) => {
+      if (!answer.question || !answer.answer) {
+        throw new Error('Each answer must have question and answer fields')
+      }
+      if (answer.question.length > GeneralMaxLength || answer.answer.length > GeneralMaxLength) {
+        throw new Error('Question and answer must not exceed maximum length')
+      }
+      return true
+    }),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ error: errors.array()[0].msg })
+    }
     next()
   },
 ]

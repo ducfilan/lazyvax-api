@@ -1,6 +1,10 @@
 import { ObjectId } from 'mongodb'
 import GoalsDao from '@dao/goals.dao'
 import { Goal } from '@/entities/Goal'
+import { GoalSettingCategoryQuestionAnswer } from '@/common/types/shared'
+import { determineGoalSettingCategory as classifyGoalSettingCategory } from '@/services/support/lang_graph/steps'
+import { updateGoalSettingCategory } from './users.services'
+import { User } from '@/entities/User'
 
 export async function getGoals(filter: {
   userId: ObjectId,
@@ -56,6 +60,13 @@ export async function getGoalsByAreaId(userId: ObjectId, areaId: ObjectId) {
   return await GoalsDao.getGoalsByAreaId(userId, areaId)
 }
 
+export async function determineGoalSettingCategory(user: User, answers: GoalSettingCategoryQuestionAnswer[]) {
+  const category = await classifyGoalSettingCategory(answers)
+  await updateGoalSettingCategory(user, category)
+
+  return category
+}
+
 export default {
   getGoals,
   createGoal,
@@ -65,4 +76,5 @@ export default {
   getGoalsByUserId,
   getGoalsByAlignGoalId,
   getGoalsByAreaId,
+  determineGoalSettingCategory,
 }

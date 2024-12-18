@@ -96,6 +96,10 @@ export async function updateAiMemory({ _id, email, aiMemory: currentAiMemory }: 
   return UsersDao.updateOne({ _id, email }, { $set: { 'aiMemory': aiMemory } })
 }
 
+export async function updateGoalSettingCategory({ _id, email }: User, goalSettingCategory: string) {
+  return UsersDao.updateOne({ _id, email }, { $set: { 'preferences.goalSettingCategory': goalSettingCategory } })
+}
+
 export async function logout({ _id, email }) {
 }
 
@@ -107,5 +111,6 @@ export default {
   updateDob,
   updateOtherPreferences,
   updateTimezone,
+  updateGoalSettingCategory,
   logout,
 }

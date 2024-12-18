@@ -110,4 +110,14 @@ export default class GoalsController {
       res.status(500).json({ error: e.message })
     }
   }
+
+  static async determineGoalSettingCategory(req: Request & { user: User }, res: Response) {
+    try {
+      const result = await goalsService.determineGoalSettingCategory(req.user, req.body.answers)
+      res.status(200).json({ category: result })
+    } catch (e) {
+      logger.error(`Error getting goal setting category: ${e}`)
+      res.status(500).json({ error: e.message })
+    }
+  }
 }

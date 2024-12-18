@@ -64,10 +64,7 @@ type NodeType = typeof START | 'determineCategoryQuestions'
 
 type GoalSettingStateType = {
   userInfo: LastValue<User>
-  questions: LastValue<Array<{
-    question: string
-    options: string[]
-  }>>
+  questions: LastValue<Array<GoalSettingCategoryQuestion>>
   messages: LastValue<Messages>
 }
 

@@ -2,7 +2,7 @@ import { Router } from 'express'
 import GoalsController from '@/controllers/goals.controller'
 import multer from 'multer'
 import auth from '@middlewares/global/auth.mw'
-import { validateGoalCreation, validateGoalUpdate, validateGoalFilters } from '@/validators/goals.validator'
+import { validateGoalCreation, validateGoalUpdate, validateGoalFilters, validateDetermineGoalSettingCategory } from '@/validators/goals.validator'
 
 const securedGoalRouter = Router()
 
@@ -20,11 +20,14 @@ securedGoalRouter.route('/:goalId')
 securedGoalRouter.route('/:goalId')
   .delete(auth, GoalsController.deleteGoal)
 
+securedGoalRouter.route('/category-questions')
+  .get(auth, GoalsController.getGoalSettingCategoryQuestions)
+
+securedGoalRouter.route('/category')
+  .post(auth, validateDetermineGoalSettingCategory, GoalsController.determineGoalSettingCategory)
+
 securedGoalRouter.route('/:goalId')
   .get(auth, GoalsController.getGoalById)
-
-securedGoalRouter.route('/category-questions')
-  .post(auth, GoalsController.getGoalSettingCategoryQuestions)
 
 export {
   securedGoalRouter

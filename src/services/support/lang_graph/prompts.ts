@@ -393,10 +393,27 @@ Long term memory about user:
 
 export const goalSettingCategoryQuestionsInstruction = [
   "Design multiple-choice questions that are:",
-  "- Simple, conversational, and engaging",
+  "- **Simple, conversational, and engaging**, question and each option less than 255 characters",
   "- Focused on understanding their familiarity with goal-setting, discipline, and focus",
-  "- Easy to categorize the user into groups like \"Confident Achiever\", \"Motivated but Distracted\", \"Overwhelmed Starter\", \"Needs Encouragement\"",
-  "- Include example answers for each",
+  "- Purpose is to **categorize the user** into one of these groups:",
+  "",
+  "1. Confident Achiever",
+  "- Knows how to set and achieve goals with little intervention",
+  "- Needs tools to track progress and reach stretch goals",
+  "",
+  "2. Motivated but Distracted",
+  "- Sets goals but struggles to stay focused",
+  "- Needs help with prioritization and managing distractions",
+  "",
+  "3. Overwhelmed Starter",
+  "- Wants to improve but feels stuck or unsure of where to begin",
+  "- Needs small, clear steps and lots of encouragement",
+  "",
+  "4. Needs Encouragement",
+  "- Reluctant or unsure about goal-setting, often motivated externally",
+  "- Needs positive reinforcement, intrinsic motivation-building, and simple wins",
+  "",
+  "- Include options (possible answers) for each question",
   "- Make sure the options are easy to choose quickly and not overwhelming",
   "",
   "Output Format:",
@@ -410,6 +427,20 @@ export const goalSettingCategoryQuestionsInstruction = [
     },
     ...
   ]`,
+  "Sample of 1 question in output:",
+  `{
+      "question": "When it comes to setting goals, how do you usually feel?",
+      "options": [
+        "I love setting goals and consistently achieve them!",
+        "I set goals but sometimes struggle to follow through", 
+        "I want to set goals but feel overwhelmed",
+        "I find it hard to commit to goals"
+      ]
+    }`,
+].join("\n");
+
+/*
+,
   "",
   "Sample output:",
   `[
@@ -476,4 +507,43 @@ export const goalSettingCategoryQuestionsInstruction = [
       ]
     }
   ]`
-].join("\n");
+ */
+
+export const goalSettingCategoryDetermineTemplate = `
+To assess user's Goal-Setting style, asking user the questions and get their answers.
+
+User's answers to goal setting questions:
+{answers}
+
+### Instructions: ###
+{instructions}
+`.trim();
+
+export const goalSettingCategoryDetermineInstruction = [
+  "Based on the user's answers, classify them into exactly ONE of these categories:",
+  "",
+  "1. Confident Achiever",
+  "- Knows how to set and achieve goals with little intervention",
+  "- Needs tools to track progress and reach stretch goals",
+  "",
+  "2. Motivated but Distracted",
+  "- Sets goals but struggles to stay focused",
+  "- Needs help with prioritization and managing distractions",
+  "",
+  "3. Overwhelmed Starter",
+  "- Wants to improve but feels stuck or unsure of where to begin",
+  "- Needs small, clear steps and lots of encouragement",
+  "",
+  "4. Needs Encouragement",
+  "- Reluctant or unsure about goal-setting, often motivated externally",
+  "- Needs positive reinforcement, intrinsic motivation-building, and simple wins",
+  "",
+  "Output Format:",
+  "Return ONLY ONE of these exact category names:",
+  "- Confident Achiever",
+  "- Motivated but Distracted",
+  "- Overwhelmed Starter",
+  "- Needs Encouragement",
+  "Sample output:",
+  "Confident Achiever",
+].join("\n").trim();

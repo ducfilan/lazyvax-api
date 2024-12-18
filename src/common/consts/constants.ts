@@ -73,6 +73,7 @@ export const AgeGroupMaxLength = 10
 export const PlanQuestionMaxLength = 1000
 export const PlanQuestionAnswerOptionMaxLength = 250
 export const MaxInt = 2147483647
+export const GeneralMaxLength = 255
 
 export const AscOrder = 'asc'
 export const DescOrder = 'desc'

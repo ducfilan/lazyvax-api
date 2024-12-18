@@ -10,3 +10,8 @@ export type GoalSettingCategoryQuestion = {
   question: string,
   options: string[],
 }
+
+export type GoalSettingCategoryQuestionAnswer = {
+  question: string,
+  answer: string,
+}
