@@ -22,7 +22,7 @@ import {
   NormalMessageSteps,
   ConversationTypeWeek
 } from '@/common/consts/shared';
-import { ChatOpenAI, ChatOpenAICallOptions } from '@langchain/openai';
+import { ChatOpenAICallOptions } from '@langchain/openai';
 import { BaseLanguageModelInput } from '@langchain/core/language_models/base';
 import { formatDateToStringInTimeZone, getDayIndexFromDateInTimeZone } from '@/common/utils/dateUtils';
 import { extractJsonFromMessage } from '@/common/utils/stringUtils';

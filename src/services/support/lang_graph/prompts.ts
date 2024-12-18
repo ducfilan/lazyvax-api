@@ -21,7 +21,7 @@ import { GeneralMessageMemorizeInfo, GeneralMessageMemory } from "@/common/types
 import { getAge } from "@/common/utils/dateUtils";
 import { User } from "@/entities/User";
 
-export const systemMessageShort = `Your name is ${LavaUserName}, and you're the heart of ${AppName}—a product that helps users make the most of their time, understand themselves, and lead purposeful, fulfilling lives, helping them feel satisfied by the week's end. You're a trusted, empathetic friend: patient, non-judgmental, a good listener, and always ready with a bit of humor. You personalize advice based on each user's unique qualities, routines, goals, and interests, encouraging steady progress at their own pace. Your guidance is inspired by concepts from life organization classics like Atomic Habits, The 7 Habits of Highly Effective People, The How of Happiness, and Deep Work. You’re here to make the journey productive, enjoyable, and as distraction-free as possible—whether it’s achieving work goals or making space for personal joys.`;
+export const systemMessageShort = `Your name is ${LavaUserName}, and you're the heart of ${AppName}—a product that helps users make the most of their time, understand themselves, and lead purposeful, fulfilling lives, helping them feel satisfied by the week's end. You're a trusted, empathetic friend: patient, non-judgmental, a good listener, and always ready with a bit of humor. You personalize advice based on each user's unique qualities, routines, goals, and interests, encouraging steady progress at their own pace. Your guidance is inspired by concepts from life organization classics like Atomic Habits, The 7 Habits of Highly Effective People, The How of Happiness, and Deep Work. You're here to make the journey productive, enjoyable, and as distraction-free as possible—whether it's achieving work goals or making space for personal joys.`;
 
 export const summarizeConversationConditionPrompt = "with a focus on extracting specific user details, facts, and numbers to understand their unique qualities, routines, goals, and interests. Highlight key points that can guide relevant and personalized responses in future interactions. Avoid generic or overly broad descriptions. The context is a productivity app designed to help users balance productivity with life enjoyment, feel content by the end of the week, and lead fulfilling lives. Emphasize actionable insights, user preferences, and behavior patterns to enable empathetic and tailored guidance."
 
@@ -379,3 +379,75 @@ ${newMemory.dailyMemory?.map(item => `- ${item}`).join("\n") ?? ""}
   "dailyMemory": "[your response, type: string]"
 }`
 }
+
+export const goalSettingLevelTemplate = `
+### Context: ###
+{user_info}
+
+Long term memory about user:
+{longTermMemory}
+
+### Instructions: ###
+{instructions}
+`;
+
+export const goalSettingLevelInstruction = [
+  "Design multiple-choice questions that are:",
+  "- Simple, conversational, and engaging",
+  "- Focused on understanding their familiarity with goal-setting, discipline, and focus",
+  "- Easy to categorize the user into groups like \"Confident Achiever\", \"Motivated but Distracted\", \"Overwhelmed Starter\", \"Needs Encouragement\"",
+  "- Include example answers for each",
+  "- Make sure the options are easy to choose quickly and not overwhelming",
+  "",
+  "Output Format:",
+  "Respond with a valid JSON array of questions, nothing else, including:",
+  "1. **Question**: Clear and engaging question text",
+  "2. **Options**: Array of 3-4 possible answers",
+  `Example format: [
+    {
+      "question": "...",
+      "options": ["...", "...", "..."]
+    },
+    ...
+  ]`,
+  "",
+  "Sample output:",
+  `[
+    {
+      "question": "When it comes to setting goals, how do you usually feel?",
+      "options": [
+        "I love setting goals and consistently achieve them!",
+        "I set goals but sometimes struggle to follow through",
+        "I want to set goals but feel overwhelmed",
+        "I find it hard to commit to goals"
+      ]
+    },
+    {
+      "question": "How do you handle setbacks when working towards a goal?",
+      "options": [
+        "I learn from them and adjust my approach",
+        "They discourage me but I try to keep going",
+        "I often give up and try something else",
+        "I take them personally and lose motivation"
+      ]
+    },
+    {
+      "question": "What's your biggest challenge with long-term goals?",
+      "options": [
+        "Staying patient - I want results faster",
+        "Keeping motivated when progress is slow",
+        "Breaking them down into manageable steps",
+        "Finding time to work on them consistently"
+      ]
+    },
+    {
+      "question": "How do you track your progress on goals?",
+      "options": [
+        "I have a detailed system and review regularly",
+        "I keep mental notes and occasional written records",
+        "I try to track but often forget or get busy",
+        "I don't really track progress"
+      ]
+    }
+  ]`
+].join("\n");

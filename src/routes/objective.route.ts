@@ -23,6 +23,9 @@ securedObjectiveRouter.route('/:objectiveId')
 securedObjectiveRouter.route('/:objectiveId')
   .get(auth, ObjectivesController.getObjectiveById)
 
+securedObjectiveRouter.route('/goal-setting-level')
+  .post(auth, upload.none(), ObjectivesController.getGoalSettingLevel)
+
 export {
   securedObjectiveRouter
 }

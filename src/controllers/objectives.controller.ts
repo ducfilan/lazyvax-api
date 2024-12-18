@@ -3,6 +3,7 @@ import objectivesService from '@services/api/objectives.services'
 import { ObjectId } from 'mongodb'
 import logger from '@/common/logger'
 import { User } from '@/entities/User'
+import { goalSettingLevelWorkflow } from '@/services/support/lang_graph/workflows'
 
 export default class ObjectivesController {
   static async getObjectives(req: Request & { user: User }, res: Response) {
@@ -94,6 +95,16 @@ export default class ObjectivesController {
       res.status(200).json(objective)
     } catch (e) {
       logger.error(`Error fetching objective by ID: ${e}`)
+      res.status(500).json({ error: e.message })
+    }
+  }
+
+  static async getGoalSettingLevel(req: Request, res: Response) {
+    try {
+      const result = await goalSettingLevelWorkflow.runWorkflow()
+      res.status(200).json(result.result.questions)
+    } catch (e) {
+      logger.error(`Error getting goal setting level: ${e}`)
       res.status(500).json({ error: e.message })
     }
   }
