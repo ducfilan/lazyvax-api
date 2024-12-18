@@ -28,7 +28,7 @@ export type Event = {
   attendees?: Attendee[],
   categories?: string[], // Array of category names
   taskIds?: ObjectId[], // References to related tasks
-  objectiveIds?: ObjectId[], // References to related objectives
+  goalIds?: ObjectId[], // References to related goals
   color?: string, // Hex code for event color
   calendarId?: ObjectId, // Reference to the associated calendar
   isPrivate?: boolean,
@@ -83,7 +83,7 @@ export const mapGoogleEventToAppEvent = (userId: ObjectId, event: calendar_v3.Sc
     attendees: event.attendees?.map(({ email, displayName: name }) => name ? ({ email, name }) : ({ email })) || [],
     categories: [], // TODO: Extract categories from event details
     taskIds: [], // TODO: Fetch related tasks
-    objectiveIds: [], // TODO: Fetch related objectives
+    goalIds: [], // TODO: Fetch related goals
     meta: {
       id: event.id,
       etag: event.etag,

@@ -32,9 +32,10 @@ export type Preference = {
   yearsOfExperience?: number,
   maritalStatus?: number,
   preferredFocusSessionLengthMinutes?: number,
-  otherPreferences?: string,
   timezone?: string,
   dob?: Date;
+  goalSettingCategory?: string,
+  otherPreferences?: string,
 }
 
 // TODO: Add more user categories, maybe not working as professional or student but something else.

@@ -380,7 +380,7 @@ ${newMemory.dailyMemory?.map(item => `- ${item}`).join("\n") ?? ""}
 }`
 }
 
-export const goalSettingLevelTemplate = `
+export const goalSettingCategoryQuestionsTemplate = `
 ### Context: ###
 {user_info}
 
@@ -391,7 +391,7 @@ Long term memory about user:
 {instructions}
 `;
 
-export const goalSettingLevelInstruction = [
+export const goalSettingCategoryQuestionsInstruction = [
   "Design multiple-choice questions that are:",
   "- Simple, conversational, and engaging",
   "- Focused on understanding their familiarity with goal-setting, discipline, and focus",
@@ -417,7 +417,7 @@ export const goalSettingLevelInstruction = [
       "question": "When it comes to setting goals, how do you usually feel?",
       "options": [
         "I love setting goals and consistently achieve them!",
-        "I set goals but sometimes struggle to follow through",
+        "I set goals but sometimes struggle to follow through", 
         "I want to set goals but feel overwhelmed",
         "I find it hard to commit to goals"
       ]
@@ -447,6 +447,32 @@ export const goalSettingLevelInstruction = [
         "I keep mental notes and occasional written records",
         "I try to track but often forget or get busy",
         "I don't really track progress"
+      ]
+    },
+    {
+      "question": "How often do you set goals?",
+      "options": [
+        "All the time",
+        "Sometimes",
+        "Rarely",
+        "Never"
+      ]
+    },
+    {
+      "question": "When you set goals, how often do you complete them?",
+      "options": [
+        "Almost always",
+        "Sometimes", 
+        "Rarely",
+        "Never"
+      ]
+    },
+    {
+      "question": "What best describes how you feel about setting goals?",
+      "options": [
+        "I'm confident and disciplined.",
+        "I sometimes get distracted or lose focus.",
+        "I feel overwhelmed or struggle to follow through."
       ]
     }
   ]`

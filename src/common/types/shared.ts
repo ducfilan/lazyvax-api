@@ -3,3 +3,10 @@ export type PlanQuestion = {
   answerOptions?: string[],
   selectedAnswer?: string,
 }
+
+export const GoalSettingCategory = ['confidentAchiever', 'motivatedButDistracted', 'overwhelmedStarter', 'needsEncouragement'];
+
+export type GoalSettingCategoryQuestion = {
+  question: string,
+  options: string[],
+}

@@ -3,7 +3,7 @@ import goalsService from '@/services/api/goals.services'
 import { ObjectId } from 'mongodb'
 import logger from '@/common/logger'
 import { User } from '@/entities/User'
-import { goalSettingLevelWorkflow } from '@/services/support/lang_graph/workflows'
+import { goalSettingCategoryQuestionsWorkflow } from '@/services/support/lang_graph/workflows'
 
 export default class GoalsController {
   static async getGoals(req: Request & { user: User }, res: Response) {
@@ -51,7 +51,7 @@ export default class GoalsController {
 
   static async updateGoal(req: Request, res: Response) {
     try {
-      const goalId = new ObjectId(req.params.objectiveId)
+      const goalId = new ObjectId(req.params.goalId)
       const updateData = req.body
 
       const success = await goalsService.updateGoal(goalId, updateData)
@@ -69,7 +69,7 @@ export default class GoalsController {
 
   static async deleteGoal(req: Request, res: Response) {
     try {
-      const goalId = new ObjectId(req.params.objectiveId)
+      const goalId = new ObjectId(req.params.goalId)
 
       const success = await goalsService.deleteGoal(goalId)
       if (!success) {
@@ -85,7 +85,7 @@ export default class GoalsController {
 
   static async getGoalById(req: Request, res: Response) {
     try {
-      const goalId = new ObjectId(req.params.objectiveId)
+      const goalId = new ObjectId(req.params.goalId)
       const goal = await goalsService.getGoalById(goalId)
 
       if (!goal) {
@@ -99,9 +99,11 @@ export default class GoalsController {
     }
   }
 
-  static async getGoalSettingLevel(req: Request, res: Response) {
+  static async getGoalSettingCategoryQuestions(req: Request & { user: User }, res: Response) {
     try {
-      const result = await goalSettingLevelWorkflow.runWorkflow()
+      const result = await goalSettingCategoryQuestionsWorkflow.runWorkflow({
+        userInfo: req.user,
+      })
       res.status(200).json(result.result.questions)
     } catch (e) {
       logger.error(`Error getting goal setting level: ${e}`)

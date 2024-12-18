@@ -66,7 +66,7 @@ export default class EventsDao {
               },
               categories: { bsonType: 'array', items: { bsonType: 'string' } },
               taskIds: { bsonType: 'array', items: { bsonType: 'objectId' } },
-              objectiveIds: { bsonType: 'array', items: { bsonType: 'objectId' } },
+              goalIds: { bsonType: 'array', items: { bsonType: 'objectId' } },
               color: { bsonType: 'string' },
               calendarId: { bsonType: 'objectId' },
               meta: {

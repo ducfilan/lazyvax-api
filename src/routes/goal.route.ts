@@ -14,17 +14,17 @@ securedGoalRouter.route('/')
 securedGoalRouter.route('/')
   .get(auth, validateGoalFilters, GoalsController.getGoals)
 
-securedGoalRouter.route('/:objectiveId')
+securedGoalRouter.route('/:goalId')
   .patch(auth, upload.none(), validateGoalUpdate, GoalsController.updateGoal)
 
-securedGoalRouter.route('/:objectiveId')
+securedGoalRouter.route('/:goalId')
   .delete(auth, GoalsController.deleteGoal)
 
-securedGoalRouter.route('/:objectiveId')
+securedGoalRouter.route('/:goalId')
   .get(auth, GoalsController.getGoalById)
 
-securedGoalRouter.route('/goal-setting-level')
-  .post(auth, upload.none(), GoalsController.getGoalSettingLevel)
+securedGoalRouter.route('/category-questions')
+  .post(auth, GoalsController.getGoalSettingCategoryQuestions)
 
 export {
   securedGoalRouter
