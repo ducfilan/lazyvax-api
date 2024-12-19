@@ -417,9 +417,9 @@ export const goalSettingCategoryQuestionsInstruction = [
   "- Make sure the options are easy to choose quickly and not overwhelming",
   "",
   "Output Format:",
-  "Respond with a valid JSON array of questions, nothing else, including:",
+  "Respond with a valid JSON array of 3 questions, nothing else, including:",
   "1. **Question**: Clear and engaging question text",
-  "2. **Options**: Array of 3-4 possible answers",
+  "2. **Options**: Array of possible answers",
   `Example format: [
     {
       "question": "...",
