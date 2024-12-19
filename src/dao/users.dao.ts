@@ -11,7 +11,8 @@ import {
   OccupationLength,
   StudyCourseLength,
   SupportingLanguages,
-  UsersCollectionName
+  UsersCollectionName,
+  GeneralMaxLength
 } from '@/common/consts/constants'
 import { User } from '@/entities/User'
 import { LangCode } from '@/common/types/types'
@@ -21,7 +22,6 @@ import { getGreetingTime } from '@/common/utils/stringUtils'
 import { delCache } from '@/common/redis'
 import logger from '@/common/logger'
 import { JobStatusMax, MaritalStatusMax, workLifeBalanceTypes } from '@/common/consts/shared'
-import { GoalSettingCategory } from '@/common/types/shared'
 
 let _users: Collection<User>
 let _db: Db
@@ -74,7 +74,7 @@ export default class UsersDao {
                   aspects: { bsonType: 'array', items: { bsonType: 'string', maxLength: AspectMaxLength } },
                   workLifeBalance: { bsonType: 'int', 'enum': workLifeBalanceTypes },
                   preferredFocusSessionLengthMinutes: { bsonType: 'int', minimum: 15, maximum: 600 },
-                  goalSettingCategory: { bsonType: 'string', 'enum': GoalSettingCategory },
+                  goalSettingCategory: { bsonType: 'string', maxLength: GeneralMaxLength },
                   dob: { bsonType: 'date' },
                   otherPreferences: { bsonType: 'string', maxLength: 2000 },
                   timezone: { bsonType: 'string' }
